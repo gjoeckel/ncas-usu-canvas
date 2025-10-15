@@ -1,4 +1,7 @@
 {
+  "_comment": "Windows MCP Server Configuration Template",
+  "_instructions": "This template uses remote npm packages for maximum portability across Windows, macOS, and Linux",
+  
   "mcpServers": {
     "github-minimal": {
       "command": "npx",
@@ -12,7 +15,7 @@
       "args": ["-y", "git+https://github.com/gjoeckel/my-mcp-servers.git#main:packages/shell-minimal"],
       "env": {
         "WORKING_DIRECTORY": "${HOME}",
-        "ALLOWED_COMMANDS": "npm,git,node,php,composer,curl,wget,ls,cat,grep,find,chmod,chown,mkdir,rm,cp,mv"
+        "ALLOWED_COMMANDS": "npm,git,node,curl,wget,ls,cat,grep,find,mkdir,rm,cp,mv"
       }
     },
     "puppeteer-minimal": {
@@ -31,7 +34,7 @@
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem", "${HOME}"],
       "env": {
-        "ALLOWED_PATHS": "${HOME}:${HOME}/.cursor:${HOME}/.config",
+        "ALLOWED_PATHS": "${HOME}",
         "READ_ONLY": "false"
       }
     },
@@ -41,3 +44,4 @@
     }
   }
 }
+

@@ -29,6 +29,9 @@ echo -e "${BLUE}  (Portable - works from any location!)${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
+# Detect operating system
+OS_TYPE="$(uname -s)"
+echo -e "${BLUE}🖥️  Detected OS: $OS_TYPE${NC}"
 echo -e "${GREEN}📍 Detected location: ${CURSOR_GLOBAL_DIR}${NC}"
 echo ""
 
@@ -91,27 +94,41 @@ fi
 # Add to PATH
 echo -e "${BLUE}📝 Configuring PATH...${NC}"
 
-# Detect shell
+# OS-aware shell configuration
 SHELL_CONFIG=""
-if [ -n "$ZSH_VERSION" ]; then
-    SHELL_CONFIG="$HOME/.zshrc"
-elif [ -n "$BASH_VERSION" ]; then
-    SHELL_CONFIG="$HOME/.bashrc"
-else
-    # Try to detect from SHELL variable
-    case "$SHELL" in
-        */zsh)
+case "$OS_TYPE" in
+    Linux*|Darwin*)
+        # macOS/Linux - supports both zsh and bash
+        if [ -n "$ZSH_VERSION" ]; then
             SHELL_CONFIG="$HOME/.zshrc"
-            ;;
-        */bash)
+        elif [ -n "$BASH_VERSION" ]; then
             SHELL_CONFIG="$HOME/.bashrc"
-            ;;
-        *)
-            echo -e "${YELLOW}   ⚠️  Could not detect shell config file${NC}"
-            SHELL_CONFIG=""
-            ;;
-    esac
-fi
+        else
+            case "$SHELL" in
+                */zsh) SHELL_CONFIG="$HOME/.zshrc" ;;
+                */bash) SHELL_CONFIG="$HOME/.bashrc" ;;
+                *) SHELL_CONFIG="" ;;
+            esac
+        fi
+        ;;
+    MINGW*|MSYS*|CYGWIN*)
+        # Windows Git Bash - only bash supported
+        if [ -f "$HOME/.bashrc" ]; then
+            SHELL_CONFIG="$HOME/.bashrc"
+        elif [ -f "$HOME/.bash_profile" ]; then
+            SHELL_CONFIG="$HOME/.bash_profile"
+        else
+            # Create .bashrc if it doesn't exist
+            echo -e "${YELLOW}   Creating .bashrc for Windows...${NC}"
+            SHELL_CONFIG="$HOME/.bashrc"
+            touch "$SHELL_CONFIG"
+        fi
+        ;;
+    *)
+        echo -e "${YELLOW}   ⚠️  Unknown OS type: $OS_TYPE${NC}"
+        SHELL_CONFIG="$HOME/.bashrc"  # Default fallback
+        ;;
+esac
 
 PATH_LINE="export PATH=\"$SCRIPTS_DIR:\$PATH\""
 

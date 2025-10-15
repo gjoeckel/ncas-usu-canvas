@@ -26,8 +26,27 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Create Cursor configuration directory
-CURSOR_CONFIG_DIR="$HOME/Library/Application Support/Cursor/User"
+# Detect OS and set appropriate Cursor settings directory
+OS_TYPE="$(uname -s)"
+case "$OS_TYPE" in
+    Darwin*)
+        CURSOR_CONFIG_DIR="$HOME/Library/Application Support/Cursor/User"
+        echo -e "${BLUE}🍎 macOS detected${NC}"
+        ;;
+    MINGW*|MSYS*|CYGWIN*)
+        CURSOR_CONFIG_DIR="$APPDATA/Cursor/User"
+        echo -e "${BLUE}🪟 Windows detected${NC}"
+        ;;
+    Linux*)
+        CURSOR_CONFIG_DIR="$HOME/.config/Cursor/User"
+        echo -e "${BLUE}🐧 Linux detected${NC}"
+        ;;
+    *)
+        echo -e "${RED}❌ Unsupported OS: $OS_TYPE${NC}"
+        exit 1
+        ;;
+esac
+
 mkdir -p "$CURSOR_CONFIG_DIR"
 
 echo -e "${BLUE}📁 Creating Cursor configuration directory...${NC}"

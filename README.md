@@ -47,7 +47,7 @@ All scripts use self-location detection - no hardcoded paths needed!
 
 ## 🚀 Quick Setup (New Machine)
 
-### Super Simple - Works Anywhere!
+### macOS / Linux Setup
 
 ```bash
 # 1. Place cursor-global ANYWHERE you want
@@ -70,6 +70,42 @@ source ~/.zshrc  # or ~/.bashrc
 
 # Done! ✅
 ```
+
+### 🪟 Windows Setup
+
+**Prerequisites:**
+- Git for Windows (includes Git Bash) - https://git-scm.com/download/win
+- Node.js - https://nodejs.org/
+
+```bash
+# 1. Open Git Bash (NOT PowerShell!)
+
+# 2. Place cursor-global ANYWHERE you want
+#    Examples:
+#    - /c/Users/YourUsername/cursor-global/
+#    - /c/Users/YourUsername/Desktop/cursor-global/
+#    - /c/Users/YourUsername/Documents/cursor-global/
+
+# 3. Navigate to wherever you placed it
+cd /c/Users/YourUsername/cursor-global
+
+# 4. Run Windows setup (auto-detects Windows!)
+./setup-windows.sh
+
+# 5. Reload shell
+source ~/.bashrc
+
+# 6. Restart Cursor IDE
+
+# Done! ✅
+```
+
+**⚠️ Windows Important Notes:**
+- ✅ Use Git Bash (scripts are NOT compatible with PowerShell)
+- ✅ Setup auto-detects Windows and configures `.bashrc` (not `.zshrc`)
+- ✅ All features work identically on Windows as on macOS/Linux
+
+**See [WINDOWS-SETUP.md](WINDOWS-SETUP.md) for complete Windows guide.**
 
 **That's it!** Setup auto-detects where you placed the folder and configures everything accordingly.
 
