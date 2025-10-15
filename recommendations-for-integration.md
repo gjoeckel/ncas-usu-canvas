@@ -43,19 +43,13 @@ All Windows-specific documentation files created during implementation:
 
 ## 🔍 Detailed Change Analysis
 
-### 1. config/mcp.json - OPTIMIZATION FOR ALL PLATFORMS
+### 1. config/mcp.json - TWO APPROACHES DOCUMENTED
 
-**Main Branch:**
-```json
-{
-  "github-minimal": {
-    "command": "node",
-    "args": ["${HOME}/Projects/accessilist/my-mcp-servers/packages/github-minimal/build/index.js"]
-  }
-}
-```
+**⚠️ IMPORTANT: Repository config vs Actual Implementation**
 
-**Windows-Cursor-Global Branch:**
+The repository's `config/mcp.json` contains a **template/ideal approach**, but the **actual working implementation** on Windows uses a different approach:
+
+**Repository File (config/mcp.json) - npx approach:**
 ```json
 {
   "github-minimal": {
@@ -65,19 +59,43 @@ All Windows-specific documentation files created during implementation:
 }
 ```
 
-**Why Changed:**
-- ❌ Main approach: Hardcoded paths, user-specific (`accessilist`), won't work on Windows
-- ✅ New approach: Uses npx to fetch from git, works everywhere, no hardcoded paths
+**Actual Working Implementation (~/.cursor/mcp.json on Windows):**
+```json
+{
+  "github-minimal": {
+    "command": "node",
+    "args": ["C:\\Users\\A00288946\\Projects\\my-mcp-servers\\my-mcp-servers\\packages\\github-minimal\\build\\index.js"]
+  }
+}
+```
 
-**Benefits:**
-- ✅ Platform-agnostic (works on macOS, Linux, Windows)
-- ✅ User-agnostic (no hardcoded username/project paths)
-- ✅ Auto-updates (can specify branch/tag)
-- ✅ No manual path configuration needed
+**Why Two Approaches:**
 
-**Recommendation:** ✅ **Merge to main** - This is better for ALL platforms
+**NPX Approach (Repository):**
+- ✅ Platform-agnostic
+- ✅ No hardcoded paths
+- ✅ Auto-fetches from git
+- ❌ **ISSUE on Windows:** npx with git URLs had problems with ES module packages
+- ❌ Slower startup (downloads on first run)
 
-**Note:** Requires npm packages to be published or git repo to be accessible. Current implementation uses git URLs which work.
+**Local Build Approach (Actual Windows Implementation):**
+- ✅ **WORKS on Windows** (validated)
+- ✅ Fast startup (already built)
+- ✅ Direct control over builds
+- ❌ Requires manual path configuration
+- ❌ User-specific paths needed
+
+**What Actually Works on Windows 11:**
+- Custom servers must be **built locally** from source
+- Paths must be **full Windows paths** (C:\\Users\\...)
+- ES module config must be **fixed first** (tsconfig.json)
+- Then use **node** command with local build paths
+
+**Recommendation:** 
+- ✅ **Document BOTH approaches** in README
+- ✅ Main approach: Local build (reliable, tested)
+- ✅ Alternative approach: npx git URLs (easier but may need troubleshooting)
+- ✅ Windows: Use local build approach (validated)
 
 ---
 

@@ -91,13 +91,27 @@ This system **requires** building the custom MCP servers from source. This is NO
 2. **Already Integrated**: All workflows and configs expect these servers
 3. **Custom Features**: Agent autonomy, sequential thinking, and other unique tools
 
-**Note for Windows**: After building, you may need to fix ES module configuration in some packages (see Windows setup documentation).
+### Windows-Specific Requirements
+
+**After building custom MCP servers, you MUST:**
+
+1. **Fix ES module configuration** in 5 packages (already done in my-mcp-servers repo):
+   - Update tsconfig.json to use `"module": "ESNext"` instead of `"commonjs"`
+   - Add `"type": "module"` to agent-autonomy/package.json if missing
+
+2. **Create Windows-specific mcp.json** in `~/.cursor/`:
+   - Use `node` command (not `npx`) for custom servers
+   - Use full Windows paths: `C:\\Users\\USERNAME\\Projects\\my-mcp-servers\\...`
+   - The repository's `config/mcp.json` is a template - Windows users need custom config
+   - The `setup-windows.ps1` script handles this automatically
+
+**Why:** npx with git URLs doesn't work reliably on Windows with ES module packages. Local builds with full paths are the validated approach.
 
 ---
 
 ## 🔧 Configuration Files
 
-The setup automatically creates symlinks in `~/.cursor/`:
+The setup automatically creates configurations in `~/.cursor/`:
 
 - **mcp.json** - Configures all 8 MCP servers (23 official + 16 custom tools)
 - **workflows.json** - Defines 12 global workflows
@@ -113,9 +127,39 @@ The setup automatically creates symlinks in `~/.cursor/`:
 | shell-minimal | 4 | Custom | Safe shell command execution |
 | puppeteer-minimal | 4 | Custom | Browser automation |
 | sequential-thinking | 4 | Custom | Step-by-step problem solving |
+| everything-minimal | 4 | Custom | Protocol validation |
 | agent-autonomy | 4 | Custom | Workflow automation |
 
-**Note**: `everything-minimal` (4 tools) was removed - use 35 total tools.
+**Total:** 39 tools across 8 servers
+
+### Two MCP Configuration Approaches
+
+**macOS/Linux (npx approach - template in config/mcp.json):**
+```json
+{
+  "github-minimal": {
+    "command": "npx",
+    "args": ["-y", "git+https://github.com/gjoeckel/my-mcp-servers.git#main:packages/github-minimal"]
+  }
+}
+```
+- Uses npx to fetch from git
+- No hardcoded paths
+- May work on macOS/Linux (needs testing)
+
+**Windows (local build approach - validated & working):**
+```json
+{
+  "github-minimal": {
+    "command": "node",
+    "args": ["C:\\Users\\USERNAME\\Projects\\my-mcp-servers\\my-mcp-servers\\packages\\github-minimal\\build\\index.js"]
+  }
+}
+```
+- Uses locally built packages
+- Full Windows paths
+- ✅ Validated and confirmed working on Windows 11
+- The `setup-windows.ps1` script generates this automatically
 
 ---
 
