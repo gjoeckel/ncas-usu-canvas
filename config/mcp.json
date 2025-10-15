@@ -1,0 +1,43 @@
+{
+  "mcpServers": {
+    "github-minimal": {
+      "command": "node",
+      "args": ["${HOME}/Projects/accessilist/my-mcp-servers/packages/github-minimal/build/index.js"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "shell-minimal": {
+      "command": "node",
+      "args": ["${HOME}/Projects/accessilist/my-mcp-servers/packages/shell-minimal/build/index.js"],
+      "env": {
+        "WORKING_DIRECTORY": "${HOME}/Projects/accessilist",
+        "ALLOWED_COMMANDS": "npm,git,node,php,composer,curl,wget,ls,cat,grep,find,chmod,chown,mkdir,rm,cp,mv"
+      }
+    },
+    "puppeteer-minimal": {
+      "command": "node",
+      "args": ["${HOME}/Projects/accessilist/my-mcp-servers/packages/puppeteer-minimal/build/index.js"]
+    },
+    "sequential-thinking-minimal": {
+      "command": "node",
+      "args": ["${HOME}/Projects/accessilist/my-mcp-servers/packages/sequential-thinking-minimal/build/index.js"]
+    },
+    "everything-minimal": {
+      "command": "node",
+      "args": ["${HOME}/Projects/accessilist/my-mcp-servers/packages/everything-minimal/build/index.js"]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "${HOME}"],
+      "env": {
+        "ALLOWED_PATHS": "${HOME}:${HOME}/.cursor:${HOME}/.config",
+        "READ_ONLY": "false"
+      }
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    }
+  }
+}

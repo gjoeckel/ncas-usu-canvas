@@ -1,0 +1,144 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-10-15",
+  "description": "Registry of globally available utility scripts for Cursor IDE",
+  "scripts_directory": "${HOME}/.local/bin/cursor-tools",
+  "scripts": {
+    "session-start.sh": {
+      "description": "Load AI session context and initialize environment",
+      "source": "${HOME}/Projects/accessilist/scripts/session/session-start.sh",
+      "type": "symlink",
+      "category": "session-management",
+      "global_workflow": "ai-start",
+      "dependencies": ["~/.ai-changelogs/"]
+    },
+    "session-end.sh": {
+      "description": "Save session context and generate changelog",
+      "source": "${HOME}/Projects/accessilist/scripts/session/session-end.sh",
+      "type": "symlink",
+      "category": "session-management",
+      "global_workflow": "ai-end",
+      "dependencies": ["~/.ai-changelogs/"]
+    },
+    "session-update.sh": {
+      "description": "Record mid-session progress",
+      "source": "${HOME}/Projects/accessilist/scripts/session/session-update.sh",
+      "type": "symlink",
+      "category": "session-management",
+      "global_workflow": "ai-update",
+      "dependencies": ["~/.ai-changelogs/"]
+    },
+    "compress-context.sh": {
+      "description": "Compress session context into intelligent summary",
+      "source": "${HOME}/Projects/accessilist/scripts/utils/compress-context.sh",
+      "type": "symlink",
+      "category": "session-management",
+      "global_workflow": "ai-compress",
+      "dependencies": ["~/.ai-changelogs/"]
+    },
+    "check-mcp-health.sh": {
+      "description": "Check MCP server health and status",
+      "source": "${HOME}/Projects/accessilist/scripts/check-mcp-health.sh",
+      "type": "symlink",
+      "category": "mcp-management",
+      "global_workflow": "mcp-health",
+      "dependencies": ["~/.cursor/mcp.json"]
+    },
+    "check-mcp-tool-count.sh": {
+      "description": "Count and verify MCP tools available",
+      "source": "${HOME}/Projects/accessilist/scripts/check-mcp-tool-count.sh",
+      "type": "symlink",
+      "category": "mcp-management",
+      "global_workflow": null,
+      "dependencies": ["~/.cursor/mcp.json"]
+    },
+    "start-mcp-servers.sh": {
+      "description": "Start all MCP servers (39 tools)",
+      "source": "${HOME}/Projects/accessilist/scripts/start-mcp-servers.sh",
+      "type": "symlink",
+      "category": "mcp-management",
+      "global_workflow": null,
+      "dependencies": ["~/.cursor/mcp.json", "${HOME}/Projects/accessilist/my-mcp-servers/"]
+    },
+    "restart-mcp-servers.sh": {
+      "description": "Restart all MCP servers",
+      "source": "${HOME}/Projects/accessilist/scripts/restart-mcp-servers.sh",
+      "type": "symlink",
+      "category": "mcp-management",
+      "global_workflow": "mcp-restart",
+      "dependencies": ["~/.cursor/mcp.json"]
+    },
+    "setup-cursor-environment.sh": {
+      "description": "Configure Cursor IDE environment",
+      "source": "${HOME}/Projects/accessilist/scripts/setup-cursor-environment.sh",
+      "type": "symlink",
+      "category": "cursor-setup",
+      "global_workflow": null,
+      "dependencies": []
+    },
+    "configure-cursor-autonomy.sh": {
+      "description": "Enable full autonomy mode in Cursor",
+      "source": "${HOME}/Projects/accessilist/scripts/utils/configure-cursor-autonomy.sh",
+      "type": "symlink",
+      "category": "cursor-setup",
+      "global_workflow": null,
+      "dependencies": ["~/.cursor/settings.json"]
+    }
+  },
+  "categories": {
+    "session-management": {
+      "description": "AI session context management and changelog generation",
+      "scripts": ["session-start.sh", "session-end.sh", "session-update.sh", "compress-context.sh"]
+    },
+    "mcp-management": {
+      "description": "MCP server health, startup, and monitoring",
+      "scripts": ["check-mcp-health.sh", "check-mcp-tool-count.sh", "start-mcp-servers.sh", "restart-mcp-servers.sh"]
+    },
+    "cursor-setup": {
+      "description": "Cursor IDE configuration and autonomy setup",
+      "scripts": ["setup-cursor-environment.sh", "configure-cursor-autonomy.sh"]
+    }
+  },
+  "global_workflows": {
+    "ai-start": "session-start.sh",
+    "ai-end": "session-end.sh",
+    "ai-update": "session-update.sh",
+    "ai-repeat": "session-start.sh",
+    "ai-clean": "built-in-commands",
+    "ai-compress": "compress-context.sh",
+    "mcp-health": "check-mcp-health.sh",
+    "mcp-restart": "restart-mcp-servers.sh",
+    "ai-local-commit": "git-local-commit.sh",
+    "ai-local-merge": "git-local-merge.sh"
+  },
+  "usage": {
+    "via_workflow": "Type workflow name in Cursor chat (e.g., 'ai-start')",
+    "via_terminal": "Run script directly from terminal (e.g., 'session-start.sh')",
+    "via_path": "Scripts are in PATH, accessible from any directory"
+  },
+  "maintenance": {
+    "adding_script": [
+      "1. Create script in source project",
+      "2. Symlink to ~/.local/bin/cursor-tools/",
+      "3. Add entry to this registry",
+      "4. Optionally add workflow to ~/.cursor/workflows.json"
+    ],
+    "removing_script": [
+      "1. Remove symlink from ~/.local/bin/cursor-tools/",
+      "2. Remove entry from this registry",
+      "3. Remove workflow from ~/.cursor/workflows.json (if exists)"
+    ],
+    "updating_script": [
+      "1. Update source script in project",
+      "2. Symlink automatically reflects changes",
+      "3. Update description in this registry if needed"
+    ]
+  },
+  "statistics": {
+    "total_scripts": 10,
+    "symlinks": 10,
+    "categories": 3,
+    "global_workflows_using_scripts": 7,
+    "mcp_tools_available": 39
+  }
+}

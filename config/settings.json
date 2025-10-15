@@ -1,0 +1,12 @@
+{
+  "YOLO": true,
+  "mcp.enabled": true,
+  "mcp.autoStart": true,
+  "cursor.ai.enabled": true,
+  "cursor.ai.autoExecute": true,
+  "cursor.ai.confirmationLevel": "none",
+  "cursor.ai.terminalAccess": true,
+  "cursor.ai.fileSystemAccess": true,
+  "cursor.ai.shellAccess": true
+}
+
