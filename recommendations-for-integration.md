@@ -154,15 +154,27 @@ The repository's `config/mcp.json` contains a **template/ideal approach**, but t
 
 **Purpose:**
 - Bash setup script for Windows (via Git Bash)
-- Alternative to setup-windows.ps1
+- **PRIMARY setup method** for Windows
 
-**Question:** Do we need both .ps1 AND .sh for Windows?
+**Status:** ✅ **KEEP - Preferred for AI Agents**
 
 **Analysis:**
-- setup-windows.ps1: Native PowerShell, better Windows integration
-- setup-windows.sh: Runs in Git Bash, more familiar to Unix users
+- setup-windows.ps1: PowerShell native, full-featured
+- setup-windows.sh: Git Bash, consistent cross-platform experience
 
-**Recommendation:** ⚠️ **Keep ONE** - setup-windows.ps1 preferred (more native)
+**Recommendation:** ✅ **Keep BOTH**
+- **Default for AI agents:** setup-windows.sh (via Git Bash)
+- **Alternative:** setup-windows.ps1 (if PowerShell preferred by user)
+
+**Why Git Bash is default:**
+- Well-documented Cursor-PowerShell-Windows integration issues
+- Workflow execution failures in PowerShell
+- Script compatibility problems
+- Git Bash provides consistent bash experience across all platforms
+
+**When to use each:**
+- **setup-windows.sh** - AI agent installations, automated setups (default)
+- **setup-windows.ps1** - Manual installations, Windows-native preference
 
 ---
 

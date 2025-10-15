@@ -26,6 +26,19 @@ This repository provides a complete, portable Cursor IDE setup with 39 MCP tools
 ### Windows Additional Requirements
 - **Git for Windows** (includes Git Bash) - ([Download](https://git-scm.com/download/win))
 
+### ⚠️ Windows Installation Note: PowerShell vs Git Bash
+
+**For AI Agent Installations (Default):**
+
+The default process is to **use PowerShell ONLY to install Git for Windows**, then **switch to Git Bash** for all subsequent operations. This is the recommended approach due to well-documented issues with Cursor-PowerShell-Windows integration that can cause workflow execution failures and script compatibility problems.
+
+**Process:**
+1. Use PowerShell (or browser) to install Git for Windows
+2. Open Git Bash for all cursor-global setup and operations
+3. Use `setup-windows.ps1` only if PowerShell is specifically required
+
+**Why:** Git Bash provides consistent bash script execution that matches the macOS/Linux experience, avoiding PowerShell-specific issues with Cursor workflows.
+
 ---
 
 ## 🚀 Quick Setup
@@ -55,14 +68,48 @@ npm run install-all
 # Done! ✅
 ```
 
-### Windows 11
+### Windows 11 (Git Bash - Recommended for AI Agents)
 
-```powershell
+**Recommended approach:** Use Git Bash for consistent cross-platform behavior
+
+```bash
+# Open Git Bash (NOT PowerShell)
+
 # 1. Clone repository
 git clone https://github.com/gjoeckel/cursor-global.git
 cd cursor-global
 
-# 2. Run Windows setup
+# 2. Run bash setup for Windows
+./setup-windows.sh
+
+# 3. Build custom MCP servers (REQUIRED)
+cd /c/Users/YOUR_USERNAME/Projects
+git clone https://github.com/gjoeckel/my-mcp-servers.git
+cd my-mcp-servers/my-mcp-servers
+npm run install-all
+
+# Additional packages (if needed)
+cd packages/sequential-thinking-minimal && npm install
+cd ../everything-minimal && npm install
+cd ../agent-autonomy && npm install
+
+# 4. Restart Cursor IDE
+
+# Done! ✅
+```
+
+### Windows 11 (PowerShell - Alternative)
+
+**Use only if Git Bash is not available:**
+
+```powershell
+# Open PowerShell
+
+# 1. Clone repository
+git clone https://github.com/gjoeckel/cursor-global.git
+cd cursor-global
+
+# 2. Run PowerShell setup
 .\setup-windows.ps1
 
 # 3. Build custom MCP servers (REQUIRED)
@@ -72,9 +119,9 @@ cd my-mcp-servers\my-mcp-servers
 npm run install-all
 
 # Additional packages (if needed)
-cd packages\sequential-thinking-minimal && npm install
-cd ..\everything-minimal && npm install
-cd ..\agent-autonomy && npm install
+cd packages\sequential-thinking-minimal; npm install
+cd ..\everything-minimal; npm install
+cd ..\agent-autonomy; npm install
 
 # 4. Restart Cursor IDE
 
