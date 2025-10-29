@@ -109,5 +109,16 @@
     "auto_approve": true,
     "timeout": 10000,
     "on_error": "continue"
+  },
+  "yolo-full": {
+    "description": "Stage, commit, and push all changes to current branch",
+    "commands": [
+      "git add -A",
+      "git commit -m \"Automated commit: $(date +%Y-%m-%d-%H%M%S)\"",
+      "git push"
+    ],
+    "auto_approve": true,
+    "timeout": 30000,
+    "on_error": "continue"
   }
 }

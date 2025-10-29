@@ -9,11 +9,33 @@ This repository provides a complete, portable Cursor IDE setup with 39 MCP tools
 ## 🎯 What You Get
 
 - **39 MCP Tools** across 8 servers (filesystem, memory, GitHub, shell, browser automation, and more)
-- **12 Global Workflows** (ai-start, ai-end, ai-local-commit, mcp-health, etc.)
+- **12 Global Workflows** (ai-start, ai-end, ai-local-commit, mcp-health, yolo-full, etc.)
 - **Automated Session Management** with context preservation
 - **Smart Git Workflows** with conflict prevention and auto-changelog
 - **Fully Portable** - place anywhere on your machine
 - **Cross-platform** - Works on macOS, Linux, and Windows
+
+**Project Structure:**
+```
+~/cursor-global/
+├── config/                 # Cursor IDE configuration files
+│   ├── workflows.json     # Global workflows (ai-*, mcp-*, yolo-full)
+│   ├── mcp.json          # MCP server configuration
+│   ├── settings.json     # Cursor IDE settings
+│   └── global-scripts.json # Script registry
+├── scripts/               # Automation scripts
+│   ├── session-*.sh      # AI session management
+│   ├── git-*.sh          # Git automation
+│   ├── *-mcp-*.sh        # MCP server management
+│   ├── load-github-token.* # Token management
+│   └── *.sh              # Other utilities
+├── secrets/               # API tokens and credentials (gitignored)
+│   ├── github-token.txt  # GitHub Personal Access Token
+│   └── README.md         # Security documentation
+├── changelogs/            # AI session summaries and context
+├── projects/              # Project-specific files and extensions
+└── README.md              # This file
+```
 
 ---
 
@@ -177,7 +199,7 @@ The setup automatically creates configurations in `~/.cursor/`:
 | everything-minimal | 4 | Custom | Protocol validation |
 | agent-autonomy | 4 | Custom | Workflow automation |
 
-**Total:** 39 tools across 8 servers
+**Total:** 12 global workflows (including yolo-full)
 
 ### Two MCP Configuration Approaches
 

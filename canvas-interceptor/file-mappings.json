@@ -1,0 +1,14 @@
+{
+  "mappings": [
+    {
+      "url": "https://instructure-uploads.s3.amazonaws.com/account_43980000000000001/attachments/1206448/ncas1.css",
+      "localPath": "../projects/NCAS/NCAS1/ncas2.css",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://instructure-uploads.s3.amazonaws.com/account_43980000000000001/attachments/1206447/ncas1.js",
+      "localPath": "../projects/NCAS/NCAS1/ncas2.js",
+      "contentType": "application/javascript"
+    }
+  ]
+}

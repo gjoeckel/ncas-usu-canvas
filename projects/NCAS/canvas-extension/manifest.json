@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "Canvas Dev Interceptor",
+  "version": "1.0.8",
+  "description": "Intercepts Canvas LMS files and serves local versions",
+  "permissions": [
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "declarativeNetRequestFeedback",
+    "scripting",
+    "webRequest",
+    "tabs",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://instructure-uploads.s3.amazonaws.com/*",
+    "*://usucourses.instructure.com/*",
+    "http://localhost:3000/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Canvas Dev Interceptor",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "content_scripts": [{
+    "matches": ["*://usucourses.instructure.com/*"],
+    "js": ["direct-injection.js"],
+    "run_at": "document_start",
+    "all_frames": false
+  }],
+  "declarative_net_request": {
+    "rule_resources": [{
+      "id": "ruleset_1",
+      "enabled": true,
+      "path": "rules.json"
+    }]
+  }
+}

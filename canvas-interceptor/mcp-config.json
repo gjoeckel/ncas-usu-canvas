@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "canvas-interceptor": {
+      "command": "node",
+      "args": ["server.js"],
+      "env": {
+        "PORT": "3000"
+      }
+    }
+  }
+}

@@ -1,0 +1,165 @@
+CANVAS INTERCEPTOR - TROUBLESHOOTING GUIDE
+==========================================
+
+PROBLEM: Extension not consistently intercepting files
+
+ROOT CAUSES & SOLUTIONS:
+
+1. CACHE ISSUES (Most Common)
+   Problem: Browser/Canvas caching old files even after interception starts
+   Solutions:
+   - Hard reload Canvas: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)
+   - Open DevTools (F12) > Network tab > Check "Disable cache"
+   - Use extension popup > "Clear Canvas Cache" button
+   - Clear all Canvas cookies and cache manually
+
+2. URL MISMATCH
+   Problem: Extension rules don't match actual Canvas URLs
+   Solutions:
+   - Open DevTools Network tab while loading Canvas page
+   - Find the actual CSS/JS URLs being loaded
+   - Update rules.json to match EXACT URLs including attachment IDs
+   - Check that attachment numbers match between:
+     * file-mappings.json
+     * rules.json
+     * Your Canvas page source
+
+3. RACE CONDITIONS
+   Problem: Requests fire before extension rules are active
+   Solutions:
+   - Reload extension after installing/updating
+   - Keep DevTools open (helps with timing)
+   - Add cache-busting query parameter in rules.json
+
+4. CORS ISSUES
+   Problem: Browser blocks cross-origin requests
+   Solutions:
+   - Verify server.js is running on port 3000
+   - Check server logs for request attempts
+   - Test direct URL: http://localhost:3000/?url=https://instructure-uploads.s3.amazonaws.com/...
+   - Ensure CORS headers are properly set (already done in your server.js)
+
+5. RESOURCE TYPE MISMATCH
+   Problem: Canvas loads files with unexpected resource types
+   Solutions:
+   - Added multiple resource types in rules.json:
+     * "stylesheet", "xmlhttprequest", "other" for CSS
+     * "script", "xmlhttprequest", "other" for JS
+   - This catches files loaded via different methods
+
+STEP-BY-STEP SETUP:
+
+1. Start the Node Server:
+   cd /path/to/your/canvas-interceptor-mcp
+   npm install
+   npm start
+   
+   Verify it's running:
+   curl http://localhost:3000/health
+
+2. Install Chrome Extension:
+   - Open Chrome > Extensions (chrome://extensions/)
+   - Enable "Developer mode"
+   - Click "Load unpacked"
+   - Select the folder containing manifest.json
+   - Note the extension ID
+
+3. Verify Extension Rules:
+   - Click extension icon > Should show "Server running"
+   - Click "View Mappings" > Should open and show your mappings
+   - Check Chrome > Extensions > Canvas Interceptor > Details
+   - Ensure "Allow access to file URLs" is OFF (not needed)
+   - Ensure "Site access" is "On all sites" or specific to Canvas
+
+4. Test Interception:
+   - Open DevTools (F12)
+   - Go to Network tab
+   - Check "Disable cache"
+   - Load Canvas page
+   - Filter by ".css" and ".js"
+   - Look for your files
+   - Check if they show "(from disk cache)" or load from localhost:3000
+   - If they're coming from S3, something is wrong
+
+5. Debug Extension:
+   - Open chrome://extensions/
+   - Find Canvas Interceptor
+   - Click "service worker" (opens console)
+   - Check for "[Canvas Interceptor] Rule matched" messages
+   - If no messages appear, rules aren't matching
+
+6. Debug Server:
+   - Watch server console for "[INTERCEPTED]" messages
+   - If no messages appear, requests aren't reaching server
+   - Test direct: http://localhost:3000/?url=YOUR_FULL_CANVAS_URL
+
+VERIFICATION CHECKLIST:
+
+□ Node server running on port 3000
+□ Local files exist at paths in file-mappings.json
+□ Extension installed and enabled
+□ Extension shows "Server running" in popup
+□ Canvas page loaded with DevTools Network tab open
+□ Cache disabled in Network tab
+□ Hard reload performed (Ctrl+Shift+R)
+□ Server console shows "[INTERCEPTED]" messages
+□ Network tab shows requests going to localhost:3000
+
+ALTERNATIVE METHOD: Chrome DevTools Overrides
+
+If extension still doesn't work, use DevTools directly:
+
+1. Open DevTools (F12) on Canvas page
+2. Go to Sources tab
+3. Click "Overrides" in left sidebar (may be under >> menu)
+4. Click "+ Select folder for overrides"
+5. Choose a folder on your computer
+6. Grant permission when prompted
+7. In Network tab, find your CSS/JS file
+8. Right-click > "Override content"
+9. Edit the file directly in DevTools
+10. Changes persist across page loads
+
+This method is 100% reliable but requires DevTools to be open.
+
+TESTING YOUR SETUP:
+
+Test 1: Server Health
+curl http://localhost:3000/health
+Expected: {"status":"ok",...}
+
+Test 2: Direct File Fetch
+curl "http://localhost:3000/?url=https://instructure-uploads.s3.amazonaws.com/account_43980000000000001/attachments/1206448/ncas1.css"
+Expected: Your local CSS content
+
+Test 3: Extension Status
+Click extension icon > Should show green "Server running"
+
+Test 4: Live Interception
+1. Open Canvas with DevTools Network tab
+2. Disable cache
+3. Hard reload (Ctrl+Shift+R)
+4. Filter Network by "ncas"
+5. Click on ncas1.css or ncas1.js
+6. Check Headers tab
+7. Look for "X-Intercepted-By: Canvas-MCP-Interceptor"
+
+COMMON MISTAKES:
+
+❌ Forgetting to start Node server
+❌ Using old attachment IDs in rules
+❌ Not disabling cache in DevTools
+❌ Not hard reloading after changes
+❌ Local file paths incorrect in file-mappings.json
+❌ Extension not reloaded after updating files
+
+BEST PRACTICES:
+
+✓ Keep DevTools open with cache disabled while developing
+✓ Use hard reload (Ctrl+Shift+R) after every change
+✓ Watch both server and extension console for errors
+✓ Test server endpoints directly before testing through Canvas
+✓ Use file watcher feature - it auto-detects local file changes
+✓ Add console.log() in your CSS/JS files to verify they're loading
+
+If nothing works, use the DevTools Overrides method - it's bulletproof!
