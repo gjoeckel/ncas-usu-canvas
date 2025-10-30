@@ -129,6 +129,16 @@ body:not(.ncademi-excluded) {
     margin-top: 0 !important; /* V1: Remove top margin since it's now in footer */
   }
 
+  /* Ensure public-license block matches the full row width like link rows */
+  .public-license {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    display: block !important;
+    box-sizing: border-box;
+  }
+
   #ncas-footer.footer-content .public-license-text {
     color: #000000 !important;
   }

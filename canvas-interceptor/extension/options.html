@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Canvas Dev Interceptor Options</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 16px; }
+      label { display: block; margin-top: 12px; }
+      input[type=text] { width: 100%; padding: 6px; }
+      input[readonly] { border: none; outline: none; background: transparent; padding-left: 0; }
+      .row { margin-top: 10px; }
+      button { padding: 6px 10px; }
+    </style>
+  </head>
+  <body>
+    <h1>Canvas Dev Interceptor - Options</h1>
+    <p>Customize target URLs and redirect paths. Defaults match file-mappings.json and local server.</p>
+    <h2>Targets (Remote S3 URLs)</h2>
+    <div>
+      <label>Current CSS Target URL</label>
+      <input id="currentCss" type="text" readonly />
+    </div>
+    <div>
+      <label>New CSS Target URL</label>
+      <input id="cssUrl" type="text" placeholder="Leave blank to keep current" />
+    </div>
+    <div>
+      <label>New Local CSS Path</label>
+      <input id="cssLocal" type="text" placeholder="e.g. ../projects/NCAS/NCAS1/ncas4.css" />
+      <button id="browseCssLocal">Browse…</button>
+    </div>
+    <div>
+      <label>Current Local CSS Path</label>
+      <input id="currentLocalCss" type="text" readonly />
+    </div>
+    <div style="margin-top:10px"></div>
+    <div>
+      <label>Current JS Target URL</label>
+      <input id="currentJs" type="text" readonly />
+    </div>
+    <div>
+      <label>New JS Target URL</label>
+      <input id="jsUrl" type="text" placeholder="Leave blank to keep current" />
+    </div>
+    <div>
+      <label>New Local JS Path</label>
+      <input id="jsLocal" type="text" placeholder="e.g. ../projects/NCAS/NCAS1/ncas4.js" />
+      <button id="browseJsLocal">Browse…</button>
+    </div>
+    <div>
+      <label>Current Local JS Path</label>
+      <input id="currentLocalJs" type="text" readonly />
+    </div>
+    <div class="row">
+      <button id="loadDefaults">Load Target Defaults</button>
+      <button id="save">Save Targets</button>
+      <button id="reset">Restore Target Defaults</button>
+      <button id="saveLocal">Save Local Paths</button>
+    </div>
+
+    <hr />
+    <h2>Redirects</h2>
+    <div>
+      <label>Current CSS Redirect Path</label>
+      <input id="currentCssRedirect" type="text" readonly />
+    </div>
+    <div>
+      <label>New CSS Redirect Path</label>
+      <input id="cssRedirect" type="text" placeholder="e.g. http://localhost:3000/test-url?url={{URL}}" />
+    </div>
+    <div style="margin-top:10px"></div>
+    <div>
+      <label>Current JS Redirect Path</label>
+      <input id="currentJsRedirect" type="text" readonly />
+    </div>
+    <div>
+      <label>New JS Redirect Path</label>
+      <input id="jsRedirect" type="text" placeholder="e.g. http://localhost:3000/test-url?url={{URL}}" />
+    </div>
+    <div class="row">
+      <button id="loadRedirectDefaults">Load Redirect Defaults</button>
+      <button id="saveRedirects">Save Redirects</button>
+      <button id="resetRedirects">Restore Redirect Defaults</button>
+    </div>
+
+    <div id="fbModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99999;">
+      <div style="background:#fff; width:80%; height:70%; margin:5% auto; padding:12px; display:flex; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong>Locate File</strong>
+          <button id="fbClose">✕</button>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; margin:8px 0;">
+          <label>Root</label>
+          <select id="fbRoot"></select>
+          <div id="fbPath" style="flex:1; font-family:monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
+        </div>
+        <div id="fbList" style="flex:1; overflow:auto; border:1px solid #ddd; padding:8px;"></div>
+        <div style="margin-top:8px; display:flex; gap:8px; justify-content:flex-end;">
+          <button id="fbChoose">Choose</button>
+          <button id="fbCancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <script src="options.js"></script>
+  </body>
+  </html>
+
+

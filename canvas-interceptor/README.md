@@ -18,48 +18,27 @@ Local development server that intercepts Canvas LMS CSS/JS files and serves loca
 
 ### Method 1: Browser Extension (Recommended)
 
-Create a simple browser extension to redirect requests:
+Use the included MV3 extension in `canvas-interceptor/extension`.
 
-manifest.json:
-{
-  "manifest_version": 3,
-  "name": "Canvas Dev Interceptor",
-  "version": "1.0",
-  "permissions": ["declarativeNetRequest"],
-  "host_permissions": ["*://instructure-uploads.s3.amazonaws.com/*"],
-  "declarativeNetRequest": {
-    "rules": [
-      {
-        "id": 1,
-        "priority": 1,
-        "action": {
-          "type": "redirect",
-          "redirect": {
-            "url": "http://localhost:3000/?url=https://instructure-uploads.s3.amazonaws.com/account_43980000000000001/attachments/1205817/ncas1-reboot-14.css"
-          }
-        },
-        "condition": {
-          "urlFilter": "*instructure-uploads.s3.amazonaws.com/account_43980000000000001/attachments/1205817/ncas1-reboot-14.css*",
-          "resourceTypes": ["stylesheet"]
-        }
-      },
-      {
-        "id": 2,
-        "priority": 1,
-        "action": {
-          "type": "redirect",
-          "redirect": {
-            "url": "http://localhost:3000/?url=https://instructure-uploads.s3.amazonaws.com/account_43980000000000001/attachments/1205816/ncas1-reboot-14.js"
-          }
-        },
-        "condition": {
-          "urlFilter": "*instructure-uploads.s3.amazonaws.com/account_43980000000000001/attachments/1205816/ncas1-reboot-14.js*",
-          "resourceTypes": ["script"]
-        }
-      }
-    ]
-  }
-}
+Steps:
+1) Load extension: Chrome → chrome://extensions → Enable Developer mode → Load unpacked → select `canvas-interceptor/extension`.
+2) Click the extension icon (popup) to:
+   - Enable/Disable Redirects (dynamic rules to localhost)
+   - Start Server (requires Native Messaging host; otherwise shows fallback command)
+   - Health (pings http://localhost:3000/health)
+   - Clear Cache (chrome.browsingData)
+   - Toggle Overlay (content script panel on Canvas pages)
+
+Native Messaging (optional: Start server button)
+---------------------------------------------
+Windows setup:
+- Update `canvas-interceptor/native-messaging/host.json` allowed_origins with your installed extension ID.
+- Register host per Chrome docs (Registry). Example (PowerShell as Admin):
+  New-Item -Path "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.canvas.dev.interceptor" -Force | Out-Null
+  New-ItemProperty -Path "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.canvas.dev.interceptor" -Name "(default)" -Value "C:\\Users\\A00288946\\cursor-global\\canvas-interceptor\\native-messaging\\host.json" -PropertyType String -Force | Out-Null
+- The stub `start-server-helper.cmd` starts the server in Git Bash.
+
+If native messaging is not configured, the popup shows the command to run in Git Bash.
 
 ### Method 2: Chrome DevTools Network Override
 
@@ -89,6 +68,13 @@ Inject a service worker into the Canvas page that intercepts fetch requests.
 
 5. Open Canvas page:
    https://usucourses.instructure.com/courses/2803
+
+## Extension Targets
+
+- Dynamic redirects target:
+  - CSS: https://instructure-uploads.s3.amazonaws.com/account_43980000000000001/attachments/1207657/ncas2.css → ../projects/NCAS/NCAS1/ncas3.css
+  - JS:  https://instructure-uploads.s3.amazonaws.com/account_43980000000000001/attachments/1207656/ncas2.js  → ../projects/NCAS/NCAS1/ncas3.js
+
 
 ## File Watching
 

@@ -1,0 +1,48 @@
+/*
+  Canvas baseline CSS context for page content
+  Source reference: https://usucourses.instructure.com/courses/2836/pages/home
+
+  Baseline styles are provided by:
+  - Canvas brandable bundles:
+    • common-d80187c278.css
+    • wiki_page-64d84d7ffb.css
+  - Institution/global CSS:
+    • catalog_canvas_global.css
+    • inst_theme_overrides.css
+  - DesignPLUS/CIDI tools:
+    • content.css
+    • editor.css
+    • themes.css
+
+  Fonts:
+  - Lato (various weights) preloaded via CloudFront
+
+  Key class semantics (used by page content):
+  - .custom-container: section wrapper providing grid/spacing
+  - .top-row: 3 featured tiles using .custom-link.large with 100% width/height images
+  - .course-modules: container for module tiles (3 rows × 3 items)
+  - .custom-row: horizontal grouping of three .link-container items
+  - .link-container: centers/blocks each tile (image + label)
+  - .custom-link.large: full-bleed tile links (image fills tile, text label below)
+  - .custom-link.small: small icon tiles (60×60 img + label)
+  - .link-text: label accompanying each tile
+
+  Accessibility patterns observed:
+  - Decorative images use role="presentation" and empty alt where appropriate
+  - Icon images for modules use alt with short descriptive text
+  - Images commonly include loading="lazy"
+
+  Do NOT override these globally in ncas2.css; prefer additive, scoped refinements.
+*/
+
+/* Placeholder selectors (no-op): document for reference only */
+.custom-container {}
+.top-row {}
+.course-modules {}
+.custom-row {}
+.link-container {}
+.custom-link.large {}
+.custom-link.small {}
+.link-text {}
+
+

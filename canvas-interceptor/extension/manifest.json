@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Canvas Dev Interceptor",
+  "version": "2.1.0",
+  "description": "Redirect Canvas CSS/JS to local dev server; tools to start server, clear cache, and overlay controls.",
+  "permissions": [
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "storage",
+    "browsingData"
+  ],
+  "host_permissions": [
+    "*://instructure-uploads.s3.amazonaws.com/*",
+    "http://localhost:3000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Canvas Dev Interceptor",
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": ["*://*.instructure.com/*", "*://*.instructure.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
+
+

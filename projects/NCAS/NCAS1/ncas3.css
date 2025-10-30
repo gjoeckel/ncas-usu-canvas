@@ -1,32 +1,7 @@
 /*
- * NCAS2 v2 CSS - Custom link hover/focus improvements
- * Updated: 2025-01-29
- * Course: NCAS1 - Fixed custom link states
- * 
- * VERSION NOTES:
- * - ncas1.css/js (v1) = Production files on Canvas/AWS
- * - ncas2.css/js (v2) = Local override files for development
- * - This file (ncas2.css) serves when intercepting Canvas requests
- * 
- * Changes:
- * 1. Added support for <header>, <main>, <footer> structure
- * 2. Preserved ALL existing visual styling from v8
- * 3. Maintained backward compatibility
- * 4. Enhanced semantic structure without visual changes
- * 5. FIXED: Enhanced right-side column hiding with higher specificity
- * 6. V11 FIX: Properly expand main content to full width
- * 7. V12 FIX: Footer positioning and background color
- * 8. V13 FIX: Header height 150px, h1 text change, orange border 6px
- * 9. V1 FIX: Footer no visible border, content width match main, public-license moved
- * 10. V1 FIX: Exclude accounts pages from NCADEMI enhancements
- * 11. V2 FIX: Removed background-color change on custom link hover/focus, added !important to base
- * 12. V2 FIX: Made only .small and .large links focusable
- * 
- * CONSOLIDATION NOTES (2025-10-29):
- * - Removed duplicate/competing styles where later, more specific rules exist
- * - Normalized navigation container: layout in header section, visuals in nav section
- * - Eliminated duplicate ".ncademi-header #ncademi-nav a.active" block (kept richer variant)
- * - Kept a single authoritative definition for #ncas-main sizing/spacing
+ * NCAS3 v3 CSS - Custom link hover/focus improvements
+ * Updated: 2025-10-30
+ * Scope: Maintain exact visuals with minimal JS; CSS drives layout and states
  */
 
 /* V1: Exclude accounts pages and pages/home from NCADEMI enhancements */
@@ -127,6 +102,16 @@ body:not(.ncademi-excluded) {
     color: #000000 !important;
     background-color: transparent !important;
     margin-top: 0 !important; /* V1: Remove top margin since it's now in footer */
+  }
+
+  /* Ensure public-license block matches the full row width like link rows */
+  .public-license {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    display: block !important;
+    box-sizing: border-box;
   }
 
   #ncas-footer.footer-content .public-license-text {
