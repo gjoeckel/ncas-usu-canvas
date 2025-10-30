@@ -18,7 +18,20 @@ Local development server that intercepts Canvas LMS CSS/JS files and serves loca
 
 ### Method 1: Browser Extension (Recommended)
 
-Use the included MV3 extension in `canvas-interceptor/extension`.
+Use one of the included MV3 extensions:
+
+- Full: `canvas-interceptor/extension` (UI, options, health, cache)
+- Minimal: `canvas-interceptor/min-extension` (hardcoded S3 targets → localhost redirects; single toggle)
+Minimal extension
+-----------------
+1) Load unpacked → `canvas-interceptor/min-extension`
+2) Click popup: Toggle Redirects → On
+3) Hard refresh Canvas
+
+Hardcoded targets in `min-extension/background.js`:
+- CSS: https://instructure-uploads.s3.amazonaws.com/account_43980000000000001/attachments/1207657/ncas2.css
+- JS:  https://instructure-uploads.s3.amazonaws.com/account_43980000000000001/attachments/1207656/ncas2.js
+Redirect template: http://localhost:3000/test-url?url={{URL}}
 
 Steps:
 1) Load extension: Chrome → chrome://extensions → Enable Developer mode → Load unpacked → select `canvas-interceptor/extension`.
