@@ -1,0 +1,53 @@
+{
+    "cursor.ai.yoloMode": true,
+    "cursor.composer.yoloMode": true,
+    "cursor.agent.yoloMode": true,
+    "cursor.general.enableYOLOMode": true,
+    "agentic.yolo.enabled": true,
+    "cursor.ai.enabled": true,
+    "cursor.ai.autoComplete": true,
+    "cursor.ai.chat.enabled": true,
+    "cursor.ai.codeGeneration": true,
+    "cursor.ai.terminalAccess": true,
+    "cursor.ai.fileSystemAccess": true,
+    "cursor.ai.shellAccess": true,
+    "cursor.ai.autoExecute": true,
+    "cursor.ai.confirmationLevel": "none",
+    "cursor.ai.autoApprove": true,
+    "cursor.ai.trustedMode": true,
+    "cursor.ai.fullAccess": true,
+    "mcp.enabled": true,
+    "mcp.autoStart": true,
+    "cursor.composer.shouldAllowCustomModes": true,
+    "terminal.integrated.defaultProfile.windows": "Git Bash",
+    "terminal.integrated.profiles.windows": {
+        "Git Bash": {
+            "path": "C:\\Users\\A00288946\\AppData\\Local\\Programs\\Git\\bin\\bash.exe",
+            "args": ["--login"],
+            "icon": "terminal-bash"
+        },
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell"
+        }
+    },
+    "terminal.integrated.shell.windows": "C:\\Users\\A00288946\\AppData\\Local\\Programs\\Git\\bin\\bash.exe",
+    "terminal.integrated.shellArgs.windows": ["--login"],
+    "window.commandCenter": true,
+    "cursor.agent_layout_browser_beta_setting": true,
+    "editor.minimap.enabled": true,
+    "explorer.confirmDelete": false,
+    "explorer.confirmDragAndDrop": false,
+    "php.validate.executablePath": "php",
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "diffEditor.maxComputationTime": 0,
+    "[dockercompose]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.autoIndent": "advanced",
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "[github-actions-workflow]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    }
+}

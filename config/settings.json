@@ -7,6 +7,26 @@
   "cursor.ai.confirmationLevel": "none",
   "cursor.ai.terminalAccess": true,
   "cursor.ai.fileSystemAccess": true,
-  "cursor.ai.shellAccess": true
+  "cursor.ai.shellAccess": true,
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "terminal.integrated.profiles.windows": {
+    "Git Bash": {
+      "path": "C:\\Users\\A00288946\\AppData\\Local\\Programs\\Git\\bin\\bash.exe",
+      "args": ["--login"],
+      "icon": "terminal-bash"
+    },
+    "PowerShell": {
+      "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "args": ["-NoLogo"],
+      "icon": "terminal-powershell"
+    },
+    "Command Prompt": {
+      "path": "C:\\Windows\\System32\\cmd.exe",
+      "args": [],
+      "icon": "terminal-cmd"
+    }
+  },
+  "terminal.integrated.shell.windows": "C:\\Users\\A00288946\\AppData\\Local\\Programs\\Git\\bin\\bash.exe",
+  "terminal.integrated.shellArgs.windows": ["--login"]
 }
 

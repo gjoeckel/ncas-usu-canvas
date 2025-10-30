@@ -67,6 +67,7 @@ Automated changelog updates and git operations.
 |----------|-------------|--------|
 | **ai-local-commit** | Update changelog, commit all changes to current branch | `git-local-commit.sh` |
 | **ai-local-merge** | Merge current branch to main, delete source branch | `git-local-merge.sh` |
+| **yolo-full** | Verify YOLO setup, then stage, commit, and push all changes | `verify-yolo-setup.bat` + git commands |
 
 **Usage in Cursor:** Type workflow name in chat (e.g., `mcp-health`)
 
@@ -95,9 +96,9 @@ restart-mcp-servers.sh
 |----------|-------|--------|-------|
 | **AI Session Management** | 5 | `ai-*` | Global - all projects |
 | **MCP Server Management** | 2 | `mcp-*` | Global - all projects |
-| **Git Operations** | 2 | `ai-*` | Global - all projects |
+| **Git Operations** | 3 | `ai-*`, `yolo-*` | Global - all projects |
 | **Utility** | 1 | `ai-*` | Global - all projects |
-| **Total Global** | **10** | - | All Cursor projects |
+| **Total Global** | **11** | - | All Cursor projects |
 
 ---
 
@@ -126,6 +127,12 @@ Verifies all 7 MCP servers are running and healthy.
 ai-clean
 ```
 Removes temporary files, logs, and caches.
+
+### **YOLO Full Commit**
+```
+yolo-full
+```
+Verifies YOLO setup (AI Autonomy settings + MCP servers), then stages, commits, and pushes all changes.
 
 ---
 
@@ -231,7 +238,7 @@ Add to `<project>/.cursor/workflows.json`:
 
 ## 🎉 All Workflows Ready
 
-**8 global workflows** available in every Cursor project
+**11 global workflows** available in every Cursor project
 **Scripts in PATH** for terminal access
 **Zero conflicts** with Cursor built-in commands
 **Production-ready** and fully documented

@@ -1,0 +1,85 @@
+{
+  "$schema": "https://aka.ms/terminal-profiles-schema",
+  "defaultProfile": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
+  "profiles": {
+    "defaults": {
+      "fontFace": "Cascadia Code",
+      "fontSize": 12,
+      "fontWeight": "normal",
+      "cursorShape": "bar",
+      "cursorHeight": 1,
+      "snapOnInput": true,
+      "historySize": 9001,
+      "snapOnInput": true,
+      "altGrAliasing": true,
+      "useAcrylic": false,
+      "closeOnExit": "graceful",
+      "colorScheme": "Campbell"
+    },
+    "list": [
+      {
+        "guid": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
+        "name": "Git Bash",
+        "commandline": "C:\\Users\\A00288946\\AppData\\Local\\Programs\\Git\\bin\\bash.exe --login -i",
+        "startingDirectory": "%USERPROFILE%",
+        "icon": "C:\\Users\\A00288946\\AppData\\Local\\Programs\\Git\\mingw64\\share\\git\\git-for-windows.ico",
+        "fontFace": "Cascadia Code",
+        "fontSize": 12,
+        "colorScheme": "Campbell"
+      },
+      {
+        "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
+        "name": "PowerShell",
+        "commandline": "powershell.exe",
+        "startingDirectory": "%USERPROFILE%",
+        "icon": "ms-appx:///ProfileIcons/{574e775e-4f2a-5b96-ac1e-a2962a402336}.png"
+      },
+      {
+        "guid": "{0caa0dad-35be-5f56-a8ff-afceeeaa6101}",
+        "name": "Command Prompt",
+        "commandline": "cmd.exe",
+        "startingDirectory": "%USERPROFILE%",
+        "icon": "ms-appx:///ProfileIcons/{0caa0dad-35be-5f56-a8ff-afceeeaa6101}.png"
+      }
+    ]
+  },
+  "schemes": [
+    {
+      "name": "Campbell",
+      "foreground": "#CCCCCC",
+      "background": "#0C0C0C",
+      "colors": [
+        "#0C0C0C",
+        "#CD3131",
+        "#0DBC79",
+        "#E5E512",
+        "#2472C8",
+        "#BC3FBC",
+        "#11A8CD",
+        "#E5E5E5",
+        "#666666",
+        "#F14C4C",
+        "#23D18B",
+        "#F5F543",
+        "#3B8EEA",
+        "#D670D6",
+        "#29B8DB",
+        "#E5E5E5"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "command": "closeTab",
+      "keys": "ctrl+w"
+    },
+    {
+      "command": "newTab",
+      "keys": "ctrl+t"
+    },
+    {
+      "command": "switchToTab",
+      "keys": "ctrl+tab"
+    }
+  ]
+}
