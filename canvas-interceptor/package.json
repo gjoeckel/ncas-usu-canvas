@@ -1,6 +1,6 @@
 {
   "name": "canvas-interceptor-mcp",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "MCP server to intercept Canvas LMS files and serve local versions",
   "main": "server.js",
   "scripts": {

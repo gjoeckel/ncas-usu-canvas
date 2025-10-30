@@ -4,20 +4,12 @@ const defaults = {
 };
 
 async function loadFromStorage() {
-  const { cssUrl, jsUrl, cssRedirect, jsRedirect } = await chrome.storage.sync.get({
+  const { cssUrl, jsUrl } = await chrome.storage.sync.get({
     cssUrl: defaults.css,
-    jsUrl: defaults.js,
-    cssRedirect: 'http://localhost:3000/test-url?url={{URL}}',
-    jsRedirect: 'http://localhost:3000/test-url?url={{URL}}',
+    jsUrl: defaults.js
   });
   document.getElementById('currentCss').value = cssUrl;
   document.getElementById('currentJs').value = jsUrl;
-  document.getElementById('currentCssRedirect').value = cssRedirect;
-  document.getElementById('currentJsRedirect').value = jsRedirect;
-  document.getElementById('cssUrl').value = '';
-  document.getElementById('jsUrl').value = '';
-  document.getElementById('cssRedirect').value = '';
-  document.getElementById('jsRedirect').value = '';
   await refreshLocalPaths(cssUrl, jsUrl);
 }
 
@@ -25,53 +17,7 @@ function isValidUrl(value) {
   try { new URL(value); return true; } catch { return false; }
 }
 
-async function onSave() {
-  const newCss = document.getElementById('cssUrl').value.trim();
-  const newJs = document.getElementById('jsUrl').value.trim();
-  const newCssRedirect = document.getElementById('cssRedirect').value.trim();
-  const newJsRedirect = document.getElementById('jsRedirect').value.trim();
-  const cssLocal = document.getElementById('cssLocal').value.trim();
-  const jsLocal = document.getElementById('jsLocal').value.trim();
-  const toSave = {};
-  if (newCss) {
-    if (!isValidUrl(newCss)) return alert('Invalid CSS URL');
-    toSave.cssUrl = newCss;
-  }
-  if (newJs) {
-    if (!isValidUrl(newJs)) return alert('Invalid JS URL');
-    toSave.jsUrl = newJs;
-  }
-  if (newCssRedirect) {
-    if (!newCssRedirect.includes('{{URL}}')) return alert('CSS Redirect must include {{URL}} placeholder');
-    toSave.cssRedirect = newCssRedirect;
-  }
-  if (newJsRedirect) {
-    if (!newJsRedirect.includes('{{URL}}')) return alert('JS Redirect must include {{URL}} placeholder');
-    toSave.jsRedirect = newJsRedirect;
-  }
-  if (Object.keys(toSave).length === 0) return alert('Nothing to update');
-  await chrome.storage.sync.set(toSave);
-  // Optionally update server mappings if local paths were provided
-  if (cssLocal || jsLocal || newCss || newJs) {
-    try {
-      const payload = {
-        cssUrl: newCss || undefined,
-        cssLocalPath: cssLocal || undefined,
-        jsUrl: newJs || undefined,
-        jsLocalPath: jsLocal || undefined,
-      };
-      await fetch('http://localhost:3000/admin/mappings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-    } catch (e) {
-      console.warn('Failed to update server mappings', e);
-    }
-  }
-  await loadFromStorage();
-  alert('Saved');
-}
+// No save/update actions – display only
 
 async function refreshLocalPaths(cssUrl, jsUrl) {
   try {
@@ -108,76 +54,6 @@ async function onLoadDefaults() {
 
 document.addEventListener('DOMContentLoaded', () => {
   loadFromStorage();
-  document.getElementById('save').addEventListener('click', onSave);
-  document.getElementById('reset').addEventListener('click', onRestoreDefaults);
-  document.getElementById('loadDefaults').addEventListener('click', onLoadDefaults);
-  document.getElementById('saveLocal').addEventListener('click', onSave);
-  document.getElementById('saveRedirects').addEventListener('click', onSave);
-  document.getElementById('resetRedirects').addEventListener('click', onRestoreDefaults);
-  document.getElementById('loadRedirectDefaults').addEventListener('click', onLoadDefaults);
-  // File browser
-  const fb = {
-    modal: document.getElementById('fbModal'),
-    path: document.getElementById('fbPath'),
-    list: document.getElementById('fbList'),
-    rootSel: document.getElementById('fbRoot'),
-    chooseBtn: document.getElementById('fbChoose'),
-    closeBtn: document.getElementById('fbClose'),
-    cancelBtn: document.getElementById('fbCancel'),
-    target: null,
-    currentPath: null,
-    currentRoot: null,
-  };
-  async function loadRoots() {
-    const res = await fetch('http://localhost:3000/admin/roots');
-    const data = await res.json();
-    fb.rootSel.innerHTML = '';
-    (data.roots || []).forEach(r => {
-      const opt = document.createElement('option');
-      opt.value = r.path; opt.textContent = r.label + ' (' + r.path + ')';
-      fb.rootSel.appendChild(opt);
-    });
-    fb.currentRoot = fb.rootSel.value;
-    fb.rootSel.onchange = () => { fb.currentRoot = fb.rootSel.value; loadDir(fb.currentRoot); };
-  }
-  async function loadDir(p) {
-    const qp = new URLSearchParams();
-    if (fb.currentRoot) qp.set('root', fb.currentRoot);
-    if (p) qp.set('path', p);
-    const res = await fetch('http://localhost:3000/admin/browse' + (qp.toString() ? ('?' + qp.toString()) : ''));
-    const data = await res.json();
-    fb.currentRoot = data.root || fb.currentRoot;
-    fb.currentPath = data.path;
-    fb.path.textContent = data.path;
-    fb.list.innerHTML = '';
-    const up = document.createElement('div');
-    up.textContent = '..';
-    up.style.cursor = 'pointer';
-    up.onclick = () => {
-      const segs = fb.currentPath.split(/\\|\//);
-      if (segs.length <= 1) return;
-      const parent = segs.slice(0, -1).join('/');
-      if (parent && parent.startsWith(fb.currentRoot)) loadDir(parent);
-    };
-    fb.list.appendChild(up);
-    data.entries.forEach(e => {
-      const item = document.createElement('div');
-      item.textContent = (e.type === 'dir' ? '[DIR] ' : '[FILE] ') + e.name;
-      item.style.cursor = 'pointer';
-      item.onclick = () => { if (e.type === 'dir') loadDir(e.fullPath); else fb.path.textContent = e.fullPath; };
-      fb.list.appendChild(item);
-    });
-  }
-  function openBrowser(targetInputId) {
-    fb.target = document.getElementById(targetInputId);
-    fb.modal.style.display = 'block';
-    loadRoots().then(() => loadDir(fb.currentRoot));
-  }
-  fb.chooseBtn.onclick = () => { if (fb.target) fb.target.value = fb.path.textContent; fb.modal.style.display = 'none'; };
-  fb.closeBtn.onclick = () => { fb.modal.style.display = 'none'; };
-  fb.cancelBtn.onclick = () => { fb.modal.style.display = 'none'; };
-  document.getElementById('browseCssLocal').addEventListener('click', () => openBrowser('cssLocal'));
-  document.getElementById('browseJsLocal').addEventListener('click', () => openBrowser('jsLocal'));
 });
 
 

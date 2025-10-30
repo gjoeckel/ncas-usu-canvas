@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Canvas Dev Interceptor",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Redirect Canvas CSS/JS to local dev server; tools to start server, clear cache, and overlay controls.",
   "permissions": [
     "declarativeNetRequest",
