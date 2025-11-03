@@ -106,10 +106,10 @@ body:not(.ncademi-excluded) {
 
   /* Ensure public-license block matches the full row width like link rows */
   .public-license {
-    width: 100% !important;
+    width: 80% !important;
     max-width: none !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
     display: block !important;
     box-sizing: border-box;
   }

@@ -124,3 +124,102 @@ The focus-visible styles need to be updated to match the actual NCADEMI website 
 2. Fix the vertical shift issue by using `outline` instead of `border`
 3. Reduce padding to minimal values (1-2px)
 4. Ensure consistent positioning across all states
+
+---
+
+## Hero Text Box Element
+
+Based on analysis of https://ncademi.org/, here's the HTML structure and CSS for the `div.hero-text-box` element.
+
+### HTML Structure
+
+The `div.hero-text-box` is located within the hero banner section and contains the main welcome heading:
+
+```html
+<section class="hero-banner">
+  <div class="hero-image-container">
+    <img width="1600" height="580" src="..." class="hero-image" alt="" ...>
+    <div class="hero-text-box">
+      <h1>Welcome to the National Center on Accessible Digital Educational Materials &amp; Instruction</h1>
+    </div>
+  </div>
+</section>
+```
+
+### CSS Styles
+
+The CSS for `.hero-text-box` and its child `h1` element from `ncademi-home.css`:
+
+```css
+/* Base styles */
+.hero-text-box {
+  position: absolute;
+  top: 268px;
+  right: 0.5px;
+  max-width: 650px;
+  background-color: #0c2336;
+  color: #fff;
+  padding: 8px 0 8px 20px;
+  border-radius: 10px 0 0 10px;
+  text-align: left;
+  margin-right: -20px;
+}
+
+.hero-text-box h1 {
+  font-size: 52px;
+  font-weight: lighter;
+  color: white;
+  margin: 0;
+}
+
+/* Mobile (max-width: 768px) */
+@media (max-width: 768px) {
+  .hero-text-box {
+    top: 66% !important;
+    max-width: 10;
+  }
+  .hero-text-box h1 {
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
+}
+
+/* Tablet / Medium Desktop (max-width: 1500px, min-width: 769px) */
+@media (max-width: 1500px) and (min-width: 769px) {
+  .hero-text-box {
+    top: 40%;
+    max-width: 35%;
+    padding: 8px 12px;
+  }
+  .hero-text-box h1 {
+    /* fluid font size between 2rem and 3rem */
+    font-size: clamp(2rem, 3vw, 3rem);
+    line-height: 1.2;
+  }
+}
+
+/* Tablet / Small Desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
+  .hero-text-box {
+    position: relative;
+    max-width: none;
+    border-radius: 0;
+    text-align: center;
+    padding: 8px 16px;
+  }
+  .hero-text-box h1 {
+    font-size: clamp(0.5rem, 4vw, 2.5rem);
+  }
+}
+```
+
+### Key Observations
+
+1. **Positioning**: Uses `position: absolute` on desktop, positioned at `top: 268px` and `right: 0.5px`
+2. **Styling**: Dark blue background (`#0c2336`) with white text, rounded left corners
+3. **Responsive Behavior**: 
+   - Desktop: Absolute positioned, right-aligned, max-width 650px
+   - Tablet (1024px): Changes to relative positioning, centered, full width
+   - Mobile (768px): Positioned at 66% from top, smaller font size
+4. **Typography**: Large heading (52px on desktop) with lighter font weight
+5. **Layout**: Contains a single `<h1>` element with the welcome message

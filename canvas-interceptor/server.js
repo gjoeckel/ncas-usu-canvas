@@ -154,23 +154,29 @@ app.get('/debug/mappings', (req, res) => {
   });
 });
 
-// Test URL endpoint
+// Test URL endpoint - serves intercepted content
 app.get('/test-url', (req, res) => {
   const testUrl = req.query.url;
+  requestCounter++;
   
   if (!testUrl) {
     return res.status(400).json({ error: 'Missing url parameter' });
   }
   
-  const shouldIntercept = interceptor.shouldIntercept(testUrl);
-  const mapping = shouldIntercept ? interceptor.getLocalFile(testUrl) : null;
-  
-  res.json({
-    url: testUrl,
-    shouldIntercept,
-    mapping,
-    timestamp: new Date().toISOString()
-  });
+  // Try to intercept and serve local file
+  if (interceptor.shouldIntercept(testUrl)) {
+    interceptor.serveLocalFile(testUrl, res);
+    return; // Important: don't continue
+  } else {
+    // If not in our mappings, return JSON debug info
+    const mapping = interceptor.getLocalFile(testUrl);
+    res.json({
+      url: testUrl,
+      shouldIntercept: false,
+      mapping,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Statistics endpoint
@@ -220,11 +226,12 @@ watcher.on('change', (filepath) => {
   }
 });
 
-// Start server
+// Start HTTP server
 app.listen(PORT, () => {
   console.log('\n========================================');
   console.log('Canvas Interceptor MCP Server Started');
   console.log('========================================');
+  console.log(`Working directory: ${process.cwd()}`);
   console.log(`Server running on: http://localhost:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
   console.log(`View mappings: http://localhost:${PORT}/mappings`);

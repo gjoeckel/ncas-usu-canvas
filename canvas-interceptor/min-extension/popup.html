@@ -13,13 +13,9 @@
   </head>
   <body>
     <div class="row">Redirects: <span id="st" class="status">…</span></div>
+    <div class="row">Server: <span id="server" class="status">…</span></div>
     <div style="margin-top:8px;" class="row"><button id="tg">Toggle Redirects</button></div>
-    <script>
-      async function send(type){ return await chrome.runtime.sendMessage({type}); }
-      async function refresh(){ const s = await send('STATE'); const el = document.getElementById('st'); el.textContent = s.enabled ? 'On' : 'Off'; el.style.color = s.enabled ? '#0a0' : '#c00'; }
-      document.getElementById('tg').onclick = async () => { await send('TOGGLE'); refresh(); };
-      document.addEventListener('DOMContentLoaded', refresh);
-    </script>
+    <script src="popup.js"></script>
   </body>
   </html>
 

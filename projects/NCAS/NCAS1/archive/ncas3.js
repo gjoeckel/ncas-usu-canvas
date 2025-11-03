@@ -23,13 +23,15 @@
 
   function isCoursePage() { return window.location.pathname.includes("/courses/"); }
   function isAccountsPage() { return window.location.pathname.includes("/accounts/"); }
+  function isAssignmentsPage() { return /\/courses\/\d+\/assignments/.test(window.location.pathname); }
+  function isSettingsPage() { return /\/courses\/\d+\/settings/.test(window.location.pathname); }
   function getCourseId() { const m = window.location.pathname.match(/\/courses\/(\d+)/); return m ? m[1] : null; }
 
   function getActiveKey(courseId) {
     const p = window.location.pathname;
     if (!courseId) return null;
     if (p === `/courses/${courseId}` || p === `/courses/${courseId}/`) return "home";
-    if (p.includes("/assignments")) return "assignments";
+    if (p.includes("/grades")) return "grades";
     return null;
   }
 
@@ -60,7 +62,7 @@
 
       const active = getActiveKey(courseId);
       nav.appendChild(createLink(`/courses/${courseId}`, "Home", active === "home"));
-      nav.appendChild(createLink(`/courses/${courseId}/assignments`, "Assignments", active === "assignments"));
+      nav.appendChild(createLink(`/courses/${courseId}/grades`, "Grades", active === "grades"));
 
       header.appendChild(nav);
 
@@ -75,7 +77,7 @@
       links.forEach(l => {
         const href = l.getAttribute('href') || '';
         if (active === 'home' && /\/courses\/\d+\/?$/.test(href)) l.classList.add('active');
-        if (active === 'assignments' && /\/courses\/\d+\/assignments/.test(href)) l.classList.add('active');
+        if (active === 'grades' && /\/courses\/\d+\/grades/.test(href)) l.classList.add('active');
       });
     }
   }
@@ -143,13 +145,22 @@
 
   if (window.ncademiInitializedMin) { log("Already initialized"); return; }
 
+  // Exclude assignments and settings pages - add class to body so CSS also excludes
+  if (isAssignmentsPage() || isSettingsPage()) {
+    waitForDOM(() => {
+      document.body.classList.add('ncademi-excluded');
+      log("Assignments or settings page; excluded from NCADEMI enhancements");
+    });
+    return;
+  }
+
   waitForDOM(() => {
     if (!isCoursePage() || isAccountsPage()) { log("Not a course page, or admin page; skipping"); return; }
     ensureHeaderNav();
     enhanceCustomLinksA11Y();
     handleResponsive();
-    alignPublicLicense();
-    window.addEventListener('resize', () => { alignPublicLicense(); }, { passive: true });
+    // alignPublicLicense(); // Disabled to allow CSS 80% width
+    // window.addEventListener('resize', () => { alignPublicLicense(); }, { passive: true });
     window.ncademiInitializedMin = true;
     logOK("Initialized minimal nav + A11Y without DOM rewrites");
   });
