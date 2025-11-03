@@ -14,6 +14,39 @@ html {
   overflow-x: hidden !important;
   width: 100% !important;
   max-width: 100vw !important;
+  height: 100% !important; /* Ensure html fills viewport */
+}
+
+/* ============================================
+  CONTENT WRAPPER OVERLAY (White cover that fades out when content loaded)
+  ============================================ */
+
+/* Ensure content-wrapper has relative positioning for absolute overlay (outside scoped block) */
+#content-wrapper {
+  position: relative !important;
+}
+
+/* Overlay injected by JS inside #content-wrapper to cover content until images load */
+#content-wrapper-overlay {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  z-index: 100; /* Above content, below header (header z-index: 1000) */
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 400ms ease;
+}
+
+/* Fade out overlay when all images are loaded */
+#content-wrapper-overlay.fade-out {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #content-wrapper-overlay {
+    transition: none;
+    opacity: 0 !important;
+  }
 }
 
 /* ============================================
@@ -203,9 +236,10 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
      ============================================ */
 
 
-     div.show-content.user_content.clearfix.enhanced {
-      padding-top: 0px !important;
-     }
+  /* Canvas enhanced content padding */
+  div.show-content.user_content.clearfix.enhanced {
+    padding-top: 0px !important;
+  }
   /* Main content container - prevents scrolling under header */
   /* Constrains content to center in space remaining after 405px margin-right (hero box + 30px buffer) */
   #ncas-main.main-content,
@@ -261,7 +295,8 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
   body {
     display: flex !important;
     flex-direction: column !important;
-    height: 100vh !important;
+    /* Removed min-height: 100vh - padding-top: 50px combined with min-height causes scrollbar */
+    /* Flexbox layout will naturally fill viewport without explicit min-height */
     margin: 0 !important;
     padding: 0 !important;
     overflow-x: hidden !important; /* Prevent horizontal scrollbar */
@@ -269,10 +304,14 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     max-width: 100vw !important; /* Ensure body doesn't exceed viewport */
   }
 
-  /* Canvas wrapper - ensure full width to prevent body whitespace */
+  /* Canvas wrapper - ensure full width flexbox to prevent body whitespace */
   #application.ic-app,
   .ic-Layout-wrapper,
   #wrapper.ic-Layout-wrapper {
+    display: flex !important; /* Ensure flex layout */
+    flex-direction: column !important;
+    flex: 1 !important; /* Allow to grow and fill space in body flexbox */
+    min-height: 0 !important; /* Allow to shrink below content size */
     width: 100% !important;
     max-width: 100vw !important; /* Prevent overflow */
     margin-left: 0 !important;
@@ -285,7 +324,8 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
   #not_right_side.ic-app-main-content {
     display: flex !important;
     flex-direction: column !important;
-    min-height: 100vh !important;
+    flex: 1 !important; /* Allow this element to grow and fill remaining space in body flexbox */
+    min-height: 0 !important; /* Allow flex item to shrink below content size to prevent scrollbar */
     width: 100% !important;
     max-width: none !important;
     margin-right: 0 !important;
@@ -293,19 +333,29 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     padding-right: 0 !important; /* Remove right padding */
   }
 
-  /* Canvas layout columns - full width */
+  /* Canvas layout columns - full width flexbox */
   /* Canvas applies 48px padding-right by default to reserve space for right sidebar */
   div#main.ic-Layout-columns,
   .ic-Layout-columns {
+    display: flex !important; /* Ensure flex layout */
+    flex-direction: column !important;
+    flex: 1 !important; /* Allow to grow and fill space in #wrapper */
+    min-height: 0 !important; /* Allow to shrink below content size */
     margin-left: 0px !important;
     margin-right: 0px !important;
     width: 100% !important;
     max-width: none !important;
     padding-right: 0 !important; /* Remove 48px right padding that Canvas adds for sidebar */
+    overflow-x: hidden !important; /* Prevent horizontal overflow */
   }
 
-  /* Content wrapper - full width */
+  /* Content wrapper - full width flexbox */
+  /* Note: position: relative moved outside scoped block for overlay positioning */
   #content-wrapper {
+    display: flex !important; /* Ensure flex layout */
+    flex-direction: column !important;
+    flex: 1 !important; /* Allow to grow and fill space in #not_right_side */
+    min-height: 0 !important; /* Allow to shrink below content size */
     width: 100% !important;
     max-width: 100% !important; /* Prevent overflow */
     margin: 0 !important;
@@ -317,7 +367,11 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
 
   /* Canvas content main - handle default Canvas padding */
   div#content.ic-Layout-contentMain {
-    padding: 36px 0px 48px 0px !important; /* Canvas default padding */
+    display: flex !important; /* Ensure flex layout */
+    flex-direction: column !important;
+    flex: 1 !important; /* Allow to grow and fill space in #content-wrapper */
+    min-height: 0 !important; /* Allow to shrink below content size */
+    padding: 36px 0px 0px 0px !important; /* Top padding only, bottom padding removed */
     padding-right: 0 !important; /* Remove right padding to eliminate gap */
     position: relative; /* Establish positioning context for absolutely positioned hero box */
     overflow-x: hidden !important; /* Prevent horizontal overflow */
@@ -668,12 +722,6 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
   }
 }
 
-/* Tablet / Medium Desktop (max-width: 1500px, min-width: 769px) */
-/* Base styles now match this breakpoint, so this media query is no longer needed */
-/* Kept for potential future overrides if needed */
-@media (max-width: 1500px) and (min-width: 769px) {
-  /* Styles moved to base - this breakpoint now uses default */
-}
 
 /* Tablet / Small Desktop (max-width: 1024px) */
 @media (max-width: 1024px) {

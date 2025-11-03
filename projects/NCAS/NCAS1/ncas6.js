@@ -22,7 +22,6 @@
   }
 
   function isCoursePage() { return window.location.pathname.includes("/courses/"); }
-  function isPagesPage() { return /\/courses\/\d+\/pages/.test(window.location.pathname); }
   function getCourseId() { const m = window.location.pathname.match(/\/courses\/(\d+)/); return m ? m[1] : null; }
   function isAdmin() { 
     try {
@@ -81,18 +80,32 @@
       // Prepend without wiping existing Canvas DOM
       document.body.insertBefore(header, document.body.firstChild);
       logOK("Injected header/nav at top of body");
+      // Header/nav is ready here
     } else {
       // Update active state if needed
       const active = getActiveKey(courseId);
+      if (!active) return;
+      
+      const linkPatterns = {
+        'start-here': '/pages/start-here',
+        'home': /\/courses\/\d+\/?$/,
+        'about': '/pages/about',
+        'grades': '/grades',
+        'survey': '/pages/survey'
+      };
+      
       const links = header.querySelectorAll('#ncademi-nav a');
       links.forEach(l => l.classList.remove('active'));
+      
+      const pattern = linkPatterns[active];
+      if (!pattern) return;
+      
       links.forEach(l => {
         const href = l.getAttribute('href') || '';
-        if (active === 'start-here' && href.includes('/pages/start-here')) l.classList.add('active');
-        if (active === 'home' && /\/courses\/\d+\/?$/.test(href)) l.classList.add('active');
-        if (active === 'about' && href.includes('/pages/about')) l.classList.add('active');
-        if (active === 'grades' && href.includes('/grades')) l.classList.add('active');
-        if (active === 'survey' && href.includes('/pages/survey')) l.classList.add('active');
+        const matches = typeof pattern === 'string' 
+          ? href.includes(pattern) 
+          : pattern.test(href);
+        if (matches) l.classList.add('active');
       });
     }
   }
@@ -181,6 +194,131 @@
 
   if (window.ncademiInitializedMin) { log("Already initialized"); return; }
 
+  // ============================================
+  // CONTENT WRAPPER OVERLAY (Inject overlay and wait for images to load)
+  // ============================================
+  function fadeOutOverlay(overlay) {
+    if (overlay.classList.contains('fade-out')) return;
+    overlay.classList.add('fade-out');
+    overlay.addEventListener('transitionend', function() {
+      // Add minimum visibility delay to ensure overlay is visible before removal
+      setTimeout(() => {
+        overlay.remove();
+        logOK("Overlay removed after fade-out");
+      }, 400); // Wait for transition + small buffer
+    }, { once: true });
+  }
+
+  function injectContentWrapperOverlay() {
+    const contentWrapper = document.getElementById('content-wrapper');
+    if (!contentWrapper) {
+      log("No #content-wrapper element found");
+      return;
+    }
+
+    // Check if overlay already exists to prevent duplicate injection
+    if (document.getElementById('content-wrapper-overlay')) {
+      log("Overlay already exists, skipping injection");
+      return;
+    }
+
+    // Inject overlay div
+    const overlay = document.createElement('div');
+    overlay.id = 'content-wrapper-overlay';
+    contentWrapper.appendChild(overlay);
+    logOK("Injected overlay into #content-wrapper");
+
+    // Find all images within #content-wrapper
+    const images = Array.from(contentWrapper.querySelectorAll('img'));
+    const totalImages = images.length;
+    
+    if (totalImages === 0) {
+      log("No images found in #content-wrapper, fading out overlay after minimum delay");
+      setTimeout(() => fadeOutOverlay(overlay), 300); // Minimum visibility time
+      return;
+    }
+
+    log(`Waiting for ${totalImages} images to load in #content-wrapper...`);
+    
+    let loadedCount = 0;
+    let erroredCount = 0;
+    let hasLazyImages = false;
+    
+    function checkComplete() {
+      if (loadedCount + erroredCount === totalImages) {
+        log(`All images loaded (${loadedCount} loaded, ${erroredCount} errors). Fading out overlay.`);
+        // Minimum visibility delay to ensure overlay is seen
+        setTimeout(() => fadeOutOverlay(overlay), 300);
+      }
+    }
+    
+    // Process all images in single loop with improved lazy loading detection
+    images.forEach(function(img) {
+      const isLazy = img.loading === 'lazy';
+      if (isLazy) hasLazyImages = true;
+      
+      // For lazy-loaded images: complete might be true but naturalHeight still 0 (not yet loaded)
+      if (img.complete && img.naturalHeight !== 0) {
+        // Image is actually loaded and has dimensions
+        loadedCount++;
+        log(`Image already loaded: ${img.src} ${isLazy ? '(lazy)' : ''}`);
+      } else if (img.complete && img.naturalHeight === 0) {
+        // Image marked complete but has no dimensions - likely failed or lazy placeholder
+        if (isLazy) {
+          // Lazy image placeholder - wait for actual load event
+          log(`Lazy image placeholder detected: ${img.src}, waiting for load event`);
+          img.addEventListener('load', function() {
+            loadedCount++;
+            log(`Lazy image loaded: ${img.src} (${loadedCount}/${totalImages})`);
+            checkComplete();
+          }, { once: true });
+          
+          img.addEventListener('error', function() {
+            erroredCount++;
+            log(`Lazy image error: ${img.src} (errors: ${erroredCount})`);
+            checkComplete();
+          }, { once: true });
+        } else {
+          // Non-lazy image with no dimensions = error
+          erroredCount++;
+          log(`Image failed to load: ${img.src}`);
+        }
+      } else {
+        // Not yet loaded - attach listeners
+        img.addEventListener('load', function() {
+          loadedCount++;
+          log(`Image loaded: ${img.src} (${loadedCount}/${totalImages}) ${isLazy ? '(lazy)' : ''}`);
+          checkComplete();
+        }, { once: true });
+        
+        img.addEventListener('error', function() {
+          erroredCount++;
+          log(`Image error: ${img.src} (errors: ${erroredCount})`);
+          checkComplete();
+        }, { once: true });
+      }
+    });
+    
+    // Log lazy loading status
+    if (hasLazyImages) {
+      log("Lazy-loaded images detected - using improved detection logic");
+    }
+    
+    // Check if all were already complete (only for non-lazy images)
+    if (loadedCount + erroredCount === totalImages && !hasLazyImages) {
+      checkComplete();
+      return;
+    }
+    
+    // Fallback timeout: fade out after 5 seconds regardless
+    setTimeout(function() {
+      if (!overlay.classList.contains('fade-out')) {
+        log("Timeout reached, forcing overlay fade-out");
+        fadeOutOverlay(overlay);
+      }
+    }, 5000);
+  }
+
   // Early admin check - if admin detected, add class to body and skip all custom JS/CSS
   if (isAdmin()) {
     waitForDOM(() => {
@@ -191,15 +329,21 @@
   }
 
   waitForDOM(() => {
-    if (!isCoursePage()) { log("Not a course page; skipping"); return; }
+    if (!isCoursePage()) { 
+      log("Not a course page; skipping");
+      return;
+    }
     
+    // Priority: Nav bar must be visible immediately
     ensureHeaderNav();
     handleResponsive();
     enhanceCustomLinksA11Y();
     
+    // Inject overlay into #content-wrapper and wait for images to load
+    injectContentWrapperOverlay();
+    
     // Inject icons into grades table if on grades page
-    const courseId = getCourseId();
-    const activeKey = courseId ? (window.location.pathname.includes("/grades") ? "grades" : (window.location.pathname === `/courses/${courseId}` || window.location.pathname === `/courses/${courseId}/` ? "home" : null)) : null;
+    const activeKey = getActiveKey(getCourseId());
     
     if (activeKey === "grades") {
       // Use MutationObserver to watch for table content changes
@@ -224,4 +368,6 @@
     window.ncademiInitializedMin = true;
     logOK("Initialized: minimal nav + A11Y without DOM rewrites");
   });
+
+  // Content wrapper overlay handles visual smoothing when images are loaded
 })();
