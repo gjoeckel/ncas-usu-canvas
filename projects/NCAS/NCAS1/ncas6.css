@@ -1,5 +1,5 @@
 /*
- * NCAS5 v5 CSS - Custom Canvas LMS Enhancement Styles
+ * NCAS6 v6 CSS - Custom Canvas LMS Enhancement Styles
  * Updated: 2025-01-02
  * Scope: Maintain exact visuals with minimal JS; CSS drives layout and states
  * Purpose: Custom navigation, layout, and content styling for Canvas course pages
@@ -981,12 +981,63 @@ table#grades_summary {
 }
 
 /* Hide grade table columns (not for admins) */
-body:not(.ncademi-admin-view) table#grades_summary thead tr th:nth-child(2),
-body:not(.ncademi-admin-view) table#grades_summary thead tr th.status,
-body:not(.ncademi-admin-view) table#grades_summary tbody tr td.due,
-body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status,
+body:not(.ncademi-admin-view) table#grades_summary thead tr th:nth-child(2), /* Hide "Due" column header */
+body:not(.ncademi-admin-view) table#grades_summary thead tr th:nth-child(3), /* Hide "Submitted" column header */
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.due, /* Hide "Due" column data */
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.submitted, /* Hide "Submitted" column data */
 body:not(.ncademi-admin-view) table#grades_summary tbody tr.group_total,
 body:not(.ncademi-admin-view) table#grades_summary tbody tr th.title div.context {
+  display: none !important;
+}
+
+/* Hide columns with no visible header text (screenreader-only or empty) */
+body:not(.ncademi-admin-view) table#grades_summary thead tr th#asset_processors_header,
+body:not(.ncademi-admin-view) table#grades_summary thead tr th:empty,
+/* Hide columns with screenreader-only text (Details and Submission Progress Status) */
+body:not(.ncademi-admin-view) table#grades_summary thead tr th:nth-child(6),
+body:not(.ncademi-admin-view) table#grades_summary thead tr th:nth-child(7),
+body:not(.ncademi-admin-view) table#grades_summary thead tr th:nth-child(8),
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.asset_processors_cell,
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.details,
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td:last-child {
+  display: none !important;
+}
+
+/* Show Status column (previously hidden, now visible) */
+body:not(.ncademi-admin-view) table#grades_summary thead tr th.status,
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status {
+  display: table-cell !important;
+}
+
+/* Set Name column width to 15rem */
+body:not(.ncademi-admin-view) table#grades_summary thead tr th:first-child,
+body:not(.ncademi-admin-view) table#grades_summary tbody tr th.title {
+  width: 15rem !important;
+}
+
+/* Remove whitespace between Name and Status columns - ensure table layout is compact */
+body:not(.ncademi-admin-view) table#grades_summary {
+  table-layout: fixed !important;
+  width: 60% !important;
+}
+
+/* Remove left padding from Status column to eliminate whitespace */
+body:not(.ncademi-admin-view) table#grades_summary thead tr th.status,
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status {
+  padding-left: 0 !important;
+  width: auto !important;
+}
+
+/* Reduce Name column padding by 50% (typical Canvas table cell padding is ~1rem, so 50% = 0.5rem) */
+body:not(.ncademi-admin-view) table#grades_summary thead tr th:first-child,
+body:not(.ncademi-admin-view) table#grades_summary tbody tr th.title {
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
+/* Hide Print Grades button (not for admins) */
+body:not(.ncademi-admin-view) #print-grades-button,
+body:not(.ncademi-admin-view) #print-grades-button-container {
   display: none !important;
 }
 

@@ -1,5 +1,5 @@
 /**
- * NCADEMI Navigation JavaScript (v5-min)
+ * NCADEMI Navigation JavaScript (v6)
  * Goal: Preserve exact visuals with minimal JS.
  * - Keep top nav bar in current location and styling
  * - Avoid DOM rewrites (no body replacement, no content moves)
@@ -9,7 +9,7 @@
 (function () {
   "use strict";
 
-  const LOG_PREFIX = "🚀 NCADEMI Navigation v5-min";
+  const LOG_PREFIX = "🚀 NCADEMI Navigation v6";
   const DEBUG_MODE = true;
 
   function log(msg, data = null) { if (DEBUG_MODE) console.log(`${LOG_PREFIX}: ${msg}`, data || ""); }
@@ -36,9 +36,9 @@
     if (!courseId) return null;
     if (p.includes("/pages/start-here")) return "start-here";
     if (p === `/courses/${courseId}` || p === `/courses/${courseId}/`) return "home";
-    if (p.includes("/pages/about")) return "about";
-    if (p.includes("/grades")) return "grades";
-    if (p.includes("/pages/survey")) return "survey";
+    // Check for grades page: /courses/{courseId}/grades or /courses/{courseId}/grades/
+    if (p === `/courses/${courseId}/grades` || p === `/courses/${courseId}/grades/` || p.startsWith(`/courses/${courseId}/grades`)) return "progress";
+    if (p.includes("/pages/feedback")) return "feedback";
     return null;
   }
 
@@ -68,12 +68,11 @@
       nav.id = "ncademi-nav";
 
       const active = getActiveKey(courseId);
-      // Add navigation links in order: Start Here, Home, About, Grades, Survey
+      // Add navigation links in order: Start Here, Core Skills, Progress, Feedback
       nav.appendChild(createLink(`/courses/${courseId}/pages/start-here`, "Start Here", active === "start-here"));
-      nav.appendChild(createLink(`/courses/${courseId}`, "Home", active === "home"));
-      nav.appendChild(createLink(`/courses/${courseId}/pages/about`, "About", active === "about"));
-      nav.appendChild(createLink(`/courses/${courseId}/grades`, "Grades", active === "grades"));
-      nav.appendChild(createLink(`/courses/${courseId}/pages/survey`, "Survey", active === "survey"));
+      nav.appendChild(createLink(`/courses/${courseId}`, "Core Skills", active === "home"));
+      nav.appendChild(createLink(`/courses/${courseId}/grades`, "Progress", active === "progress"));
+      nav.appendChild(createLink(`/courses/${courseId}/pages/feedback`, "Feedback", active === "feedback"));
 
       header.appendChild(nav);
 
@@ -89,9 +88,8 @@
       const linkPatterns = {
         'start-here': '/pages/start-here',
         'home': /\/courses\/\d+\/?$/,
-        'about': '/pages/about',
-        'grades': '/grades',
-        'survey': '/pages/survey'
+        'progress': '/grades',
+        'feedback': '/pages/feedback'
       };
       
       const links = header.querySelectorAll('#ncademi-nav a');
@@ -145,11 +143,25 @@
   }
 
   function injectGradeIcons() {
+    // Check if icons have already been injected to prevent duplicate injection
+    if (window.ncademiGradeIconsInjected) {
+      log("Grade icons already injected, skipping");
+      return true; // Return true to indicate icons are already present
+    }
+
     const courseId = getCourseId();
-    if (!courseId) return;
+    if (!courseId) return false;
 
     const gradesTable = document.querySelector('table#grades_summary');
-    if (!gradesTable) return;
+    if (!gradesTable) return false;
+
+    // Check if any icons are already present in the table
+    const existingIcons = gradesTable.querySelectorAll('.ncademi-grade-icon');
+    if (existingIcons.length > 0) {
+      log("Grade icons already present in table, marking as injected");
+      window.ncademiGradeIconsInjected = true;
+      return true;
+    }
 
     // Icon mapping: assignment name -> image file ID
     const iconMap = {
@@ -167,6 +179,7 @@
     // Find all assignment name links in the grades table
     const assignmentLinks = gradesTable.querySelectorAll('tbody tr th.title a');
     
+    let injectedCount = 0;
     assignmentLinks.forEach(link => {
       const assignmentName = link.textContent.trim();
       const iconInfo = iconMap[assignmentName];
@@ -187,9 +200,129 @@
         
         // Insert icon before the link
         link.parentNode.insertBefore(iconImg, link);
+        injectedCount++;
         logOK(`Injected icon for ${assignmentName}`);
       }
     });
+
+    // Mark as injected if any icons were added
+    if (injectedCount > 0) {
+      window.ncademiGradeIconsInjected = true;
+      logOK(`Grade icons injection complete (${injectedCount} icons injected)`);
+      return true;
+    }
+
+    return false;
+  }
+
+  function populateStatusColumn() {
+    // Check if status has already been populated to prevent duplicate updates
+    if (window.ncademiStatusPopulated) {
+      log("Status column already populated, skipping");
+      return true;
+    }
+
+    const gradesTable = document.querySelector('table#grades_summary');
+    if (!gradesTable) return false;
+
+    // Find all assignment rows (exclude group totals)
+    const assignmentRows = gradesTable.querySelectorAll('tbody tr.student_assignment');
+    if (assignmentRows.length === 0) return false;
+
+    let populatedCount = 0;
+    assignmentRows.forEach(row => {
+      // Find the Score column
+      const scoreCell = row.querySelector('td.assignment_score');
+      if (!scoreCell) return;
+
+      // Find the Status column
+      const statusCell = row.querySelector('td.status');
+      if (!statusCell) return;
+
+      // Check if status is already populated (has our custom content)
+      if (statusCell.hasAttribute('data-ncademi-status-populated')) {
+        return; // Skip if already populated
+      }
+
+      // Extract score from Score column
+      const gradeSpan = scoreCell.querySelector('.grade');
+      if (!gradeSpan) return;
+
+      // Get the score text (Y value) - could be a number or "-"
+      // Need to get text content excluding tooltips and screenreader-only text
+      let scoreText = null;
+      // Try to get the first text node (the actual score number)
+      for (let node of gradeSpan.childNodes) {
+        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+          scoreText = node.textContent.trim();
+          break;
+        }
+      }
+      
+      // Fallback: parse from textContent if no direct text node found
+      if (!scoreText) {
+        const allText = gradeSpan.textContent.trim();
+        // Extract first non-whitespace token (the score number or "-")
+        const match = allText.match(/^(\S+)/);
+        scoreText = match ? match[1] : allText.split(/\s+/)[0] || '';
+      }
+      
+      const Y = scoreText;
+      
+      // Get points possible (X value) - look for "/ X" pattern in the tooltip span
+      const tooltipSpan = scoreCell.querySelector('.tooltip');
+      if (!tooltipSpan) return;
+      
+      // The points possible is in a span after the grade span, text like "/ 3" or "/ 4"
+      const pointsText = tooltipSpan.textContent.match(/\/\s*(\d+)/);
+      if (!pointsText || !pointsText[1]) return;
+
+      const X = parseInt(pointsText[1], 10);
+
+      // Determine status based on Y and X
+      let statusText = '';
+      let statusStyle = 'font-size: 1.25rem !important;';
+
+      if (Y === '-') {
+        // Pending: Y = "-"
+        statusText = 'Pending';
+        statusStyle += ' color: #666 !important; font-style: italic !important;';
+      } else {
+        const scoreY = parseInt(Y, 10);
+        if (isNaN(scoreY)) return; // Invalid score format
+
+        if (scoreY < X) {
+          // Active: Y < X
+          statusText = 'Active';
+          statusStyle += ' color: #333 !important; font-weight: bold !important;';
+        } else if (scoreY === X) {
+          // Done: Y = X
+          statusText = 'Done';
+          statusStyle += ' color: #336600 !important; font-weight: bold !important;';
+        } else {
+          // Edge case: score exceeds points possible (shouldn't happen, but handle gracefully)
+          statusText = 'Done';
+          statusStyle += ' color: #336600 !important; font-weight: bold !important;';
+        }
+      }
+
+      // Set status text and styling
+      statusCell.textContent = statusText;
+      statusCell.setAttribute('style', statusStyle);
+      statusCell.setAttribute('data-ncademi-status-populated', 'true');
+      populatedCount++;
+      
+      logOK(`Status populated: ${statusText} for score ${Y}/${X}`);
+    });
+
+    // Mark as populated if any statuses were set
+    if (populatedCount > 0) {
+      window.ncademiStatusPopulated = true;
+      logOK(`Status column population complete (${populatedCount} rows updated)`);
+      return true;
+    }
+
+    return false;
   }
 
   if (window.ncademiInitializedMin) { log("Already initialized"); return; }
@@ -342,25 +475,114 @@
     // Inject overlay into #content-wrapper and wait for images to load
     injectContentWrapperOverlay();
     
-    // Inject icons into grades table if on grades page
+    // Inject icons into grades table if on progress page
     const activeKey = getActiveKey(getCourseId());
     
-    if (activeKey === "grades") {
-      // Use MutationObserver to watch for table content changes
-      const observer = new MutationObserver(() => {
-        injectGradeIcons();
-      });
+    if (activeKey === "progress") {
+      log("Progress page detected, setting up grade icons injection and status population");
       
-      const gradesTable = document.querySelector('table#grades_summary');
-      if (gradesTable) {
-        injectGradeIcons();
-        observer.observe(gradesTable, { childList: true, subtree: true });
-      } else {
-        // Table might not be loaded yet, try again after a short delay
+      // Update h1 title from "Grades for [user name]" to "Your Progress"
+      const updateH1Title = () => {
+        const h1Heading = document.querySelector('.ic-Action-header__Heading, h1.ic-Action-header__Heading');
+        if (h1Heading) {
+          if (h1Heading.textContent.includes('Grades for')) {
+            h1Heading.textContent = 'Your Progress';
+            logOK("Updated h1 heading to 'Your Progress'");
+            return true;
+          }
+        }
+        return false;
+      };
+      
+      // Try to update h1 immediately
+      if (!updateH1Title()) {
+        // If not found, retry after a short delay
         setTimeout(() => {
-          injectGradeIcons();
-          const table = document.querySelector('table#grades_summary');
-          if (table) observer.observe(table, { childList: true, subtree: true });
+          updateH1Title();
+        }, 100);
+      }
+      
+      // Reset flags on page navigation (in case of SPA-style navigation)
+      // Full page reloads will naturally reset this
+      const gradesTable = document.querySelector('table#grades_summary');
+      if (!gradesTable) {
+        // If table doesn't exist yet, check if flags should be reset
+        // If we're on a fresh page load, the flags will be undefined
+        if (typeof window.ncademiGradeIconsInjected === 'undefined') {
+          window.ncademiGradeIconsInjected = false;
+        }
+        if (typeof window.ncademiStatusPopulated === 'undefined') {
+          window.ncademiStatusPopulated = false;
+        }
+      } else {
+        // Table exists - check if icons are already present from previous load
+        const existingIcons = gradesTable.querySelectorAll('.ncademi-grade-icon');
+        if (existingIcons.length === 0) {
+          // No icons present, reset flag to allow injection
+          window.ncademiGradeIconsInjected = false;
+        }
+        // Check if status is already populated
+        const existingStatusCells = gradesTable.querySelectorAll('td.status[data-ncademi-status-populated]');
+        if (existingStatusCells.length === 0) {
+          // No status populated, reset flag to allow population
+          window.ncademiStatusPopulated = false;
+        }
+      }
+
+      // Use MutationObserver to watch for table content changes
+      let observer = null;
+      
+      const setupObserver = () => {
+        const gradesTable = document.querySelector('table#grades_summary');
+        if (!gradesTable) {
+          log("Grades table not found yet, will retry");
+          return false;
+        }
+
+        log("Grades table found, attempting icon injection and status population");
+        
+        // Try to inject icons
+        const iconsInjected = injectGradeIcons();
+        
+        // Try to populate status column
+        const statusPopulated = populateStatusColumn();
+        
+        // If both icons and status are injected/populated, disconnect observer
+        if (iconsInjected && statusPopulated) {
+          if (observer) {
+            observer.disconnect();
+            observer = null;
+            log("Grade icons injection and status population complete, observer disconnected");
+          }
+          return true;
+        }
+
+        // If observer not yet created, create it
+        if (!observer) {
+          log("Creating MutationObserver to watch for grade table changes");
+          observer = new MutationObserver(() => {
+            // Check if icons and status are now present
+            const iconsInjected = injectGradeIcons();
+            const statusPopulated = populateStatusColumn();
+            if (iconsInjected && statusPopulated) {
+              observer.disconnect();
+              observer = null;
+              log("Grade icons injection and status population complete, observer disconnected");
+            }
+          });
+          observer.observe(gradesTable, { childList: true, subtree: true });
+          log("MutationObserver set up for grade icons injection and status population");
+        }
+
+        return false;
+      };
+
+      // Try immediately
+      if (!setupObserver()) {
+        // Table might not be loaded yet, try again after a short delay
+        log("Retrying grade icons injection and status population after delay");
+        setTimeout(() => {
+          setupObserver();
         }, 500);
       }
     }
