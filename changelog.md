@@ -13,7 +13,8 @@
 **Action:** Local branch merge
 **Source Branch:** simplify-extension
 **Target Branch:** main
-**Status:** [pending]
+**Status:** ✅ Complete
+**Merge Commit:** 87b7765
 
 ---
 
