@@ -266,6 +266,16 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
   div.show-content.user_content.clearfix.enhanced {
     padding-top: 0px !important;
   }
+
+  /* Header moved to document.body.firstChild by JS (like NCAS6) to persist across AJAX navigations */
+  /* Header is completely outside Canvas's replaceable content areas */
+  body > #content-header.course-content-header:first-child {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
   /* Hide hero box on Core Skills (home) page only */
   body.ncademi-home-page .hero-text-box {
     display: none !important;
