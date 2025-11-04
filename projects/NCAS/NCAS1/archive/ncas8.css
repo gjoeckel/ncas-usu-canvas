@@ -591,36 +591,128 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
      RESPONSIVE DESIGN
      ============================================ */
 
-  /* Mobile responsiveness (max-width: 768px) - will address in next phase */
-  @media (max-width: 768px) {
-    body {
-      padding-top: 90px !important; /* Adjusted for 90px header height */
+  /* Mobile responsiveness (max-width: 850px) - stacked vertical layout */
+  @media (max-width: 850px) {
+    /* Header container - stack vertically */
+    #content-header.course-content-header {
+      flex-direction: column !important;
+      height: auto !important;
+      align-items: stretch !important;
     }
 
-    #content-header.course-content-header {
-      height: 90px; /* Header height for mobile */
+    /* Header title - full width, first element */
+    #content-header.course-content-header .ncademi-header-title {
+      width: 100% !important;
+      flex-shrink: 0 !important;
     }
 
     #content-header.course-content-header .ncademi-header-title h1.header-text,
     #content-header.course-content-header .ncademi-header-title span.header-text {
-      display: block !important; /* Keep title visible on mobile for now */
+      display: block !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
     }
 
+    /* Navigation container - stack vertically, full width */
     #content-header.course-content-header #ncademi-nav {
-      flex-direction: row; /* Keep row layout for now */
-      height: 90px;
-      padding: 0px 30px 0px 0px;
+      flex-direction: column !important;
+      width: 100% !important;
+      height: auto !important;
+      padding: 0 !important;
+      background-image: none !important; /* Remove blue gradient band */
+      background-color: transparent !important;
+      box-shadow: none !important;
+      align-items: stretch !important;
+      justify-content: flex-start !important;
     }
 
+    /* Navigation links - full width, stack vertically */
     #content-header.course-content-header #ncademi-nav a {
-      width: 100%;
-      text-align: center;
-      margin: 4px 0;
+      width: 100% !important;
+      display: block !important;
+      text-align: left !important;
+      padding: 12px 30px !important;
+      margin: 0 !important;
+      margin-bottom: 0 !important;
+      margin-left: 0 !important;
+      height: auto !important;
+      border-bottom: 3px solid transparent !important;
+      box-sizing: border-box !important;
+    }
+
+    /* Remove first-child margin override */
+    #content-header.course-content-header #ncademi-nav a:first-child {
+      margin-left: 0 !important;
+    }
+
+    /* Active link - full width, no tab styling */
+    #content-header.course-content-header #ncademi-nav a.active,
+    #content-header.course-content-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"] {
+      border-radius: 0 !important;
+      width: 100% !important;
+      margin-bottom: 0 !important;
+      margin-top: 0 !important;
+      padding: 12px 30px !important;
+      height: auto !important;
+      background: #ec8e22 !important; /* Full width orange background */
+      color: rgb(0, 0, 0) !important;
+    }
+
+    /* Hover states for inactive links - full width underline */
+    #content-header.course-content-header #ncademi-nav a:hover:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
+      background: transparent !important;
+      color: rgb(255, 255, 255) !important;
+      text-decoration: underline !important;
+      text-decoration-color: rgb(255, 255, 255) !important;
+      text-decoration-thickness: 2px !important;
+    }
+
+    /* Focus states for inactive links - full width outline */
+    #content-header.course-content-header #ncademi-nav a:focus:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
+      background: transparent !important;
+      color: rgb(255, 255, 255) !important;
+      outline: 3px solid #ffffff !important;
+      outline-offset: 1px !important;
+      box-shadow: inset 0 0 0 1px #000000 !important;
+      border-radius: 0 !important;
+    }
+
+    #content-header.course-content-header #ncademi-nav a:focus-visible:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
+      background: transparent !important;
+      outline: 3px solid #ffffff !important;
+      outline-offset: 1px !important;
+      box-shadow: inset 0 0 0 1px #000000 !important;
+      border-radius: 0 !important;
+    }
+
+    /* Active links maintain styling on hover/focus */
+    #content-header.course-content-header #ncademi-nav a.active:hover,
+    #content-header.course-content-header #ncademi-nav a.active:focus,
+    #content-header.course-content-header #ncademi-nav a.active:focus-visible,
+    #content-header.course-content-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:hover,
+    #content-header.course-content-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:focus,
+    #content-header.course-content-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:focus-visible {
+      background: #ec8e22 !important;
+      color: rgb(0, 0, 0) !important;
+      text-decoration: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Bottom border - appears after all nav links */
+    #content-header.course-content-header {
+      border-bottom: 5px solid #ec8e22 !important;
+    }
+
+    /* Body padding adjustment */
+    body {
+      padding-top: 0 !important;
     }
 
     #ncas-main.main-content,
-    #ncas-main.ncademi-main-layout {
-      margin-top: 0; /* Body padding handles spacing */
+    #ncas-main.ncademi-main-layout,
+    main {
+      padding-top: 0 !important;
     }
 
     .dp-wrapper {
@@ -628,7 +720,7 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     }
 
     .row.dp-col-3-eq {
-      margin-bottom: 30px; /* Adjusted for mobile */
+      margin-bottom: 30px;
     }
 
     .col-lg-4,
@@ -681,16 +773,16 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
 
   /* Mobile responsive utility classes */
   .ncademi-mobile-header {
-    height: 90px !important;
+    height: auto !important;
   }
 
   .ncademi-mobile-nav {
     flex-direction: column !important;
-    height: 90px !important;
+    height: auto !important;
   }
 
   .ncademi-mobile-body {
-    padding-top: 90px !important;
+    padding-top: 0 !important;
   }
 
   /* Desktop responsive utility classes */
@@ -1162,11 +1254,14 @@ h5 {
 /* Page title styling - context-specific override inheriting from h1 */
 h1.page-title {
   color: #025191 !important; /* Match border color */
-  border-bottom: 2px solid #025191;
-  padding-bottom: 0.25em; /* Space between text and border */
-  margin:-10px 0 0 0 !important;/* Remove default margin - spacing handled by icon-right */
-  width: 100%; /* Ensure border spans full width */
-  position: relative; /* For icon positioning context */
+  font-size: 2rem !important;
+  font-weight: 200 !important;
+  color: #025191 !important;
+  border-bottom: 2px solid #025191 !important;
+  padding-bottom: 0.25em !important;
+  margin: -5px 0 0 0 !important;
+  width: 100% !important;
+  position: relative !important;
 }
 
 /* Visually hide h1.page-title on core-skills page but keep accessible to screen readers */
@@ -1225,4 +1320,8 @@ div.callout {
 
 .margin-top-50 {
   margin-top: 50px !important;
+}
+
+div#print-grades-container.ic-Action-header {
+ display: none !important;
 }

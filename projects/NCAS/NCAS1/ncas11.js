@@ -1,5 +1,5 @@
 /**
- * NCADEMI Navigation JavaScript (v8)
+ * NCADEMI Navigation JavaScript (v11)
  * Always injects complete header element - no HTML header elements needed
  * 
  * Goal: Preserve exact visuals with minimal JS.
@@ -12,7 +12,7 @@
 (function () {
   "use strict";
 
-  const LOG_PREFIX = "🚀 NCADEMI Navigation v8";
+  const LOG_PREFIX = "🚀 NCADEMI Navigation v11";
   const DEBUG_MODE = true;
 
   function log(msg, data = null) { if (DEBUG_MODE) console.log(`${LOG_PREFIX}: ${msg}`, data || ""); }
@@ -68,11 +68,84 @@
     if (active) {
       a.classList.add("active");
       a.setAttribute("aria-current", "page");
+      a.setAttribute("tabindex", "-1"); // Remove from keyboard navigation
+    } else {
+      a.setAttribute("tabindex", "0"); // Ensure keyboard accessible
     }
     return a;
   }
 
-  // Create and inject the complete header element
+  // Inject skip link for accessibility (skip to main content)
+  function injectSkipLink() {
+    // Find the main content target in priority order:
+    // 1. main element (preferred)
+    // 2. div#wrapper (if no main element)
+    // 3. #content-wrapper (fallback)
+    // 4. #content (fallback)
+    let mainTarget = document.querySelector('main');
+    if (!mainTarget) {
+      mainTarget = document.querySelector('div#wrapper');
+    }
+    if (!mainTarget) {
+      mainTarget = document.querySelector('#content-wrapper');
+    }
+    if (!mainTarget) {
+      mainTarget = document.querySelector('#content');
+    }
+    
+    if (!mainTarget) {
+      return; // No target found, skip link won't work
+    }
+
+    // Ensure target has an ID for the skip link to target
+    if (!mainTarget.id) {
+      mainTarget.id = 'ncademi-main-content';
+    }
+    const targetId = mainTarget.id;
+
+    // Check if skip link already exists
+    let skipLink = document.querySelector('#ncademi-skip-link');
+    if (skipLink) {
+      // Update existing skip link href to point to current main target
+      skipLink.href = `#${targetId}`;
+      return;
+    }
+
+    // Create skip link
+    skipLink = document.createElement('a');
+    skipLink.id = 'ncademi-skip-link';
+    skipLink.href = `#${targetId}`;
+    skipLink.className = 'ncademi-skip-link';
+    skipLink.textContent = 'Skip to main content';
+    skipLink.setAttribute('aria-label', 'Skip to main content');
+
+    // Insert as first child of body (before header)
+    try {
+      document.body.insertBefore(skipLink, document.body.firstChild);
+      logOK("Skip link injected");
+    } catch (e) {
+      logError("Error injecting skip link", e);
+    }
+  }
+
+  // Check if header exists and is correctly positioned
+  function getExistingHeader() {
+    const existingHeader = document.querySelector("#content-header");
+    if (!existingHeader) return null;
+    
+    // Check if header is at body.firstChild (correct position)
+    // Skip link may be first child, so check if header is first or second
+    const bodyChildren = Array.from(document.body.children);
+    const headerIndex = bodyChildren.indexOf(existingHeader);
+    if (existingHeader.parentNode === document.body && headerIndex >= 0 && headerIndex < 2) {
+      return existingHeader;
+    }
+    
+    // Header exists but in wrong position - will need to recreate
+    return null;
+  }
+
+  // Create the complete header element structure (before DOM insertion)
   function createHeader() {
     // Make sure body exists before trying to insert
     if (!document.body) {
@@ -80,15 +153,25 @@
       return null;
     }
     
-    // Remove any existing headers first
+    // Only remove existing headers if they're in wrong position
+    // (getExistingHeader already checked for correct position)
     const existingHeaders = document.querySelectorAll("#content-header");
-    existingHeaders.forEach(header => header.remove());
+    existingHeaders.forEach(header => {
+      if (header.parentNode !== document.body || header !== document.body.firstChild) {
+        header.remove();
+      }
+    });
     
-    log("Creating header element");
+    log("Creating header element structure");
     const header = document.createElement("header");
     header.id = "content-header";
     header.className = "course-content-header";
     
+    // Create wrapper container for title and nav (will be centered)
+    const headerWrapper = document.createElement("div");
+    headerWrapper.className = "ncademi-header-wrapper";
+    
+    // Create and build header-title structure completely
     const headerTitle = document.createElement("div");
     headerTitle.className = "ncademi-header-title";
     
@@ -96,18 +179,14 @@
     headerText.className = "header-text";
     headerText.innerHTML = "NCADEMI Core<br />Accessibility Skills";
     
+    // Build structure: headerText -> headerTitle -> headerWrapper -> header
     headerTitle.appendChild(headerText);
-    header.appendChild(headerTitle);
+    headerWrapper.appendChild(headerTitle);
+    header.appendChild(headerWrapper);
     
-    // Insert at body.firstChild
-    try {
-      document.body.insertBefore(header, document.body.firstChild);
-      logOK("Created and inserted header element");
-      return { header, headerTitle };
-    } catch (e) {
-      logError("Error inserting header into body", e);
-      return null;
-    }
+    // Return header structure without inserting into DOM yet
+    // This allows nav to be added before DOM insertion to prevent visual shift
+    return { header, headerTitle, headerWrapper };
   }
 
   function ensureHeaderNav() {
@@ -117,7 +196,41 @@
       return; 
     }
 
-    // Always create/inject header - no checking for existing
+    // Update existing header without removing it (prevents visual shift)
+    function updateExistingHeader() {
+      const existingHeader = getExistingHeader();
+      if (!existingHeader) return false;
+      
+      log("Header exists in correct position, updating active states");
+      const headerTitle = existingHeader.querySelector(".ncademi-header-title");
+      if (!headerTitle) {
+        // If header exists but structure is wrong, need to recreate
+        log("Header exists but missing title structure, will recreate");
+        return false;
+      }
+      
+      // Ensure wrapper exists (for backwards compatibility)
+      // Check if wrapper exists - if not, this header structure is old and needs recreation
+      let headerWrapper = headerTitle.parentElement;
+      if (!headerWrapper || !headerWrapper.classList.contains('ncademi-header-wrapper')) {
+        // If wrapper doesn't exist, header structure is incompatible - need to recreate
+        // This prevents DOM manipulation that could cause visual shift
+        log("Header exists but missing wrapper structure, will recreate to prevent shift");
+        return false;
+      }
+      
+      // Update nav links first (ensures nav exists for responsive classes)
+      injectNav(existingHeader, headerTitle);
+      
+      // Apply responsive classes immediately (after nav is ready)
+      // Apply synchronously to prevent flash of unstyled content
+      applyResponsiveClasses(existingHeader);
+      
+      logOK("Updated existing header without removal");
+      return true;
+    }
+
+    // Create and inject new header (only if doesn't exist)
     function injectHeaderAndNav() {
       // Make sure body is ready
       if (!document.body) {
@@ -125,24 +238,63 @@
         return false;
       }
       
+      // Check if header already exists and update it instead
+      if (updateExistingHeader()) {
+        return true;
+      }
+      
+      // Create complete header structure (not yet in DOM)
       const headerData = createHeader();
       if (!headerData) {
         return false;
       }
       
-      const { header, headerTitle } = headerData;
+      const { header, headerTitle, headerWrapper } = headerData;
+      
+      // Build nav structure and add it to header BEFORE DOM insertion
+      // This prevents visual shift by ensuring everything is ready at once
       injectNav(header, headerTitle);
-      return true;
+      
+      // Apply responsive classes BEFORE DOM insertion to prevent layout shift
+      applyResponsiveClasses(header);
+      
+      // Inject skip link before header (for accessibility)
+      injectSkipLink();
+
+      // Now insert the complete header (with title and nav) into DOM in one operation
+      // Skip link should be first, so insert header after skip link if it exists
+      try {
+        const skipLink = document.querySelector('#ncademi-skip-link');
+        if (skipLink) {
+          // Insert header after skip link
+          skipLink.parentNode.insertBefore(header, skipLink.nextSibling);
+        } else {
+          // No skip link, insert as first child
+          document.body.insertBefore(header, document.body.firstChild);
+        }
+        logOK("Created and inserted complete header element (title + nav)");
+        return true;
+      } catch (e) {
+        logError("Error inserting header into body", e);
+        return false;
+      }
     }
 
     // Inject nav into header
     function injectNav(header, headerTitle) {
+      // Find the wrapper container (parent of headerTitle)
+      const headerWrapper = headerTitle.parentElement;
+      if (!headerWrapper || !headerWrapper.classList.contains('ncademi-header-wrapper')) {
+        logError("Header wrapper not found, nav injection may fail");
+        return;
+      }
       
       let nav = header.querySelector("#ncademi-nav");
       if (!nav) {
         nav = document.createElement("div");
         nav.id = "ncademi-nav";
         nav.className = "ncademi-desktop-nav";
+        // Insert nav after title within the wrapper
         headerTitle.insertAdjacentElement("afterend", nav);
         logOK("Nav container created and injected");
         
@@ -236,6 +388,7 @@
         existingLinks.forEach(l => {
           l.classList.remove('active');
           l.removeAttribute('aria-current');
+          l.setAttribute('tabindex', '0'); // Restore keyboard navigation for inactive links
         });
         
         const pattern = linkPatterns[active];
@@ -246,6 +399,7 @@
           if (matches) {
             l.classList.add('active');
             l.setAttribute('aria-current', 'page');
+            l.setAttribute('tabindex', '-1'); // Remove from keyboard navigation
           }
         });
           }
@@ -317,25 +471,34 @@
     logOK(`Enhanced A11Y for ${links.length} custom links`);
   }
 
+  // Apply responsive classes to header (can be called before or after DOM insertion)
+  function applyResponsiveClasses(header) {
+    if (!header) return;
+    
+    const isMobile = window.innerWidth <= 850;
+    const nav = header.querySelector('#ncademi-nav');
+    if (!nav) return;
+
+    header.classList.remove('ncademi-mobile-header', 'ncademi-desktop-header');
+    nav.classList.remove('ncademi-mobile-nav', 'ncademi-desktop-nav');
+    document.body.classList.remove('ncademi-mobile-body', 'ncademi-desktop-body');
+
+    if (isMobile) {
+      header.classList.add('ncademi-mobile-header');
+      nav.classList.add('ncademi-mobile-nav');
+      document.body.classList.add('ncademi-mobile-body');
+    } else {
+      header.classList.add('ncademi-desktop-header');
+      nav.classList.add('ncademi-desktop-nav');
+      document.body.classList.add('ncademi-desktop-body');
+    }
+  }
+
   function handleResponsive() {
     function apply() {
-      const isMobile = window.innerWidth <= 768;
       const header = document.getElementById('content-header');
-      const nav = document.getElementById('ncademi-nav');
-      if (!header || !nav) return;
-
-      header.classList.remove('ncademi-mobile-header', 'ncademi-desktop-header');
-      nav.classList.remove('ncademi-mobile-nav', 'ncademi-desktop-nav');
-      document.body.classList.remove('ncademi-mobile-body', 'ncademi-desktop-body');
-
-      if (isMobile) {
-        header.classList.add('ncademi-mobile-header');
-        nav.classList.add('ncademi-mobile-nav');
-        document.body.classList.add('ncademi-mobile-body');
-      } else {
-        header.classList.add('ncademi-desktop-header');
-        nav.classList.add('ncademi-desktop-nav');
-        document.body.classList.add('ncademi-desktop-body');
+      if (header) {
+        applyResponsiveClasses(header);
       }
     }
     apply();
@@ -473,6 +636,39 @@
     return false;
   }
 
+  function injectPageTitle() {
+    // Reset flag on navigation to allow re-injection if needed
+    // But check if title already exists in DOM to prevent duplicates
+    const existingTitle = document.querySelector('h1.page-title');
+    if (existingTitle) {
+      // Title exists, check if it's in the right place
+      const gradesTable = document.querySelector('table#grades_summary');
+      if (gradesTable && existingTitle.nextElementSibling === gradesTable) {
+        // Title is correctly positioned, no need to re-inject
+        return true;
+      }
+    }
+
+    const gradesTable = document.querySelector('table#grades_summary');
+    if (!gradesTable) return false;
+
+    // Remove existing title if it's in wrong position
+    if (existingTitle) {
+      existingTitle.remove();
+    }
+
+    // Create the h1.page-title element
+    const pageTitle = document.createElement('h1');
+    pageTitle.className = 'page-title';
+    pageTitle.textContent = 'Progress';
+
+    // Insert before the grades table (ensures correct order)
+    gradesTable.parentNode.insertBefore(pageTitle, gradesTable);
+    
+    logOK('Page title "Progress" injected');
+    return true;
+  }
+
   function fadeOutOverlay(overlay) {
     if (overlay.classList.contains('fade-out')) return;
     overlay.classList.add('fade-out');
@@ -552,7 +748,11 @@
     const contentWrapper = document.getElementById('content-wrapper');
     if (!contentWrapper) return;
 
-    if (document.getElementById('content-wrapper-overlay')) return;
+    // Remove existing overlay if it exists (prevents duplicate overlays during navigation)
+    const existingOverlay = document.getElementById('content-wrapper-overlay');
+    if (existingOverlay) {
+      existingOverlay.remove();
+    }
 
     const overlay = document.createElement('div');
     overlay.id = 'content-wrapper-overlay';
@@ -615,8 +815,66 @@
     }, 5000);
   }
 
-  if (window.ncademiInitializedV8) {
-    log("Already initialized");
+  // Setup Canvas navigation listener (for AJAX navigation)
+  function setupCanvasNavigationListener() {
+    // Prevent multiple wraps
+    if (window.ncademiNavigationListenerSet) {
+      return;
+    }
+    
+    // Listen for Canvas route changes (Backbone router events)
+    if (window.Backbone && window.Backbone.history) {
+      // Only wrap if not already wrapped
+      if (!window.Backbone.history.navigate._ncademiWrapped) {
+        const originalNavigate = window.Backbone.history.navigate;
+        window.Backbone.history.navigate = function(fragment, options) {
+          const result = originalNavigate.apply(this, arguments);
+          
+          // After navigation, update header without removing it
+          // Use requestAnimationFrame to ensure update happens after Canvas's DOM changes
+          if (options && options.trigger) {
+            // Use double RAF to ensure we're after Canvas's layout changes
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                const courseId = getCourseId();
+                if (courseId && !isAdmin()) {
+                  log("Canvas navigation detected, updating header and page logic");
+                  ensureHeaderNav();
+                  // Apply page-specific logic after header is updated
+                  applyPageSpecificLogic();
+                }
+              });
+            });
+          }
+          
+          return result;
+        };
+        window.Backbone.history.navigate._ncademiWrapped = true;
+        logOK("Canvas navigation listener set up");
+      }
+    }
+    
+    // Also listen for DOM ready events that Canvas fires after AJAX navigation
+    // (only set up once)
+    if (!window.ncademiDOMReadyListenerSet) {
+      document.addEventListener('DOMContentLoaded', function() {
+        const courseId = getCourseId();
+        if (courseId && !isAdmin() && window.ncademiInitializedV11) {
+          // Header already exists, just update it
+          ensureHeaderNav();
+        }
+      });
+      window.ncademiDOMReadyListenerSet = true;
+    }
+    
+    window.ncademiNavigationListenerSet = true;
+  }
+
+  // Initialize only once per page load
+  if (window.ncademiInitializedV11) {
+    log("Already initialized, updating header for navigation");
+    // Header may already exist from previous navigation - update it
+    ensureHeaderNav();
     return;
   }
 
@@ -646,26 +904,165 @@
     return;
   }
 
-  waitForDOM(() => {
-    if (!isCoursePage()) { 
-      log("Not a course page; skipping");
+  // Ensure container widths remain consistent across pages to prevent visual shifts
+  function enforceContainerWidths() {
+    const containers = [
+      { selector: '#not_right_side.ic-app-main-content', props: ['width', 'maxWidth', 'paddingLeft', 'paddingRight', 'marginLeft', 'marginRight'] },
+      { selector: 'div#main.ic-Layout-columns, .ic-Layout-columns', props: ['width', 'maxWidth', 'paddingRight', 'marginLeft', 'marginRight'] },
+      { selector: '#content-wrapper', props: ['width', 'maxWidth', 'paddingLeft', 'paddingRight', 'marginLeft', 'marginRight'] },
+      { selector: 'div#content.ic-Layout-contentMain', props: ['width', 'maxWidth', 'paddingRight', 'marginLeft', 'marginRight'] }
+    ];
+
+    containers.forEach(({ selector, props }) => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(el => {
+        if (!el) return;
+        
+        // Ensure width is set to 100%
+        if (props.includes('width')) {
+          const computedWidth = window.getComputedStyle(el).width;
+          if (computedWidth !== '100%' && computedWidth !== window.innerWidth + 'px') {
+            el.style.width = '100%';
+          }
+        }
+        
+        // Ensure max-width is set correctly
+        if (props.includes('maxWidth')) {
+          const computedMaxWidth = window.getComputedStyle(el).maxWidth;
+          if (selector.includes('#not_right_side') || selector.includes('#main')) {
+            if (computedMaxWidth !== '100vw' && computedMaxWidth !== 'none') {
+              el.style.maxWidth = '100vw';
+            }
+          } else {
+            if (computedMaxWidth !== '100%') {
+              el.style.maxWidth = '100%';
+            }
+          }
+        }
+        
+        // Ensure padding-right is 0
+        if (props.includes('paddingRight')) {
+          const computedPaddingRight = window.getComputedStyle(el).paddingRight;
+          if (computedPaddingRight !== '0px') {
+            el.style.paddingRight = '0';
+          }
+        }
+        
+        // Ensure margin-left and margin-right are 0
+        if (props.includes('marginLeft')) {
+          const computedMarginLeft = window.getComputedStyle(el).marginLeft;
+          if (computedMarginLeft !== '0px') {
+            el.style.marginLeft = '0';
+          }
+        }
+        
+        if (props.includes('marginRight')) {
+          const computedMarginRight = window.getComputedStyle(el).marginRight;
+          if (computedMarginRight !== '0px') {
+            el.style.marginRight = '0';
+          }
+        }
+      });
+    });
+  }
+
+  // Setup MutationObserver to monitor container size changes and enforce consistent widths
+  function setupContainerWidthMonitor() {
+    // Prevent multiple observers
+    if (window.ncademiContainerWidthMonitor) {
       return;
     }
+
+    const observer = new MutationObserver((mutations) => {
+      let shouldEnforce = false;
+      
+      mutations.forEach((mutation) => {
+        // Check if containers were added or modified
+        if (mutation.type === 'childList' || mutation.type === 'attributes') {
+          const target = mutation.target;
+          if (target && (
+            target.id === 'not_right_side' || 
+            target.id === 'main' || 
+            target.id === 'content-wrapper' || 
+            target.id === 'content' ||
+            target.classList.contains('ic-Layout-columns') ||
+            target.classList.contains('ic-app-main-content') ||
+            target.classList.contains('ic-Layout-contentMain')
+          )) {
+            shouldEnforce = true;
+          }
+        }
+      });
+      
+      if (shouldEnforce) {
+        // Use requestAnimationFrame to batch enforcement
+        requestAnimationFrame(() => {
+          enforceContainerWidths();
+        });
+      }
+    });
+
+    // Observe container elements and their style changes
+    const observeTargets = () => {
+      const targets = [
+        document.querySelector('#not_right_side'),
+        document.querySelector('#main'),
+        document.querySelector('#content-wrapper'),
+        document.querySelector('#content')
+      ].filter(Boolean);
+      
+      targets.forEach(target => {
+        observer.observe(target, {
+          attributes: true,
+          attributeFilter: ['style', 'class'],
+          childList: true,
+          subtree: true
+        });
+      });
+    };
+
+    // Start observing
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', observeTargets);
+    } else {
+      observeTargets();
+    }
+
+    // Re-observe after navigation (when DOM changes)
+    window.ncademiContainerWidthMonitor = observer;
     
-    // Inject full-body overlay for redirect (must be before header injection)
-    injectBodyOverlayForRedirect();
+    // Also observe document body for container additions
+    const bodyObserver = new MutationObserver(() => {
+      observeTargets();
+    });
+    bodyObserver.observe(document.body, { childList: true, subtree: true });
     
-    ensureHeaderNav();
-    handleResponsive();
-    enhanceCustomLinksA11Y();
-    
-    // Add body classes for page-specific styling
+    window.ncademiContainerWidthMonitorBody = bodyObserver;
+  }
+
+  // Extract page-specific logic into reusable function (called on initial load and during navigation)
+  function applyPageSpecificLogic() {
     const activeKey = getActiveKey(getCourseId());
     const courseId = getCourseId();
     const currentPath = window.location.pathname;
     const isCoreSkillsPage = courseId && currentPath.includes(`/courses/${courseId}/pages/core-skills`);
     const isDefaultCourseHome = courseId && (currentPath === `/courses/${courseId}` || currentPath === `/courses/${courseId}/`);
     
+    // Ensure skip link exists and targets correct element
+    injectSkipLink();
+    
+    // Enforce consistent container widths first to prevent visual shifts
+    enforceContainerWidths();
+    
+    // Reset page-specific flags on navigation to allow re-injection if needed
+    // This ensures page-specific elements can be re-injected during AJAX navigation
+    if (activeKey !== "progress") {
+      window.ncademiPageTitleInjected = false;
+      window.ncademiGradeIconsInjected = false;
+      window.ncademiStatusPopulated = false;
+    }
+    
+    // Update body classes synchronously (before any layout-affecting operations)
     if (activeKey === "home") {
       document.body.classList.add('ncademi-home-page');
     } else {
@@ -684,11 +1081,14 @@
       document.body.classList.remove('ncademi-default-course-home');
     }
     
+    // Inject content wrapper overlay (after body classes are set)
+    // Inject immediately to prevent layout shift - overlay is positioned absolutely so won't affect layout
     injectContentWrapperOverlay();
     
-    // Handle grades page
+    // Handle grades page (Progress)
     if (activeKey === "progress") {
-      // Hide the "Your Progress" or "Grades for..." heading
+      // Hide the "Your Progress" or "Grades for..." heading immediately
+      // Do this synchronously to prevent layout shift
       const hideH1Title = () => {
         const h1Heading = document.querySelector('.ic-Action-header__Heading, h1.ic-Action-header__Heading');
         if (h1Heading) {
@@ -698,24 +1098,93 @@
         return false;
       };
       
+      // Try to hide immediately
+      hideH1Title();
+      
+      // If not found, wait briefly but still synchronously
       if (!hideH1Title()) {
-        setTimeout(hideH1Title, 100);
+        // Use MutationObserver to catch when Canvas adds the element
+        const observer = new MutationObserver(() => {
+          if (hideH1Title()) {
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        // Cleanup after 2 seconds
+        setTimeout(() => observer.disconnect(), 2000);
       }
+
+      // Remove editable elements from keyboard navigation (minimal JS, just sets tabindex)
+      function removeFromKeyboardNavigation() {
+        // Score column grade elements (the clickable "3" or score value) - PRIMARY TARGET
+        const gradeElements = document.querySelectorAll('.assignment_score .grade');
+        gradeElements.forEach(el => {
+          el.setAttribute('tabindex', '-1');
+        });
+
+        // Score column inputs and editable elements
+        const scoreInputs = document.querySelectorAll('.assignment_score input, .assignment_score [contenteditable="true"], .assignment_score [contenteditable]');
+        scoreInputs.forEach(el => {
+          el.setAttribute('tabindex', '-1');
+        });
+
+        // Sorting dropdown
+        const sortMenu = document.querySelector('#assignment_sort_order_select_menu');
+        if (sortMenu) {
+          sortMenu.setAttribute('tabindex', '-1');
+        }
+
+        // Apply button
+        const applyButton = document.querySelector('#apply_select_menus');
+        if (applyButton) {
+          applyButton.setAttribute('tabindex', '-1');
+        }
+
+        // What-If inputs in sidebar
+        const whatIfInputs = document.querySelectorAll('#student-grades-whatif input');
+        whatIfInputs.forEach(input => {
+          input.setAttribute('tabindex', '-1');
+        });
+
+        // Revert button
+        const revertButton = document.querySelector('#student-grades-revert button, .revert_all_scores_link');
+        if (revertButton) {
+          revertButton.setAttribute('tabindex', '-1');
+        }
+      }
+
+      // Remove from keyboard navigation immediately and on DOM changes
+      removeFromKeyboardNavigation();
+      
+      // Use MutationObserver to catch dynamically added elements
+      const keyboardNavObserver = new MutationObserver(() => {
+        removeFromKeyboardNavigation();
+      });
+      keyboardNavObserver.observe(document.body, { 
+        childList: true, 
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class']
+      });
+      // Store for potential cleanup
+      window.ncademiKeyboardNavObserver = keyboardNavObserver;
       
       const setupObserver = () => {
         const gradesTable = document.querySelector('table#grades_summary');
         if (!gradesTable) return false;
 
+        const pageTitleInjected = injectPageTitle();
         const iconsInjected = injectGradeIcons();
         const statusPopulated = populateStatusColumn();
         
-        if (iconsInjected && statusPopulated) return true;
+        if (pageTitleInjected && iconsInjected && statusPopulated) return true;
 
         if (typeof MutationObserver !== 'undefined') {
           const observer = new MutationObserver(() => {
+            const pageTitleInjected = injectPageTitle();
             const iconsInjected = injectGradeIcons();
             const statusPopulated = populateStatusColumn();
-        if (iconsInjected && statusPopulated) {
+        if (pageTitleInjected && iconsInjected && statusPopulated) {
             observer.disconnect();
             }
           });
@@ -724,9 +1193,10 @@
         } else {
           // Fallback polling
             const retryInterval = setInterval(() => {
+              const pageTitleInjected = injectPageTitle();
               const iconsInjected = injectGradeIcons();
               const statusPopulated = populateStatusColumn();
-              if (iconsInjected && statusPopulated) {
+              if (pageTitleInjected && iconsInjected && statusPopulated) {
                 clearInterval(retryInterval);
               }
             }, 1000);
@@ -736,12 +1206,52 @@
         return false;
       };
 
-      if (!setupObserver()) {
-        setTimeout(setupObserver, 500);
-      }
+      // Use requestAnimationFrame to ensure setup happens after DOM is ready
+      requestAnimationFrame(() => {
+        if (!setupObserver()) {
+          requestAnimationFrame(() => {
+            setupObserver();
+          });
+        }
+      });
+    }
+  }
+
+  waitForDOM(() => {
+    if (!isCoursePage()) { 
+      log("Not a course page; skipping");
+      return;
     }
     
-    window.ncademiInitializedV8 = true;
-    logOK("Initialized: v8 nav + A11Y");
+    // Inject skip link early (for accessibility)
+    injectSkipLink();
+    
+    // Inject full-body overlay for redirect (must be before header injection)
+    injectBodyOverlayForRedirect();
+    
+    // Setup container width monitor to prevent visual shifts (must be early)
+    setupContainerWidthMonitor();
+    
+    // Setup listener for Canvas AJAX navigation (must be before ensureHeaderNav)
+    setupCanvasNavigationListener();
+    
+    // Ensure header/nav exists or is updated (checks for existing header first)
+    ensureHeaderNav();
+    
+    // Ensure skip link is in correct position (should be first child)
+    const skipLink = document.querySelector('#ncademi-skip-link');
+    if (skipLink && skipLink !== document.body.firstChild) {
+      document.body.insertBefore(skipLink, document.body.firstChild);
+    }
+    
+    // Setup responsive handler (will update existing header immediately)
+    handleResponsive();
+    enhanceCustomLinksA11Y();
+    
+    // Apply page-specific logic (body classes, overlays, page-specific enhancements)
+    applyPageSpecificLogic();
+    
+    window.ncademiInitializedV11 = true;
+    logOK("Initialized: v11 nav + A11Y + Container Width Enforcement + Skip Link");
   });
 })();
