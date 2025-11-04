@@ -142,16 +142,49 @@
       }
     }
 
-    // Check if header exists
+    // Check if header exists, or create it if it doesn't
     function checkHeaderExists() {
-      const header = document.getElementById("content-header");
+      let header = document.getElementById("content-header");
+      
       if (header) {
         const headerTitle = header.querySelector(".ncademi-header-title");
         if (headerTitle) {
           return { header, headerTitle, found: true };
         }
       }
+      
+      // Header doesn't exist - create it
+      // Make sure body exists before trying to insert
+      if (!document.body) {
+        log("Body not ready yet, cannot create header");
         return { header: null, headerTitle: null, found: false };
+      }
+      
+      log("Header not found in HTML, creating new header element");
+      header = document.createElement("header");
+      header.id = "content-header";
+      header.className = "course-content-header";
+      
+      const headerTitle = document.createElement("div");
+      headerTitle.className = "ncademi-header-title";
+      
+      const headerText = document.createElement("span");
+      headerText.className = "header-text";
+      headerText.innerHTML = "NCADEMI Core<br />Accessibility Skills";
+      
+      headerTitle.appendChild(headerText);
+      header.appendChild(headerTitle);
+      
+      // Insert at body.firstChild
+      try {
+        document.body.insertBefore(header, document.body.firstChild);
+        logOK("Created and inserted new header element");
+      } catch (e) {
+        logError("Error inserting header into body", e);
+        return { header: null, headerTitle: null, found: false };
+      }
+      
+      return { header, headerTitle, found: true };
     }
 
     // Inject nav once header is found
@@ -293,7 +326,7 @@
       }
     }
 
-    // METHOD 1: Immediate check
+    // METHOD 1: Immediate check (or create if needed)
     const immediateCheck = checkHeaderExists();
     if (immediateCheck.found) {
       injectNav(immediateCheck.header, immediateCheck.headerTitle);
@@ -309,7 +342,7 @@
         });
       }
 
-      // Check again after DOMContentLoaded
+      // Check again after DOMContentLoaded (or create if needed)
       const check2 = checkHeaderExists();
       if (check2.found) {
         injectNav(check2.header, check2.headerTitle);
@@ -334,7 +367,7 @@
         });
       }
 
-      // Final check and injection
+      // Final check and injection (or create if needed)
       const check3 = checkHeaderExists();
       if (check3.found) {
         injectNav(check3.header, check3.headerTitle);
@@ -651,17 +684,18 @@
     
     // Handle grades page
     if (activeKey === "progress") {
-      const updateH1Title = () => {
+      // Hide the "Your Progress" or "Grades for..." heading
+      const hideH1Title = () => {
         const h1Heading = document.querySelector('.ic-Action-header__Heading, h1.ic-Action-header__Heading');
-        if (h1Heading && h1Heading.textContent.includes('Grades for')) {
-            h1Heading.textContent = 'Your Progress';
+        if (h1Heading) {
+            h1Heading.style.display = 'none';
             return true;
         }
         return false;
       };
       
-      if (!updateH1Title()) {
-        setTimeout(updateH1Title, 100);
+      if (!hideH1Title()) {
+        setTimeout(hideH1Title, 100);
       }
       
       const setupObserver = () => {

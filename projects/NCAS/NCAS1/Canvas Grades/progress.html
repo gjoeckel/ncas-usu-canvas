@@ -1,0 +1,776 @@
+<header id="content-header" class="course-content-header">
+    <div class="ncademi-header-title"><span class="header-text">NCADEMI Core<br />Accessibility Skills</span></div>
+</header>
+
+<style>
+/* Hide Canvas UI elements not covered by ncas7-min.css */
+#breadcrumbs,
+#global_nav_tray_container,
+#global_nav_tour,
+#instructure_ajax_error_box,
+#flash_message_holder,
+#flash_screenreader_holder {
+  display: none !important;
+}
+
+/* Hide interactive elements not covered by ncas7-min.css */
+#student-grades-right-content,
+.outcome-toggles {
+  display: none !important;
+}
+
+/* Show only assignments tab content */
+#assignments {
+  display: block !important;
+  visibility: visible !important;
+}
+
+#outcomes {
+  display: none !important;
+}
+
+/* Disable What-If score editing */
+.assignment_score .grade,
+.assignment_score .tooltip {
+  cursor: default !important;
+  pointer-events: none !important;
+}
+
+/* Ensure table displays properly */
+#grades_summary {
+  width: 100%;
+}
+</style>
+
+<div id="grade-summary-content">
+
+  <div id="print-grades-container" class="ic-Action-header" style="margin-bottom: 2.25rem">
+    <div id="print-grades-button-container" class="ic-Action-header__Secondary">
+      <a role="button" id="print-grades-button" class="Button print-grades icon-printer" href="javascript:window.print()">
+        Print Grades
+      </a>
+    </div>
+      <div id="ClearBadgeCountsButton" class="ic-Action-header__Secondary"></div>
+  </div>
+
+  <div id="assignments" aria-labelledby="ui-id-1" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-expanded="true" aria-hidden="false">
+      <span id="aria-announcer" class="hide-text affix" aria-live="polite"></span>
+      <table id="grades_summary" class="editable ic-Table ic-Table--hover-row ic-Table--grades-summary-table">
+          <caption class="screenreader-only">You can view your grades based on What-If scores so that you know how grades will be affected by upcoming or resubmitted assignments. You can test scores for an assignment that already includes a score, or an assignment that has yet to be graded.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Due</th>
+            <th scope="col">Submitted</th>
+            <th scope="col" class="status">Status</th>
+            <th scope="col" class="assignment_score">Score</th>
+            <th scope="col" id="asset_processors_header"> <!-- React content --></th>
+            <th scope="col"><span class="screenreader-only">Details</span></th>
+            <th scope="col"><span class="screenreader-only">Submission Progress Status</span></th>
+          </tr>
+        </thead>
+
+        <tbody id="assignments-tbody">
+          <!-- Assignment rows will be populated dynamically by JavaScript -->
+        </tbody>
+      </table>
+  <div id="GradeSummarySubmissionCommentsTray"></div>
+  </div>
+
+</div>
+
+<script>
+// Expose as a global function for external execution
+window.progressPageInit = function() {
+  'use strict';
+  
+  console.log('[Progress Page] ===== INITIALIZATION START =====');
+  console.log('[Progress Page] Document ready state:', document.readyState);
+  console.log('[Progress Page] ENV available:', typeof ENV !== 'undefined');
+  
+  if (typeof ENV !== 'undefined') {
+    console.log('[Progress Page] ENV object:', ENV);
+    console.log('[Progress Page] ENV.submissions:', ENV.submissions);
+    console.log('[Progress Page] ENV.assignment_groups:', ENV.assignment_groups);
+    console.log('[Progress Page] ENV.course_id:', ENV.course_id);
+    console.log('[Progress Page] ENV.student_id:', ENV.student_id);
+    console.log('[Progress Page] ENV.current_user_id:', ENV.current_user_id);
+  }
+  
+  var waitCount = 0;
+  var maxWaitCount = 100; // 10 seconds max wait
+  
+  // Wait for Canvas ENV to be available
+  function waitForENV(callback) {
+    waitCount++;
+    console.log('[Progress Page] Waiting for ENV... (attempt ' + waitCount + '/' + maxWaitCount + ')');
+    
+    if (typeof ENV !== 'undefined') {
+      console.log('[Progress Page] ENV found, checking for required properties...');
+      console.log('[Progress Page] ENV.submissions exists:', !!ENV.submissions);
+      console.log('[Progress Page] ENV.assignment_groups exists:', !!ENV.assignment_groups);
+      
+      if (ENV.submissions) {
+        console.log('[Progress Page] ENV.submissions type:', typeof ENV.submissions);
+        console.log('[Progress Page] ENV.submissions is array:', Array.isArray(ENV.submissions));
+        console.log('[Progress Page] ENV.submissions length:', ENV.submissions ? ENV.submissions.length : 0);
+        if (ENV.submissions.length > 0) {
+          console.log('[Progress Page] First submission sample:', ENV.submissions[0]);
+        }
+      }
+      
+      if (ENV.assignment_groups) {
+        console.log('[Progress Page] ENV.assignment_groups type:', typeof ENV.assignment_groups);
+        console.log('[Progress Page] ENV.assignment_groups is array:', Array.isArray(ENV.assignment_groups));
+        console.log('[Progress Page] ENV.assignment_groups length:', ENV.assignment_groups ? ENV.assignment_groups.length : 0);
+        if (ENV.assignment_groups.length > 0) {
+          console.log('[Progress Page] First group sample:', ENV.assignment_groups[0]);
+          if (ENV.assignment_groups[0].assignments) {
+            console.log('[Progress Page] First group assignments count:', ENV.assignment_groups[0].assignments.length);
+            if (ENV.assignment_groups[0].assignments.length > 0) {
+              console.log('[Progress Page] First assignment sample:', ENV.assignment_groups[0].assignments[0]);
+            }
+          }
+        }
+      }
+      
+      if (ENV.submissions && ENV.assignment_groups) {
+        console.log('[Progress Page] All required ENV properties found, proceeding...');
+        callback();
+        return;
+      }
+    }
+    
+    if (waitCount >= maxWaitCount) {
+      console.error('[Progress Page] TIMEOUT: ENV not available after ' + maxWaitCount + ' attempts');
+      console.error('[Progress Page] ENV state:', typeof ENV !== 'undefined' ? {
+        hasSubmissions: !!ENV.submissions,
+        hasAssignmentGroups: !!ENV.assignment_groups,
+        courseId: ENV.course_id,
+        studentId: ENV.student_id,
+        allKeys: Object.keys(ENV || {})
+      } : 'ENV is undefined');
+      return;
+    }
+    
+    setTimeout(function() { waitForENV(callback); }, 100);
+  }
+  
+  function getAssignmentData(assignmentId) {
+    console.log('[Progress Page] Getting assignment data for ID:', assignmentId);
+    
+    // Find assignment in assignment groups
+    var assignment = null;
+    var submission = null;
+    
+    if (ENV.assignment_groups) {
+      console.log('[Progress Page] Searching ' + ENV.assignment_groups.length + ' assignment groups...');
+      for (var i = 0; i < ENV.assignment_groups.length; i++) {
+        var group = ENV.assignment_groups[i];
+        console.log('[Progress Page] Checking group ' + (i + 1) + ' (ID: ' + group.id + '), assignments: ' + (group.assignments ? group.assignments.length : 0));
+        
+        if (!group.assignments) {
+          console.warn('[Progress Page] Group ' + group.id + ' has no assignments array');
+          continue;
+        }
+        
+        for (var j = 0; j < group.assignments.length; j++) {
+          var assignmentIdStr = String(group.assignments[j].id);
+          var searchIdStr = String(assignmentId);
+          console.log('[Progress Page] Comparing assignment ID: ' + assignmentIdStr + ' with search: ' + searchIdStr);
+          
+          if (assignmentIdStr === searchIdStr) {
+            assignment = group.assignments[j];
+            console.log('[Progress Page] Found assignment:', assignment);
+            break;
+          }
+        }
+        if (assignment) break;
+      }
+    } else {
+      console.warn('[Progress Page] ENV.assignment_groups is not available');
+    }
+    
+    if (!assignment) {
+      console.warn('[Progress Page] Assignment not found for ID:', assignmentId);
+    }
+    
+    // Find submission
+    if (ENV.submissions) {
+      console.log('[Progress Page] Searching ' + ENV.submissions.length + ' submissions...');
+      for (var k = 0; k < ENV.submissions.length; k++) {
+        var subAssignmentId = String(ENV.submissions[k].assignment_id);
+        var searchIdStr = String(assignmentId);
+        console.log('[Progress Page] Comparing submission assignment_id: ' + subAssignmentId + ' with search: ' + searchIdStr);
+        
+        if (subAssignmentId === searchIdStr) {
+          submission = ENV.submissions[k];
+          console.log('[Progress Page] Found submission:', submission);
+          break;
+        }
+      }
+    } else {
+      console.warn('[Progress Page] ENV.submissions is not available');
+    }
+    
+    if (!submission) {
+      console.log('[Progress Page] No submission found for assignment ID:', assignmentId);
+    }
+    
+    console.log('[Progress Page] Assignment data result:', {
+      assignment: assignment ? { id: assignment.id, name: assignment.name } : null,
+      submission: submission ? { assignment_id: submission.assignment_id, score: submission.score, workflow_state: submission.workflow_state } : null
+    });
+    
+    return { assignment: assignment, submission: submission };
+  }
+  
+  function getStatusDisplay(submission, assignment) {
+    if (!submission || submission.workflow_state === 'unsubmitted') {
+      return {
+        text: 'Pending',
+        style: 'font-size: 1.25rem !important; color: #666 !important; font-style: italic !important;'
+      };
+    }
+    
+    if (submission.workflow_state === 'graded') {
+      var score = submission.score || 0;
+      var pointsPossible = assignment ? assignment.points_possible : 0;
+      
+      if (score === pointsPossible && score > 0) {
+        return {
+          text: 'Done',
+          style: 'font-size: 1.25rem !important; color: #336600 !important; font-weight: bold !important;'
+        };
+      } else {
+        return {
+          text: 'Active',
+          style: 'font-size: 1.25rem !important; color: #333 !important; font-weight: bold !important;'
+        };
+      }
+    }
+    
+    return {
+      text: 'Pending',
+      style: 'font-size: 1.25rem !important; color: #666 !important; font-style: italic !important;'
+    };
+  }
+  
+  function formatScore(submission, assignment) {
+    if (!submission || submission.workflow_state === 'unsubmitted') {
+      return { score: '-', points: assignment ? assignment.points_possible : 0 };
+    }
+    
+    if (submission.workflow_state === 'graded') {
+      var score = submission.score || 0;
+      var points = assignment ? assignment.points_possible : 0;
+      return { score: score, points: points };
+    }
+    
+    return { score: '-', points: assignment ? assignment.points_possible : 0 };
+  }
+  
+  function formatDate(dateString) {
+    if (!dateString) return '';
+    
+    try {
+      var date = new Date(dateString);
+      var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      var month = months[date.getMonth()];
+      var day = date.getDate();
+      var hours = date.getHours();
+      var minutes = date.getMinutes();
+      var ampm = hours >= 12 ? 'pm' : 'am';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      minutes = minutes < 10 ? '0' + minutes : minutes;
+      return month + ' ' + day + ' at ' + hours + ':' + minutes + ampm;
+    } catch (e) {
+      return dateString;
+    }
+  }
+  
+  function getAssignmentName(assignmentId) {
+    // Map of assignment IDs to names (from rendered HTML)
+    var names = {
+      '55670': 'Alternative Text',
+      '55673': 'Color Use',
+      '55679': 'Captions',
+      '55672': 'Clear Writing',
+      '55675': 'Headings',
+      '55680': 'Links',
+      '55674': 'Lists',
+      '55669': 'Tables',
+      '55676': 'Text Contrast'
+    };
+    return names[assignmentId] || 'Assignment ' + assignmentId;
+  }
+  
+  function getAssignmentIcon(assignmentId) {
+    // Map of assignment IDs to icon file IDs
+    var icons = {
+      '55670': '1197429',
+      '55673': '1197432',
+      '55679': '1197430',
+      '55672': '1197431',
+      '55675': '1197421',
+      '55680': '1197434',
+      '55674': '1197435',
+      '55669': '1197436',
+      '55676': '1197433'
+    };
+    var fileId = icons[assignmentId];
+    if (fileId && ENV.course_id) {
+      return 'https://usucourses.instructure.com/courses/' + ENV.course_id + '/files/' + fileId + '/preview';
+    }
+    return '';
+  }
+  
+  function renderAssignmentRow(assignmentId) {
+    console.log('[Progress Page] Rendering assignment row for ID:', assignmentId);
+    
+    var data = getAssignmentData(assignmentId);
+    var assignment = data.assignment;
+    var submission = data.submission;
+    
+    if (!assignment) {
+      console.warn('[Progress Page] Cannot render row - assignment not found for ID:', assignmentId);
+      return '';
+    }
+    
+    // Find assignment group ID
+    var groupId = '';
+    if (ENV.assignment_groups) {
+      for (var g = 0; g < ENV.assignment_groups.length; g++) {
+        var group = ENV.assignment_groups[g];
+        if (group.assignments) {
+          for (var a = 0; a < group.assignments.length; a++) {
+            if (String(group.assignments[a].id) === String(assignmentId)) {
+              groupId = String(group.id);
+              break;
+            }
+          }
+          if (groupId) break;
+        }
+      }
+    }
+    console.log('[Progress Page] Found group ID:', groupId);
+    
+    var courseId = ENV.course_id || '2803';
+    var studentId = ENV.student_id || ENV.current_user_id || '163152';
+    console.log('[Progress Page] Using courseId:', courseId, 'studentId:', studentId);
+    
+    var assignmentName = getAssignmentName(assignmentId);
+    var iconUrl = getAssignmentIcon(assignmentId);
+    var statusInfo = getStatusDisplay(submission, assignment);
+    var scoreInfo = formatScore(submission, assignment);
+    
+    // Get submission date - try multiple possible fields
+    var submissionDate = '';
+    if (submission) {
+      console.log('[Progress Page] Submission object keys:', Object.keys(submission));
+      // Try different possible date fields
+      if (submission.submitted_at) {
+        submissionDate = formatDate(submission.submitted_at);
+        console.log('[Progress Page] Found submitted_at:', submission.submitted_at, 'formatted:', submissionDate);
+      } else if (submission.submission_date) {
+        submissionDate = formatDate(submission.submission_date);
+        console.log('[Progress Page] Found submission_date:', submission.submission_date, 'formatted:', submissionDate);
+      } else if (submission.created_at) {
+        submissionDate = formatDate(submission.created_at);
+        console.log('[Progress Page] Using created_at as fallback:', submission.created_at, 'formatted:', submissionDate);
+      } else {
+        console.log('[Progress Page] No submission date field found');
+      }
+    } else {
+      console.log('[Progress Page] No submission object, no date available');
+    }
+    
+    var dueDate = assignment.due_at ? formatDate(assignment.due_at) : '';
+    var assignmentUrl = '/courses/' + courseId + '/assignments/' + assignmentId + '/submissions/' + studentId;
+    var isGraded = submission && submission.workflow_state === 'graded';
+    var rowClass = 'student_assignment' + (isGraded ? ' assignment_graded' : '') + ' editable';
+    
+    // Get submission ID if available
+    var submissionId = submission && submission.id ? submission.id : '';
+    if (submission && !submissionId && submission.submission_id) {
+      submissionId = submission.submission_id;
+    }
+    console.log('[Progress Page] Submission ID:', submissionId);
+    
+    // Format score display - handle both numeric and string
+    var scoreDisplay = scoreInfo.score;
+    var originalPoints = '';
+    var originalScore = '';
+    if (scoreInfo.score !== '-') {
+      // original_points should be the full float value like "3.0"
+      var scoreNum = parseFloat(scoreInfo.score);
+      originalPoints = isNaN(scoreNum) ? '' : scoreNum.toFixed(1);
+      // original_score should be the display value with trailing space like "3 "
+      originalScore = String(scoreInfo.score).trim() + ' ';
+    }
+    console.log('[Progress Page] Score formatting:', {
+      scoreDisplay: scoreDisplay,
+      originalPoints: originalPoints,
+      originalScore: originalScore
+    });
+    
+    console.log('[Progress Page] Assignment row data:', {
+      assignmentId: assignmentId,
+      assignmentName: assignmentName,
+      score: scoreInfo.score,
+      points: scoreInfo.points,
+      status: statusInfo.text,
+      isGraded: isGraded,
+      submissionDate: submissionDate,
+      dueDate: dueDate,
+      submissionId: submissionId,
+      groupId: groupId
+    });
+    
+    var html = '';
+    
+    // Main assignment row
+    html += '<tr class="' + rowClass + '" data-muted="false" data-pending_quiz="false" id="submission_' + assignmentId + '">';
+    
+    // Title column
+    html += '<th class="title" scope="row">';
+    if (iconUrl) {
+      html += '<img src="' + iconUrl + '" alt="' + assignmentName + ' icon" class="ncademi-grade-icon" width="60" height="60" role="presentation">';
+    }
+    html += '<a href="' + assignmentUrl + '">' + assignmentName + '</a>';
+    html += '<div class="context">Assignments</div>';
+    html += '</th>';
+    
+    // Due date column
+    html += '<td class="due">';
+    html += dueDate ? '    ' + dueDate + '' : '    ';
+    html += '</td>';
+    
+    // Submitted column
+    html += '<td class="submitted">';
+    html += submissionDate ? '    ' + submissionDate + '' : '    ';
+    html += '</td>';
+    
+    // Status column
+    html += '<td class="status" scope="row" style="' + statusInfo.style + '" data-ncademi-status-populated="true">' + statusInfo.text + '</td>';
+    
+    // Score column - EXACT structure from grades page
+    html += '<td class="assignment_score" title="Click to test a different score">';
+    html += '<div style="position: relative; height: 100%;" class="score_holder">';
+    html += '<span class="assignment_presenter_for_submission" style="display: none;"></span>';
+    html += '<span class="react_pill_container"></span>';
+    html += '<span class="tooltip">';
+    html += '<span class="grade" tabindex="0">';
+    html += '<span class="tooltip_wrap right">';
+    html += '<span class="tooltip_text score_teaser">';
+    html += 'Click to test a different score';
+    html += '</span>';
+    html += '</span>';
+    html += '<span class="screenreader-only" role="button">';
+    html += 'Click to test a different score';
+    html += '</span>';
+    html += scoreDisplay;
+    html += '</span>';
+    html += '<span>/ ' + scoreInfo.points + '</span>';
+    html += '</span>';
+    html += '<div style="display: none;">';
+    html += '<!-- Store the original points so we don\'t need to parse and guess at locale -->';
+    html += '<span class="original_points">';
+    html += originalPoints ? '                        ' + originalPoints + '\n                      ' : '\n                        ';
+    html += '</span>';
+    html += '<!-- Store the original score so that we can retrieve it after any "What-If" calculations -->';
+    html += '<span class="original_score">';
+    html += originalScore ? '                        ' + originalScore + ' \n                      ' : '                         \n                      ';
+    html += '</span>';
+    html += '<!-- Store the current score so that it can persist between multiple "What-If" calculations -->';
+    html += '<span class="what_if_score">';
+    html += originalScore ? '                        ' + originalScore + ' \n                      ' : '                         \n                      ';
+    html += '</span>';
+    html += '<!-- Load any previously saved "What-If" scores -->';
+    html += '<span class="student_entered_score">';
+    html += '\n                        \n                      ';
+    html += '</span>';
+    html += '<span class="submission_status">';
+    html += (submission ? submission.workflow_state : 'unsubmitted');
+    html += '</span>';
+    html += '<span class="assignment_group_id">' + groupId + '</span>';
+    html += '<span class="assignment_id">' + assignmentId + '</span>';
+    html += '<span class="group_weight"></span>';
+    html += '<span class="rules"></span>';
+    html += '</div>';
+    html += '</div>';
+    html += '</td>';
+    
+    // Asset processors column
+    html += '<td class="asset_processors_cell" data-assignment-id="' + assignmentId + '" data-submission-id="' + submissionId + '" data-assignment-name="' + assignmentName + '"></td>';
+    
+    // Details column - EXACT structure with all hidden links
+    html += '<td class="details">';
+    html += '<a href="#" class="toggle_final_grade_info tooltip" aria-label="This assignment does not count toward the final grade." aria-hidden="true" role="presentation" tabindex="-1" style="visibility: hidden;">';
+    html += '<span class="tooltip_wrap right">';
+    html += '<span class="tooltip_text">Grade Info</span>';
+    html += '</span>';
+    html += '<i class="icon-warning standalone-icon"></i>';
+    html += '</a>';
+    html += '<a href="#" class="toggle_score_details_link tooltip" aria-label="See scoring details" aria-hidden="true" role="presentation" tabindex="-1" style="visibility: hidden;">';
+    html += '<span class="tooltip_wrap right">';
+    html += '<span class="tooltip_text">See scoring details</span>';
+    html += '</span>';
+    html += '<i class="icon-check-plus standalone-icon"></i>';
+    html += '</a>';
+    html += '<a href="#" role="button" class="toggle_rubric_assessments_link tooltip" aria-label="See rubric results" aria-expanded="false" aria-controls="rubric_' + assignmentId + '" tabindex="0" style="visibility: hidden;">';
+    html += '<span class="tooltip_wrap right">';
+    html += '<span class="tooltip_text">See rubric results</span>';
+    html += '</span>';
+    html += '<i class="icon-rubric"></i>';
+    html += '</a>';
+    html += '<a href="#" id="assignment_comment_' + assignmentId + '" class="toggle_comments_link tooltip" aria-label="Read comments" aria-haspopup="true" aria-describedby="comment_count_for_assignment_' + assignmentId + '" aria-hidden="true" role="presentation" tabindex="-1" style="visibility: hidden;">';
+    html += '<span class="tooltip_wrap right">';
+    html += '<span class="tooltip_text" id="comment_count_for_assignment_' + assignmentId + '">';
+    html += '0 comments';
+    html += '</span>';
+    html += '</span>';
+    html += '<i class="icon-discussion standalone-icon"></i>';
+    html += '<span class="comment_count">';
+    html += '0';
+    html += '</span>';
+    html += '</a>';
+    html += '</td>';
+    
+    // Progress status column
+    html += '<td></td>';
+    
+    html += '</tr>';
+    
+    // Collapsible rows - EXACT structure from grades page
+    var commentsClass = isGraded ? 'comments assignment_graded' : 'comments ';
+    html += '<tr id="final_grade_info_' + assignmentId + '" class="' + commentsClass + '" style="display: none;">';
+    html += '</tr>';
+    html += '<tr id="grade_info_' + assignmentId + '" class="comments grade_details ' + (isGraded ? 'assignment_graded' : '') + '" style="display: none;">';
+    if (isGraded) {
+      html += '<td colspan="6" style="padding-bottom: 20px;">';
+      html += '</td>';
+    }
+    html += '</tr>';
+    html += '<tr id="comments_thread_' + assignmentId + '" class="comments comments_thread ' + (isGraded ? 'assignment_graded' : '') + '" style="display: none;">';
+    if (isGraded) {
+      html += '<td colspan="6">';
+      html += '</td>';
+    }
+    html += '</tr>';
+    html += '<tr id="rubric_' + assignmentId + '" class="rubric_assessments ' + (isGraded ? 'assignment_graded' : '') + '" style="display: none;">';
+    html += '</tr>';
+    
+    console.log('[Progress Page] Generated HTML length:', html.length, 'characters');
+    
+    return html;
+  }
+  
+  function renderAssignments() {
+    console.log('[Progress Page] ===== RENDER ASSIGNMENTS START =====');
+    
+    if (!ENV.assignment_groups) {
+      console.error('[Progress Page] ENV.assignment_groups is undefined');
+      return;
+    }
+    
+    if (!ENV.assignment_groups.length) {
+      console.warn('[Progress Page] ENV.assignment_groups is empty array');
+      return;
+    }
+    
+    console.log('[Progress Page] Found ' + ENV.assignment_groups.length + ' assignment groups');
+    
+    var tbody = document.getElementById('assignments-tbody');
+    if (!tbody) {
+      console.error('[Progress Page] CRITICAL: assignments-tbody element not found in DOM');
+      console.error('[Progress Page] Available elements:', {
+        gradeSummaryContent: !!document.getElementById('grade-summary-content'),
+        assignments: !!document.getElementById('assignments'),
+        gradesSummary: !!document.getElementById('grades_summary')
+      });
+      return;
+    }
+    
+    console.log('[Progress Page] Found tbody element, collecting assignment IDs...');
+    
+    // Collect all assignment IDs
+    var assignmentIds = [];
+    for (var i = 0; i < ENV.assignment_groups.length; i++) {
+      var group = ENV.assignment_groups[i];
+      console.log('[Progress Page] Processing group ' + (i + 1) + ':', {
+        id: group.id,
+        assignmentsCount: group.assignments ? group.assignments.length : 0
+      });
+      
+      if (!group.assignments) {
+        console.warn('[Progress Page] Group ' + group.id + ' has no assignments property');
+        continue;
+      }
+      
+      if (!Array.isArray(group.assignments)) {
+        console.warn('[Progress Page] Group ' + group.id + ' assignments is not an array:', typeof group.assignments);
+        continue;
+      }
+      
+      for (var j = 0; j < group.assignments.length; j++) {
+        var assignment = group.assignments[j];
+        if (!assignment || !assignment.id) {
+          console.warn('[Progress Page] Invalid assignment in group ' + group.id + ':', assignment);
+          continue;
+        }
+        var idStr = String(assignment.id);
+        assignmentIds.push(idStr);
+        console.log('[Progress Page] Added assignment ID:', idStr, 'name:', assignment.name || 'unnamed');
+      }
+    }
+    
+    console.log('[Progress Page] Collected ' + assignmentIds.length + ' assignment IDs:', assignmentIds);
+    
+    if (assignmentIds.length === 0) {
+      console.error('[Progress Page] CRITICAL: No assignment IDs collected!');
+      console.error('[Progress Page] ENV.assignment_groups structure:', JSON.stringify(ENV.assignment_groups, null, 2));
+      return;
+    }
+    
+    // Render each assignment
+    var html = '';
+    var renderedCount = 0;
+    for (var k = 0; k < assignmentIds.length; k++) {
+      console.log('[Progress Page] Rendering assignment ' + (k + 1) + '/' + assignmentIds.length + ': ' + assignmentIds[k]);
+      var rowHtml = renderAssignmentRow(assignmentIds[k]);
+      if (rowHtml) {
+        html += rowHtml;
+        renderedCount++;
+      } else {
+        console.warn('[Progress Page] renderAssignmentRow returned empty for ID:', assignmentIds[k]);
+      }
+    }
+    
+    console.log('[Progress Page] Rendered ' + renderedCount + ' assignment rows');
+    console.log('[Progress Page] HTML length:', html.length, 'characters');
+    
+    // Add group total row if needed - EXACT structure from grades page
+    if (ENV.assignment_groups.length > 0) {
+      var groupId = ENV.assignment_groups[0].id;
+      console.log('[Progress Page] Adding group total row for group:', groupId);
+      html += '<tr class="student_assignment hard_coded group_total" data-muted="true" data-pending_quiz="false" id="submission_group-' + groupId + '">';
+      html += '<th class="title" scope="row">';
+      html += 'Assignments';
+      html += '</th>';
+      html += '<td class="due">';
+      html += '</td>';
+      html += '<td class="submitted">';
+      html += '</td>';
+      html += '<td class="status" scope="row">';
+      html += '</td>';
+      html += '<td class="assignment_score" title="">';
+      html += '<div style="position: relative; height: 100%;" class="score_holder">';
+      html += '<span class="assignment_presenter_for_submission" style="display: none;"></span>';
+      html += '<span class="react_pill_container"></span>';
+      html += '<span class="tooltip">';
+      html += '<span class="grade">';
+      html += '<span class="tooltip_wrap right">';
+      html += '<span class="tooltip_text score_teaser">';
+      html += 'Instructor has not posted this grade';
+      html += '</span>';
+      html += '</span>';
+      html += '<i class="icon-off" title="Instructor has not posted this grade"></i>';
+      html += '</span>';
+      html += '</span>';
+      html += '<div style="display: none;">';
+      html += '<!-- Store the original points so we don\'t need to parse and guess at locale -->';
+      html += '<span class="original_points">';
+      html += '\n                        \n                      ';
+      html += '</span>';
+      html += '<!-- Store the original score so that we can retrieve it after any "What-If" calculations -->';
+      html += '<span class="original_score">';
+      html += '\n                        \n                      ';
+      html += '</span>';
+      html += '<!-- Store the current score so that it can persist between multiple "What-If" calculations -->';
+      html += '<span class="what_if_score">';
+      html += '\n                        \n                      ';
+      html += '</span>';
+      html += '<!-- Load any previously saved "What-If" scores -->';
+      html += '<span class="student_entered_score">';
+      html += '\n                        \n                      ';
+      html += '</span>';
+      html += '<span class="submission_status">';
+      html += 'none';
+      html += '</span>';
+      html += '<span class="assignment_group_id">' + groupId + '</span>';
+      html += '<span class="assignment_id">group-' + groupId + '</span>';
+      html += '<span class="group_weight">0.0</span>';
+      html += '<span class="rules"></span>';
+      html += '</div>';
+      html += '</div>';
+      html += '</td>';
+      html += '<td class="asset_processors_cell" data-assignment-id="group-' + groupId + '" data-submission-id="" data-assignment-name="Assignments"></td>';
+      html += '<td class="details">';
+      html += '<span class="possible points_possible" aria-label=""></span>';
+      html += '</td>';
+      html += '<td></td>';
+      html += '</tr>';
+      // Collapsible rows for group total
+      html += '<tr id="final_grade_info_group-' + groupId + '" class="comments " style="display: none;">';
+      html += '</tr>';
+      html += '<tr id="grade_info_group-' + groupId + '" class="comments grade_details " style="display: none;">';
+      html += '\n                ';
+      html += '</tr>';
+      html += '<tr id="rubric_group-' + groupId + '" class="rubric_assessments " style="display: none;">';
+      html += '</tr>';
+    }
+    
+    console.log('[Progress Page] Setting tbody.innerHTML (' + html.length + ' characters)...');
+    tbody.innerHTML = html;
+    
+    var rowsAfter = tbody.querySelectorAll('tr').length;
+    console.log('[Progress Page] ===== RENDER ASSIGNMENTS COMPLETE =====');
+    console.log('[Progress Page] Total rows in tbody after render:', rowsAfter);
+    console.log('[Progress Page] Expected rows:', assignmentIds.length + 1); // +1 for group total
+  }
+  
+  // Check for required DOM elements
+  console.log('[Progress Page] Checking for required DOM elements...');
+  
+  var gradeSummaryContent = document.getElementById('grade-summary-content');
+  var assignments = document.getElementById('assignments');
+  var tbody = document.getElementById('assignments-tbody');
+  
+  console.log('[Progress Page] DOM elements check:', {
+    gradeSummaryContent: !!gradeSummaryContent,
+    assignments: !!assignments,
+    tbody: !!tbody
+  });
+  
+  if (!gradeSummaryContent) {
+    console.error('[Progress Page] CRITICAL: #grade-summary-content not found');
+  }
+  if (!assignments) {
+    console.error('[Progress Page] CRITICAL: #assignments not found');
+  }
+  if (!tbody) {
+    console.error('[Progress Page] CRITICAL: #assignments-tbody not found');
+    return;
+  }
+  
+  console.log('[Progress Page] All DOM elements found, waiting for ENV...');
+  waitForENV(renderAssignments);
+};
+
+// Execute immediately when script loads
+console.log('[Progress Page] Script loaded, attempting to initialize...');
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('[Progress Page] DOMContentLoaded - executing init');
+    window.progressPageInit();
+  });
+} else {
+  // DOM already loaded
+  setTimeout(function() {
+    console.log('[Progress Page] DOM ready - executing init');
+    window.progressPageInit();
+  }, 100);
+}
+</script>

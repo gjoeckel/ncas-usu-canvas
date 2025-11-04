@@ -1,9 +1,9 @@
 /*
- * NCAS7 v7 CSS - Custom Canvas LMS Enhancement Styles
+ * NCAS8 v8 CSS - Custom Canvas LMS Enhancement Styles
  * Updated: 2025-01-02
  * Scope: Maintain exact visuals with minimal JS; CSS drives layout and states
  * Purpose: Custom navigation, layout, and content styling for Canvas course pages
- * Note: Header structure exists in HTML; CSS styles existing elements
+ * Note: Header element is injected via JavaScript; CSS styles the injected elements
  */
 
 /* ============================================
@@ -172,7 +172,6 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     font-weight: 600 !important;
     background: #ec8e22 !important; /* NCADEMI orange - using hex instead of rgb for exact color match */
     border-radius: 8px 8px 0px 0px !important;
-    border-bottom: 5px solid #ec8e22 !important;
     position: relative;
     z-index: 2; /* Above background gradient */
     height: 50px !important; /* Tab height */
@@ -305,10 +304,13 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
   /* ============================================
      PUBLIC LICENSE BLOCK ALIGNMENT
      ============================================ */
-
+  /* Hide public license on default course home page */
+  .public-license {
+    display: none;
+  }
   /* Public license block - constrained to center in remaining space after hero box */
   /* Calculation: 3 link-containers × 210px (200px width + 5px padding each side) + 2 gaps × 10px = 650px */
-  .public-license {
+  .public-license.visible {
     width: 650px !important;
     max-width: calc(100vw - 405px - 40px) !important; /* Account for hero box space (405px) + 20px margin on each side */
     margin-left: auto !important;
@@ -318,10 +320,7 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     text-align: center !important; /* Center align all text content */
   }
 
-  /* Hide public license on default course home page */
-  body.ncademi-default-course-home .public-license {
-    display: none !important;
-  }
+
 
   /* 10px spacing between image and text */
   .public-license-image-link {
@@ -1100,7 +1099,6 @@ h1 {
   font-weight: bold;
   color: #005190;
   text-align: left;
-  margin-top: 1em;
   margin-bottom: 0.5em;
   line-height: 1.2;
 }
@@ -1166,14 +1164,23 @@ h1.page-title {
   color: #025191 !important; /* Match border color */
   border-bottom: 2px solid #025191;
   padding-bottom: 0.25em; /* Space between text and border */
-  margin-bottom: 0; /* Remove default margin - spacing handled by icon-right */
+  margin:-10px 0 0 0 !important;/* Remove default margin - spacing handled by icon-right */
   width: 100%; /* Ensure border spans full width */
   position: relative; /* For icon positioning context */
 }
 
-/* Hide h1.page-title on core-skills page */
+/* Visually hide h1.page-title on core-skills page but keep accessible to screen readers */
 body.ncademi-core-skills-page h1.page-title {
-  display: none !important;
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  border-bottom: none !important;
 }
 
 /* Icon container - positioned over the border under h1.page-title */
