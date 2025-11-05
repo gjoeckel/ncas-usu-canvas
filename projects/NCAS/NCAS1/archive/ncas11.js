@@ -561,6 +561,235 @@
     return false;
   }
 
+  // Calculate status using same logic as grades page
+  function calculateStatus(score, pointsPossible) {
+    // Y = score, X = pointsPossible
+    if (score === null || score === undefined || score === '-') {
+      return 'pending'; // Y === '-'
+    }
+    
+    const scoreNum = typeof score === 'string' ? parseFloat(score) : score;
+    const pointsNum = typeof pointsPossible === 'string' ? parseFloat(pointsPossible) : pointsPossible;
+    
+    if (isNaN(scoreNum) || isNaN(pointsNum)) {
+      return 'pending';
+    }
+    
+    if (scoreNum < pointsNum) {
+      return 'active'; // Y < X
+    } else if (scoreNum === pointsNum && pointsNum > 0) {
+      return 'done'; // Y === X
+    }
+    
+    return 'pending';
+  }
+
+  // Extract assignment IDs and points_possible from Core Skills links
+  function extractAssignmentIdsFromLinks() {
+    const links = document.querySelectorAll('body.ncademi-core-skills-page .custom-link.small, body.ncademi-core-skills-page .custom-link.large');
+    const assignmentIds = [];
+    const linkMap = new Map(); // Map assignment ID to link element
+    const assignmentsMap = new Map(); // Map assignment ID to { id, points_possible }
+    
+    links.forEach(link => {
+      // First, try to get assignment ID from data-assignment-id attribute (static, preferred)
+      let assignmentId = link.getAttribute('data-assignment-id');
+      
+      // If not found, try to extract from href (fallback for dynamic links)
+      if (!assignmentId) {
+        const href = link.getAttribute('href') || '';
+        // Match pattern: /courses/{courseId}/assignments/{assignmentId}
+        const match = href.match(/\/courses\/\d+\/assignments\/(\d+)/);
+        if (match && match[1]) {
+          assignmentId = match[1];
+        }
+      }
+      
+      if (assignmentId) {
+        if (!assignmentIds.includes(assignmentId)) {
+          assignmentIds.push(assignmentId);
+        }
+        linkMap.set(assignmentId, link);
+        
+        // Extract points_possible from data-points-possible attribute (hardcoded in HTML)
+        const pointsPossible = link.getAttribute('data-points-possible');
+        if (pointsPossible) {
+          assignmentsMap.set(assignmentId, {
+            id: assignmentId,
+            points_possible: parseFloat(pointsPossible) || 0
+          });
+        }
+      }
+    });
+    
+    return { assignmentIds, linkMap, assignmentsMap };
+  }
+
+
+  // Fetch submissions from Canvas API
+  async function fetchSubmissions(courseId, studentId, assignmentIds) {
+    if (!assignmentIds || assignmentIds.length === 0) {
+      log("No assignment IDs to fetch");
+      return null;
+    }
+
+    // Check cache first
+    const cacheKey = `ncademi_submissions_${courseId}_${studentId}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const data = JSON.parse(cached);
+        const cacheTime = data.timestamp || 0;
+        const now = Date.now();
+        // Cache for 5 minutes
+        if (now - cacheTime < 300000) {
+          log("Using cached submissions data");
+          return data.submissions;
+        }
+      } catch (e) {
+        logError("Error parsing cached submissions", e);
+      }
+    }
+
+    try {
+      // Build API URL with assignment IDs
+      const assignmentParams = assignmentIds.map(id => `assignment_ids[]=${id}`).join('&');
+      const url = `/api/v1/courses/${courseId}/students/submissions?student_ids[]=${studentId}&${assignmentParams}&per_page=100`;
+      
+      log(`Fetching submissions from Canvas API: ${url}`);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include' // Use Canvas session cookies
+      });
+
+      if (!response.ok) {
+        logError(`API request failed: ${response.status} ${response.statusText}`);
+        return null;
+      }
+
+      const submissions = await response.json();
+      
+      // Cache the results
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        submissions: submissions,
+        timestamp: Date.now()
+      }));
+      
+      logOK(`Fetched ${submissions.length} submissions from API`);
+      return submissions;
+    } catch (error) {
+      logError("Error fetching submissions from Canvas API", error);
+      return null;
+    }
+  }
+
+  // Apply status to Core Skills links
+  function applyStatusToCoreSkillsLinks(submissions, assignmentsMap, linkMap) {
+    if (!submissions || !linkMap) return;
+
+    let appliedCount = 0;
+
+    submissions.forEach(submission => {
+      const assignmentId = String(submission.assignment_id);
+      const link = linkMap.get(assignmentId);
+      
+      if (!link) return;
+
+      const score = submission.score;
+      // Get points_possible from assignments map (not from submission object)
+      const assignment = assignmentsMap.get(assignmentId);
+      const pointsPossible = assignment ? (assignment.points_possible || 0) : 0;
+      const status = calculateStatus(score, pointsPossible);
+      
+      // Apply data-status attribute
+      link.setAttribute('data-status', status);
+      appliedCount++;
+      
+      log(`Applied status "${status}" to assignment ${assignmentId} (score: ${score}/${pointsPossible})`);
+    });
+
+    if (appliedCount > 0) {
+      logOK(`Applied status to ${appliedCount} links on Core Skills page`);
+    }
+  }
+
+  // Main function to update Core Skills checkmarks
+  async function updateCoreSkillsCheckmarks() {
+    if (!document.body.classList.contains('ncademi-core-skills-page')) {
+      return; // Not on Core Skills page
+    }
+
+    if (window.ncademiCoreSkillsStatusApplied) {
+      return; // Already applied
+    }
+
+    const courseId = getCourseId();
+    if (!courseId) {
+      log("No course ID found, cannot fetch submissions");
+      return;
+    }
+
+    // Get student ID from ENV or current user context
+    let studentId = null;
+    if (window.ENV && window.ENV.student_id) {
+      studentId = window.ENV.student_id;
+    } else if (window.ENV && window.ENV.current_user && window.ENV.current_user.id) {
+      studentId = window.ENV.current_user.id;
+    } else {
+      // Try to get from current user API
+      try {
+        const userResponse = await fetch('/api/v1/users/self', {
+          credentials: 'include'
+        });
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          studentId = userData.id;
+        }
+      } catch (e) {
+        logError("Could not determine student ID", e);
+      }
+    }
+
+    if (!studentId) {
+      log("No student ID found, cannot fetch submissions");
+      return;
+    }
+
+    // Extract assignment IDs and points_possible from links (hardcoded in HTML)
+    const { assignmentIds, linkMap, assignmentsMap } = extractAssignmentIdsFromLinks();
+    
+    if (assignmentIds.length === 0) {
+      log("No assignment IDs found in Core Skills links");
+      return;
+    }
+
+    log(`Found ${assignmentIds.length} assignment IDs in Core Skills links`);
+
+    // assignmentsMap is already populated from HTML data-points-possible attributes
+    if (assignmentsMap.size === 0) {
+      log("No points_possible data found in link attributes");
+      return;
+    }
+
+    // Fetch submissions
+    const submissions = await fetchSubmissions(courseId, studentId, assignmentIds);
+    
+    if (!submissions || submissions.length === 0) {
+      log("No submissions data available");
+      return;
+    }
+
+    // Apply status to links (with assignments data for points_possible from HTML)
+    applyStatusToCoreSkillsLinks(submissions, assignmentsMap, linkMap);
+    
+    window.ncademiCoreSkillsStatusApplied = true;
+  }
+
   function populateStatusColumn() {
     if (window.ncademiStatusPopulated) return true;
 
@@ -604,25 +833,32 @@
 
       let statusText = '';
       let statusStyle = 'font-size: 1.25rem !important;';
+      let statusValue = '';
 
       if (Y === '-') {
         statusText = 'Pending';
-        statusStyle += ' color: #666 !important; font-style: italic !important;';
+        statusValue = 'pending';
+        statusStyle += ' color: #777777 !important; font-style: italic !important;';
       } else {
         const scoreY = parseInt(Y, 10);
         if (isNaN(scoreY)) return;
 
         if (scoreY < X) {
           statusText = 'Active';
-          statusStyle += ' color: #333 !important; font-weight: bold !important;';
+          statusValue = 'active';
+          statusStyle += ' color: #955823 !important; font-weight: bold !important;';
         } else {
           statusText = 'Done';
-          statusStyle += ' color: #336600 !important; font-weight: bold !important;';
+          statusValue = 'done';
+          statusStyle += ' color: #38993D !important; font-weight: bold !important;';
         }
       }
 
-      statusCell.textContent = statusText;
+      // Wrap text in span for proper alignment with column header, add 4 &nbsp; for whitespace
+      statusCell.innerHTML = `<span class="ncademi-status-text">${statusText}&nbsp;&nbsp;&nbsp;&nbsp;</span>`;
       statusCell.setAttribute('style', statusStyle);
+      statusCell.setAttribute('data-status', statusValue);
+      statusCell.classList.add('ncademi-status');
       statusCell.setAttribute('data-ncademi-status-populated', 'true');
       populatedCount++;
     });
@@ -1071,6 +1307,32 @@
     
     if (isCoreSkillsPage) {
       document.body.classList.add('ncademi-core-skills-page');
+      // Reset status flag when navigating to Core Skills page
+      window.ncademiCoreSkillsStatusApplied = false;
+      // Update checkmarks with status from API
+      updateCoreSkillsCheckmarks();
+      
+      // Also set up observer to handle dynamically loaded links
+      if (!window.ncademiCoreSkillsObserverSet) {
+        const observer = new MutationObserver(() => {
+          // Re-check for links and update status if not already applied
+          if (!window.ncademiCoreSkillsStatusApplied) {
+            updateCoreSkillsCheckmarks();
+          }
+        });
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true
+        });
+        window.ncademiCoreSkillsObserverSet = true;
+        
+        // Also try after a short delay to catch any late-loading content
+        setTimeout(() => {
+          if (!window.ncademiCoreSkillsStatusApplied) {
+            updateCoreSkillsCheckmarks();
+          }
+        }, 1000);
+      }
     } else {
       document.body.classList.remove('ncademi-core-skills-page');
     }

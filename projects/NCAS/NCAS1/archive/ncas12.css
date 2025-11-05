@@ -423,6 +423,13 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     box-sizing: border-box !important;
   }
 
+  /* Set max-width for all div#wrapper elements and center */
+  div#wrapper.ic-Layout-wrapper {
+    max-width: 1200px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
   /* Canvas main content area - full width flexbox layout */
   #not_right_side.ic-app-main-content {
     display: flex !important;
@@ -431,7 +438,7 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     min-height: 0 !important; /* Allow flex item to shrink below content size to prevent scrollbar */
     min-width: 0 !important; /* Prevent flex item from overflowing */
     width: 100% !important;
-    max-width: 100vw !important; /* Prevent overflow beyond viewport */
+    max-width: 100% !important; /* Change from 100vw to 100% to respect parent 1200px constraint */
     margin-right: 0 !important;
     margin-left: 0 !important;
     padding-right: 0 !important; /* Remove right padding */
@@ -451,7 +458,7 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     margin-left: 0px !important;
     margin-right: 0px !important;
     width: 100% !important;
-    max-width: 100vw !important; /* Prevent overflow beyond viewport */
+    max-width: 100% !important; /* Change from 100vw to 100% to respect parent 1200px constraint */
     padding-right: 0 !important; /* Remove 48px right padding that Canvas adds for sidebar */
     overflow-x: hidden !important; /* Prevent horizontal overflow */
     box-sizing: border-box !important; /* Include padding in width calculation */
@@ -1173,6 +1180,92 @@ a:focus-visible .link-text,
 }
 
 /* ============================================
+   CORE SKILLS PAGE - CHECKMARK ICONS
+   Add checkmark in circle to upper-right corner of all links
+   ============================================ */
+
+/* Step 1: Make links on core-skills page position relative for absolute positioning of checkmark */
+body.ncademi-core-skills-page .custom-link.small,
+body.ncademi-core-skills-page .custom-link.large {
+  position: relative;
+  /* Ensure enough space in upper-right corner for the icon - adjust padding to accommodate checkmark */
+  padding-top: 10px; /* Keep existing top padding */
+  padding-right: 10px; /* Keep existing right padding - checkmark positioned outside border */
+  padding-bottom: 10px; /* Keep existing bottom padding */
+  padding-left: 10px; /* Keep existing left padding */
+}
+
+/* Step 2: Create icon using ::after pseudo-element - Default: Pending style (dash) */
+body.ncademi-core-skills-page .custom-link.small::after,
+body.ncademi-core-skills-page .custom-link.large::after {
+  content: "—"; /* Em dash for pending status */
+  font-family: Arial, sans-serif; /* Font that renders well */
+  position: absolute;
+  top: 8px; /* Position in upper-right corner */
+  right: 8px; /* Position in upper-right corner */
+  
+  /* Circle styling */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 20px; /* Size of the circle */
+  height: 20px; /* Size of the circle */
+  background-color: #ffffff; /* Default: Pending style - White fill */
+  color: #666666; /* Default: Pending style - Gray dash */
+  border: 2px solid #666666; /* Default: Pending style - Gray border */
+  border-radius: 50%; /* Makes it a perfect circle */
+  
+  /* Icon styling */
+  font-size: 10px; /* Size of the dash/icon - smaller for pending dash */
+  font-weight: bold;
+  line-height: 1; /* Center the icon vertically */
+  
+  /* Ensure it doesn't interfere with link functionality */
+  pointer-events: none; /* Prevent clicks on the icon from affecting the link */
+  z-index: 10; /* Ensure it appears above other elements */
+}
+
+/* Pending style - Gray dash on white fill with gray border, and gray link text */
+body.ncademi-core-skills-page .custom-link[data-status="pending"].small::after,
+body.ncademi-core-skills-page .custom-link[data-status="pending"].large::after {
+  background-color: #ffffff !important;
+  color: #666666 !important;
+  border: 2px solid #666666 !important;
+  content: "—"; /* Em dash for pending */
+}
+
+body.ncademi-core-skills-page .custom-link[data-status="pending"].small .link-text,
+body.ncademi-core-skills-page .custom-link[data-status="pending"].large .link-text {
+  color: #666666 !important;
+}
+
+/* Active style - Orange/brown checkmark on white fill with orange/brown border */
+body.ncademi-core-skills-page .custom-link[data-status="active"].small::after,
+body.ncademi-core-skills-page .custom-link[data-status="active"].large::after {
+  background-color: #ffffff !important;
+  color: #955823 !important;
+  border: 2px solid #955823 !important;
+  content: "\2713"; /* Checkmark for active */
+}
+
+/* Done style - White checkmark on green fill with green border */
+body.ncademi-core-skills-page .custom-link[data-status="done"].small::after,
+body.ncademi-core-skills-page .custom-link[data-status="done"].large::after {
+  background-color: #38993D !important;
+  color: #ffffff !important;
+  border: 2px solid #38993D !important;
+  content: "\2713"; /* Checkmark for done */
+}
+
+/* Step 3: Ensure checkmark remains visible on hover/focus (optional - can be removed if you want it to hide) */
+body.ncademi-core-skills-page .custom-link.small:hover::after,
+body.ncademi-core-skills-page .custom-link.large:hover::after,
+body.ncademi-core-skills-page .custom-link.small:focus::after,
+body.ncademi-core-skills-page .custom-link.large:focus::after {
+  opacity: 1; /* Keep visible on hover/focus */
+}
+
+/* ============================================
    GRADES PAGE STYLING
    Applied globally (outside scope wrapper)
    ============================================ */
@@ -1222,6 +1315,12 @@ table#grades_summary {
   }
 }
 
+/* Hide "Your Progress" or "Grades for..." H1 heading on grades page (not for admins) */
+body:not(.ncademi-admin-view) .ic-Action-header__Heading,
+body:not(.ncademi-admin-view) h1.ic-Action-header__Heading {
+  display: none !important;
+}
+
 /* Hide grade table columns (not for admins) */
 body:not(.ncademi-admin-view) table#grades_summary thead tr th:nth-child(2), /* Hide "Due" column header */
 body:not(.ncademi-admin-view) table#grades_summary thead tr th:nth-child(3), /* Hide "Submitted" column header */
@@ -1245,6 +1344,11 @@ body:not(.ncademi-admin-view) table#grades_summary tbody tr td:last-child {
   display: none !important;
 }
 
+/* Center-align all header text in grades table */
+body:not(.ncademi-admin-view) table#grades_summary thead tr th {
+  text-align: center !important;
+}
+
 /* Show Status column (previously hidden, now visible) */
 body:not(.ncademi-admin-view) table#grades_summary thead tr th.status,
 body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status {
@@ -1260,14 +1364,101 @@ body:not(.ncademi-admin-view) table#grades_summary tbody tr th.title {
 /* Remove whitespace between Name and Status columns - ensure table layout is compact */
 body:not(.ncademi-admin-view) table#grades_summary {
   table-layout: fixed !important;
-  width: 60% !important;
+  width: 70% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 /* Remove left padding from Status column to eliminate whitespace */
 body:not(.ncademi-admin-view) table#grades_summary thead tr th.status,
 body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status {
   padding-left: 0 !important;
-  width: auto !important;
+  width: 20% !important; /* Constrain Status column to 20% width */
+}
+
+/* ============================================
+   GRADES PAGE - STATUS COLUMN ICONS
+   Add circle icons after status text (Pending, Active, Done) - same style as Core Skills
+   ============================================ */
+
+/* Keep status cells as table cells, right-align content so icons align vertically */
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status {
+  display: table-cell !important; /* Keep table cell alignment with header */
+  text-align: right !important; /* Right-align content so icons align vertically */
+  font-size: 1.25rem !important; /* Base font size for status text */
+}
+
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status .ncademi-status-text {
+  display: inline-block;
+  vertical-align: middle;
+  color: inherit; /* Inherit color from cell */
+  /* 4 &nbsp; added in JavaScript for whitespace with icon */
+}
+
+/* Status text colors and styles based on data-status attribute */
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="pending"] {
+  color: #666666 !important;
+  font-style: italic !important;
+}
+
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="active"] {
+  color: #955823 !important;
+  font-weight: bold !important;
+}
+
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="done"] {
+  color: #38993D !important;
+  font-weight: bold !important;
+}
+
+/* Add circle icon using ::after pseudo-element - Default: Pending (dash) */
+/* NOTE: Icon is decorative - nearby status text provides alternative text for screen readers */
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status::after {
+  content: "—"; /* Em dash for pending - decorative only, text provides context */
+  font-family: Arial, sans-serif;
+  
+  /* Circle styling - same as Core Skills */
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 20px; /* Size of the circle */
+  height: 20px; /* Size of the circle */
+  background-color: #ffffff; /* Default: Pending style - White fill */
+  color: #666666; /* Default: Pending style - Gray dash */
+  border: 2px solid #666666; /* Default: Pending style - Gray border */
+  border-radius: 50%; /* Makes it a perfect circle */
+  
+  /* Icon styling */
+  font-size: 10px; /* Size of the dash/icon - smaller for pending dash */
+  font-weight: bold;
+  line-height: 1; /* Center the icon vertically */
+  vertical-align: middle; /* Align with text */
+}
+
+/* Pending status - Gray dash on white fill with gray border */
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="pending"]::after {
+  content: "—";
+  background-color: #ffffff !important;
+  color: #666666 !important;
+  border: 2px solid #666666 !important;
+}
+
+/* Active status - Orange/brown checkmark on white fill with orange/brown border */
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="active"]::after {
+  content: "\2713"; /* Checkmark for active */
+  background-color: #ffffff !important;
+  color: #955823 !important;
+  border: 2px solid #955823 !important;
+  font-size: 12px; /* Slightly larger for checkmark */
+}
+
+/* Done status - White checkmark on green fill with green border */
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="done"]::after {
+  content: "\2713"; /* Checkmark for done */
+  background-color: #38993D !important;
+  color: #ffffff !important;
+  border: 2px solid #38993D !important;
+  font-size: 12px; /* Slightly larger for checkmark */
 }
 
 /* Reduce Name column padding by 50% (typical Canvas table cell padding is ~1rem, so 50% = 0.5rem) */
@@ -1542,7 +1733,28 @@ div.callout {
 .margin-top-50 {
   margin-top: 50px !important;
 }
+.margin-top-25 {
+  margin-top: 25px !important;
+}
 
 div#print-grades-container.ic-Action-header {
  display: none !important;
+}
+.rem-1-2-5 {
+  font-size: 1.25rem !important;
+}
+.rem-1-5-0 {
+  font-size: 1.5rem !important;
+}
+.rem-1-7-5 {
+  font-size: 1.75rem !important;
+}
+.rem-2-0-0 {
+  font-size: 2rem !important;
+}
+.rem-2-2-5 {
+  font-size: 2.25rem !important;
+}
+.rem-2-5-0 {
+  font-size: 2.5rem !important;
 }
