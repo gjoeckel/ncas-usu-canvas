@@ -1,14 +1,15 @@
 /*
- * NCAS15 v15 CSS - Custom Canvas LMS Enhancement Styles
+ * NCAS16 v16 CSS - Custom Canvas LMS Enhancement Styles
  * Updated: 2025-01-02
  * Scope: Maintain exact visuals with minimal JS; CSS drives layout and states
  * Purpose: Custom navigation, layout, and content styling for Canvas course pages
  * Note: Header element is injected via JavaScript; CSS styles the injected elements
  * 
- * Structure (v15):
+ * Structure (v16):
  * - Title floats left (static, independent position)
  * - Links wrapper centers on full header width (overlaps title)
- * - Heading indentation: All child elements respect heading indentation (v15)
+ * - Heading indentation: All child elements respect heading indentation using heading-section wrappers
+ * - Status indicators: Quiz status icons on Core Skills page, status column on Progress page
  */
 
 /* ============================================
@@ -23,6 +24,32 @@ html {
   max-width: 100vw !important;
   height: 100% !important; /* Ensure html fills viewport */
   scrollbar-gutter: stable !important; /* Reserve space for scrollbar to prevent layout shift */
+}
+
+/* ============================================
+   GLOBAL MAX-WIDTH CONSTRAINT
+   Ensure no content elements exceed 1200px width
+   ============================================ */
+
+/* Apply max-width to common content elements */
+img,
+table,
+iframe,
+div.ytplayer,
+video,
+audio,
+figure,
+blockquote,
+pre,
+code {
+  max-width: 1200px !important;
+}
+
+/* Ensure tables specifically respect max-width and are centered */
+table {
+  max-width: 1000px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 /* ============================================
@@ -226,7 +253,6 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     position: relative;
     width: auto;
     text-align: left;
-    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border-bottom: 3px solid transparent; /* Prevent text jumping on hover */
     height: 50px; /* Height matches blue band */
   }
@@ -259,72 +285,36 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     cursor: default !important;
   }
 
-  /* Navigation link hover effects - underline and white border with inner black ring for inactive links */
-  #content-header.course-content-header #ncademi-nav a:hover:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
-    background: transparent !important;
-    color: rgb(255, 255, 255) !important;
-    text-decoration: underline !important;
-    text-decoration-color: rgb(255, 255, 255) !important;
-    text-decoration-thickness: 2px !important;
-    /* Rounded double border: black inside, white outside - match focus state */
-    outline: 3px solid #ffffff !important;
-    outline-offset: 1px !important;
-    box-shadow: inset 0 0 0 1px #222222 !important;
-    border-radius: 4px !important;
-  }
-
-  /* Active links: maintain styling on hover (no visual change) */
-  #content-header.course-content-header #ncademi-nav a.active:hover,
-  #content-header.course-content-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:hover {
-    background: #D87C13 !important;
-    color: #222222 !important;
-    text-decoration: none !important;
-  }
-
-  /* Navigation link focus effects - underline and white border with inner black ring for inactive links */
-  #content-header.course-content-header #ncademi-nav a:focus:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
-    background: transparent !important;
-    color: rgb(255, 255, 255) !important;
-    text-decoration: underline !important;
-    text-decoration-color: rgb(255, 255, 255) !important;
-    text-decoration-thickness: 2px !important;
-    /* Rounded double border: black inside, white outside */
-    outline: 3px solid #ffffff !important;
-    outline-offset: 1px !important;
-    box-shadow: inset 0 0 0 1px #222222 !important;
-    border-radius: 4px !important;
-  }
-
-  /* Active links: no focus styling (non-interactive) */
-  #content-header.course-content-header #ncademi-nav a.active:focus,
-  #content-header.course-content-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:focus {
-    outline: none !important;
-    box-shadow: none !important;
-    background: #D87C13 !important;
-    color: #222222 !important;
-  }
-
-  /* Navigation link focus-visible - accessibility indicator for inactive links only */
+  /* Navigation link hover/focus/focus-visible effects - consolidated common styles for inactive links */
+  /* Rounded double border: black inside, white outside */
+  #content-header.course-content-header #ncademi-nav a:hover:not(.active):not([style*="background: rgb(236, 142, 34)"]),
+  #content-header.course-content-header #ncademi-nav a:focus:not(.active):not([style*="background: rgb(236, 142, 34)"]),
   #content-header.course-content-header #ncademi-nav a:focus-visible:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
     background: transparent !important;
     color: rgb(255, 255, 255) !important;
     text-decoration: underline !important;
     text-decoration-color: rgb(255, 255, 255) !important;
     text-decoration-thickness: 2px !important;
-    /* Rounded double border: black inside, white outside */
+    position: relative !important;
+    z-index: 3 !important; /* Above active tab (z-index: 2) */
     outline: 3px solid #ffffff !important;
     outline-offset: 1px !important;
     box-shadow: inset 0 0 0 1px #222222 !important;
     border-radius: 4px !important;
   }
 
-  /* Active links: no focus-visible styling (non-interactive) */
+  /* Active links: maintain styling on hover/focus (no visual change, non-interactive) */
+  #content-header.course-content-header #ncademi-nav a.active:hover,
+  #content-header.course-content-header #ncademi-nav a.active:focus,
   #content-header.course-content-header #ncademi-nav a.active:focus-visible,
+  #content-header.course-content-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:hover,
+  #content-header.course-content-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:focus,
   #content-header.course-content-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
     background: #D87C13 !important;
     color: #222222 !important;
+    text-decoration: none !important;
+    outline: none !important;
+    box-shadow: none !important;
   }
 
   /* Home link detection - targets course home page links (any course ID) */
@@ -334,10 +324,7 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     position: relative; /* Base styling inherited from main nav link styles */
   }
 
-  /* Course link transitions - ensures smooth animations for all course links */
-  #content-header.course-content-header #ncademi-nav a[href*="usucourses.instructure.com/courses/"] {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
+  /* Course link transitions removed for instant hover/focus effects */
 
   /* ============================================
      MAIN CONTENT AREA
@@ -551,13 +538,7 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     margin-top: 0; /* Body padding handles spacing, not this margin */
   }
 
-  /* Smooth transitions for all interactive elements */
-  #content-header.course-content-header #ncademi-nav a,
-  .col-lg-4,
-  .col-md-4,
-  .col-12 {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
+  /* Transitions removed for instant hover/focus effects on nav links and columns */
 
 
   /* ============================================
@@ -794,57 +775,11 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
       color: #222222 !important;
     }
 
-    /* Hover states for inactive links - underline and white border with inner black ring */
-    #content-header.course-content-header #ncademi-nav a:hover:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
-      background: transparent !important;
-      color: rgb(255, 255, 255) !important;
-      text-decoration: underline !important;
-      text-decoration-color: rgb(255, 255, 255) !important;
-      text-decoration-thickness: 2px !important;
-      /* Rounded double border: black inside, white outside - match focus state */
-      outline: 3px solid #ffffff !important;
-      outline-offset: 1px !important;
-      box-shadow: inset 0 0 0 1px #222222 !important;
-      border-radius: 0 !important;
-    }
-
-    /* Focus states for inactive links - underline and white border with inner black ring */
-    #content-header.course-content-header #ncademi-nav a:focus:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
-      background: transparent !important;
-      color: rgb(255, 255, 255) !important;
-      text-decoration: underline !important;
-      text-decoration-color: rgb(255, 255, 255) !important;
-      text-decoration-thickness: 2px !important;
-      outline: 3px solid #ffffff !important;
-      outline-offset: 1px !important;
-      box-shadow: inset 0 0 0 1px #222222 !important;
-      border-radius: 0 !important;
-    }
-
+    /* Mobile: Override border-radius for hover/focus states (no rounded corners on mobile) */
+    #content-header.course-content-header #ncademi-nav a:hover:not(.active):not([style*="background: rgb(236, 142, 34)"]),
+    #content-header.course-content-header #ncademi-nav a:focus:not(.active):not([style*="background: rgb(236, 142, 34)"]),
     #content-header.course-content-header #ncademi-nav a:focus-visible:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
-      background: transparent !important;
-      color: rgb(255, 255, 255) !important;
-      text-decoration: underline !important;
-      text-decoration-color: rgb(255, 255, 255) !important;
-      text-decoration-thickness: 2px !important;
-      outline: 3px solid #ffffff !important;
-      outline-offset: 1px !important;
-      box-shadow: inset 0 0 0 1px #222222 !important;
       border-radius: 0 !important;
-    }
-
-    /* Active links maintain styling on hover/focus */
-    #content-header.course-content-header #ncademi-nav a.active:hover,
-    #content-header.course-content-header #ncademi-nav a.active:focus,
-    #content-header.course-content-header #ncademi-nav a.active:focus-visible,
-    #content-header.course-content-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:hover,
-    #content-header.course-content-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:focus,
-    #content-header.course-content-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:focus-visible {
-      background: #D87C13 !important;
-      color: #222222 !important;
-      text-decoration: none !important;
-      outline: none !important;
-      box-shadow: none !important;
     }
 
     /* Bottom border - appears after all nav links */
@@ -1063,12 +998,18 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
   margin-right: 0px !important;
 }
 
-/* Sign-in banner for non-signed-in users on core-skills page */
-.ncademi-signin-banner {
+/* ============================================
+   CORE SKILLS PAGE - STATUS KEY BANNER
+   Dismissable banner showing status icon legend
+   ============================================ */
+
+/* Status key banner container */
+.ncademi-status-key-banner {
+  display: none; /* Hidden by default, shown via JS when user is signed in */
   position: relative;
   margin: 0 auto 20px auto;
   padding: 15px 40px 15px 15px;
-  border: 2px solid #333333;
+  border: 1px solid #333333;
   border-radius: 8px;
   background-color: #ffffff;
   color: #333333;
@@ -1077,7 +1018,87 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
   /* Width is set dynamically via JavaScript to match links container (up to max-width) */
 }
 
-.ncademi-signin-banner-message {
+/* Show banner when status is enabled (user signed in) */
+body.ncademi-core-skills-page.ncademi-status-enabled .ncademi-status-key-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 30px;
+}
+
+/* Status key item */
+.ncademi-status-key-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Status icon in key banner (matches link icons) */
+.ncademi-status-key-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Pending icon */
+.ncademi-status-key-icon.pending {
+  background-color: #ffffff;
+  color: #666666;
+  border: 2px solid #666666;
+}
+
+.ncademi-status-key-icon.pending::before {
+  content: "—";
+  display: block;
+}
+
+/* Active icon */
+.ncademi-status-key-icon.active {
+  background-color: #ffffff;
+  color: #955823;
+  border: 2px solid #955823;
+}
+
+.ncademi-status-key-icon.active::before {
+  content: "\2713";
+  display: block;
+}
+
+/* Done icon */
+.ncademi-status-key-icon.done {
+  background-color: #38993D;
+  color: #ffffff;
+  border: 2px solid #38993D;
+}
+
+.ncademi-status-key-icon.done::before {
+  content: "\2713";
+  display: block;
+}
+
+/* Status key label */
+.ncademi-status-key-label {
+  margin: 0;
+  padding: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #222222;
+  margin-right: 10px;
+}
+
+/* Status key text */
+.ncademi-status-key-text {
   margin: 0;
   padding: 0;
   font-size: 1rem;
@@ -1085,24 +1106,8 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
   color: #333333;
 }
 
-.ncademi-signin-banner-message a {
-  color: #333333;
-  text-decoration: underline;
-  text-decoration-color: #333333;
-  text-underline-offset: 2px;
-}
-
-.ncademi-signin-banner-message a:hover {
-  color: #000000;
-  text-decoration-color: #000000;
-}
-
-.ncademi-signin-banner-message a:focus {
-  outline: 2px solid #333333;
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
+/* Banner dismiss buttons - consolidated shared styles */
+.ncademi-status-key-banner-dismiss,
 .ncademi-signin-banner-dismiss {
   position: absolute;
   top: 8px;
@@ -1120,21 +1125,70 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s ease;
+  /* Transition removed for instant hover/focus effects */
 }
 
-.ncademi-signin-banner-dismiss:hover {
-  color: #000000;
-}
-
-.ncademi-signin-banner-dismiss:focus {
-  outline: 2px solid #333333;
-  outline-offset: 2px;
-}
-
+.ncademi-status-key-banner-dismiss:hover,
+.ncademi-status-key-banner-dismiss:active,
+.ncademi-signin-banner-dismiss:hover,
 .ncademi-signin-banner-dismiss:active {
   color: #000000;
 }
+
+.ncademi-status-key-banner-dismiss:focus,
+.ncademi-signin-banner-dismiss:focus {
+  outline: 2px solid #D87C13;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Sign-in banner for non-signed-in users on core-skills page */
+.ncademi-signin-banner {
+  position: relative;
+  margin: 0 auto 20px auto;
+  padding: 15px 40px 15px 15px;
+  border: 1px solid #333333;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #333333;
+  box-sizing: border-box;
+  max-width: 640px;
+  /* Width is set dynamically via JavaScript to match links container (up to max-width) */
+}
+
+.ncademi-signin-banner-message {
+  margin: 0;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #333333;
+}
+
+.ncademi-signin-banner-message a {
+  color: #006199;
+  text-decoration: none !important;
+  border-bottom: 1px solid #222222;
+  display: inline;
+}
+
+.ncademi-signin-banner-message a:hover {
+  color: #222222;
+  text-decoration: none !important;
+  border-bottom-color: #D87C13;
+  outline: 2px solid #D87C13;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.ncademi-signin-banner-message a:focus {
+  color: #222222;
+  text-decoration: none !important;
+  border-bottom-color: #D87C13;
+  outline: 2px solid #D87C13;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 
 /* Custom Row Styles */
 .custom-row {
@@ -1166,7 +1220,7 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
   border: 2px solid #ddd;
   border-radius: 8px;
   background-color: #fff !important;
-  transition: all 0.3s ease;
+  /* Transition removed for instant hover/focus effects */
   box-sizing: border-box;
   width: 100%;
   min-height: 120px;
@@ -1205,20 +1259,17 @@ a.custom-link:hover {
   min-height: 150px;
 }
 
-/* Custom Link Hover and Focus States */
+/* Custom Link Hover and Focus States - consolidated */
 .custom-link.small:hover,
-.custom-link.large:hover {
+.custom-link.small:focus,
+.custom-link.small:focus-visible,
+.custom-link.large:hover,
+.custom-link.large:focus,
+.custom-link.large:focus-visible {
   border-color: rgb(236, 142, 34);
   box-shadow: 0 4px 8px rgba(236, 142, 34, 0.3);
   transform: translateY(-2px);
   outline: none;
-}
-
-.custom-link.small:focus,
-.custom-link.large:focus {
-  border-color: rgb(236, 142, 34);
-  box-shadow: 0 4px 8px rgba(236, 142, 34, 0.3);
-  transform: translateY(-2px);
 }
 
 /* Only .small and .large links receive focus - make all other links not focusable */
@@ -1287,14 +1338,7 @@ a:focus-visible .link-text,
   text-decoration-color: #D87C13 !important; /* Hover/focus underline color */
 }
 
-/* WCAG 2.2 AA Compliance Enhancements */
-.custom-link.small:focus-visible,
-.custom-link.large:focus-visible {
-  outline: none;
-  border-color: rgb(236, 142, 34);
-  box-shadow: 0 4px 8px rgba(236, 142, 34, 0.3);
-  transform: translateY(-2px);
-}
+/* WCAG 2.2 AA Compliance Enhancements - focus-visible styles consolidated above */
 
 /* ============================================
    QUIZ BUTTON STYLES
@@ -1308,7 +1352,7 @@ a.quiz-button {
   color: #fff !important;
   border: 1px solid #03893D !important;
   border-radius: 3px !important;
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important; /* Exclude outline and box-shadow for instant border appearance */
+  /* Transitions removed for instant hover/focus effects */
   display: inline-block !important;
   position: relative !important;
   padding: 8px 14px !important;
@@ -1588,25 +1632,43 @@ body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status {
   display: table-cell !important;
 }
 
-/* Set Name column width to 15rem */
-body:not(.ncademi-admin-view) table#grades_summary thead tr th:first-child,
-body:not(.ncademi-admin-view) table#grades_summary tbody tr th.title {
-  width: 15rem !important;
-}
 
-/* Remove whitespace between Name and Status columns - ensure table layout is compact */
+/* Table width and centering */
 body:not(.ncademi-admin-view) table#grades_summary {
   table-layout: fixed !important;
-  width: 70% !important;
+  width: 400px !important;
   margin-left: auto !important;
   margin-right: auto !important;
 }
 
-/* Remove left padding from Status column to eliminate whitespace */
-body:not(.ncademi-admin-view) table#grades_summary thead tr th.status,
+/* Name column: 250px wide, header centered, content left-aligned */
+body:not(.ncademi-admin-view) table#grades_summary thead tr th:first-child {
+  width: 250px !important;
+  text-align: center !important; /* Header centered */
+}
+body:not(.ncademi-admin-view) table#grades_summary tbody tr th.title {
+  width: 250px !important;
+  text-align: left !important; /* Content left-aligned */
+}
+
+/* Status column: 150px wide, header centered, content centered */
+body:not(.ncademi-admin-view) table#grades_summary thead tr th.status {
+  width: 150px !important;
+  text-align: center !important; /* Header centered */
+}
 body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status {
-  padding-left: 0 !important;
-  width: 20% !important; /* Constrain Status column to 20% width */
+  width: 150px !important;
+  text-align: center !important; /* Content centered */
+}
+
+/* Score column: 100px wide, header centered, content centered */
+body:not(.ncademi-admin-view) table#grades_summary thead tr th.assignment_score {
+  width: 100px !important;
+  text-align: center !important; /* Header centered */
+}
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.assignment_score {
+  width: 100px !important;
+  text-align: center !important; /* Content centered */
 }
 
 /* ============================================
@@ -1614,39 +1676,47 @@ body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status {
    Add circle icons after status text (Pending, Active, Done) - same style as Core Skills
    ============================================ */
 
-/* Keep status cells as table cells, right-align content so icons align vertically */
+/* Keep status cells as table cells, center-align content with icon first */
 body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status {
   display: table-cell !important; /* Keep table cell alignment with header */
-  text-align: right !important; /* Right-align content so icons align vertically */
+  text-align: center !important; /* Center-align content */
   font-size: 1.25rem !important; /* Base font size for status text */
+  color: #222222 !important; /* All status text color */
+  font-weight: 400 !important; /* All status text weight */
+  font-style: normal !important; /* No italics */
+  position: relative; /* For positioning ::before icon */
+  padding-left: 0 !important; /* No left padding needed for centered content */
 }
 
 body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status .ncademi-status-text {
   display: inline-block;
   vertical-align: middle;
-  color: inherit; /* Inherit color from cell */
-  /* 4 &nbsp; added in JavaScript for whitespace with icon */
+  color: #222222 !important;
+  font-size: 1.25rem !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+  margin-left: 15px; /* 20px space after icon */
 }
 
-/* Status text colors and styles based on data-status attribute */
+/* Status text colors - all use same color now */
 body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="pending"] {
-  color: #666666 !important;
-  font-style: italic !important;
+  color: #222222 !important;
+  font-style: normal !important;
 }
 
 body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="active"] {
-  color: #955823 !important;
-  font-weight: bold !important;
+  color: #222222 !important;
+  font-weight: 400 !important;
 }
 
 body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="done"] {
-  color: #38993D !important;
-  font-weight: bold !important;
+  color: #222222 !important;
+  font-weight: 400 !important;
 }
 
-/* Add circle icon using ::after pseudo-element - Default: Pending (dash) */
+/* Add circle icon using ::before pseudo-element - Icon comes FIRST */
 /* NOTE: Icon is decorative - nearby status text provides alternative text for screen readers */
-body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status::after {
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status::before {
   content: "—"; /* Em dash for pending - decorative only, text provides context */
   font-family: Arial, sans-serif;
   
@@ -1666,10 +1736,11 @@ body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-st
   font-weight: bold;
   line-height: 1; /* Center the icon vertically */
   vertical-align: middle; /* Align with text */
+  margin-right: 0; /* Space handled by text margin-left */
 }
 
 /* Pending status - Gray dash on white fill with gray border */
-body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="pending"]::after {
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="pending"]::before {
   content: "—";
   background-color: #ffffff !important;
   color: #666666 !important;
@@ -1677,7 +1748,7 @@ body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-st
 }
 
 /* Active status - Orange/brown checkmark on white fill with orange/brown border */
-body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="active"]::after {
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="active"]::before {
   content: "\2713"; /* Checkmark for active */
   background-color: #ffffff !important;
   color: #955823 !important;
@@ -1686,7 +1757,7 @@ body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-st
 }
 
 /* Done status - White checkmark on green fill with green border */
-body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="done"]::after {
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status.ncademi-status[data-status="done"]::before {
   content: "\2713"; /* Checkmark for done */
   background-color: #38993D !important;
   color: #ffffff !important;
@@ -1871,75 +1942,177 @@ h4 {
   line-height: 1.4;
 }
 
-/* Indent all content elements after headings - prevents compounding by cascade order */
-/* Rules are ordered from highest to lowest heading level so lower-level rules override higher ones */
+/* Heading indentation within heading-group and heading-section - relative to PRECEDING nearest heading one level up */
+/* Each heading level only looks at its immediate parent level (one level up) */
+/* With section structure, headings are always first child of their section */
 
-/* Indent all content elements after h2 - 1rem total (v15) */
-/* h2 has no left margin (0) */
-h2 ~ p,
-h2 ~ div:not(h2):not(h3):not(h4):not(h5):not(h6),
-h2 ~ img,
-h2 ~ table,
-h2 ~ blockquote,
-h2 ~ pre {
+/* h2 is base level (no indent) */
+.heading-group > h2,
+.heading-section > h2 {
+  margin-left: 0 !important;
+}
+
+/* h3: indented 1rem relative to PRECEDING h2 (h2's 0 + 1rem = 1rem) */
+/* h3 in a section that follows or is nested after a section containing h2 */
+.heading-section:has(> h2) ~ .heading-section > h3,
+.heading-section:has(> h2) .heading-section > h3 {
   margin-left: 1rem !important;
 }
 
-/* Lists after h2 - 2rem total */
-h2 ~ ul,
-h2 ~ ol {
+/* h3 without h2 context - base indent */
+.heading-section > h3:first-child {
+  margin-left: 1rem !important;
+}
+
+/* Legacy support: h3 as direct child (without sections) */
+.heading-group > h3:first-child {
+  margin-left: 1rem !important;
+}
+.heading-group > h2 ~ h3 {
+  margin-left: 1rem !important;
+}
+
+/* h4: indented 1rem relative to PRECEDING h3 ONLY (h3's 1rem + 1rem = 2rem) */
+/* h4 in a section that follows or is nested after a section containing h3 */
+.heading-section:has(> h3) ~ .heading-section > h4,
+.heading-section:has(> h3) .heading-section > h4 {
   margin-left: 2rem !important;
 }
 
-/* Indent all content elements after h3 - 2rem total (v15) */
-/* h3 has margin-left: 1rem - comes after h2 rules so it overrides for h3 content */
-h3 ~ p,
-h3 ~ div:not(h2):not(h3):not(h4):not(h5):not(h6),
-h3 ~ img,
-h3 ~ table,
-h3 ~ blockquote,
-h3 ~ pre {
+/* h4 without h3 context - base indent */
+.heading-section > h4:first-child {
+  margin-left: 1rem !important;
+}
+
+/* Legacy support: h4 as direct child (without sections) */
+.heading-group > h4:first-child {
+  margin-left: 1rem !important;
+}
+.heading-group > h3 ~ h4 {
   margin-left: 2rem !important;
 }
 
-/* Lists after h3 - 3rem total */
-h3 ~ ul,
-h3 ~ ol {
+/* h5: indented 1rem relative to PRECEDING h4 ONLY (h4's 2rem + 1rem = 3rem) */
+/* h5 in a section that follows or is nested after a section containing h4 */
+.heading-section:has(> h4) ~ .heading-section > h5,
+.heading-section:has(> h4) .heading-section > h5 {
   margin-left: 3rem !important;
 }
 
-/* Indent all content elements after h4 - 3rem total (v15) */
-/* h4 has margin-left: 2rem - comes after h3 rules so it overrides for h4 content */
-h4 ~ p,
-h4 ~ div:not(h2):not(h3):not(h4):not(h5):not(h6),
-h4 ~ img,
-h4 ~ table,
-h4 ~ blockquote,
-h4 ~ pre {
+/* h5 without h4 context - base indent */
+.heading-section > h5:first-child {
+  margin-left: 1rem !important;
+}
+
+/* Legacy support: h5 as direct child (without sections) */
+.heading-group > h5:first-child {
+  margin-left: 1rem !important;
+}
+.heading-group > h4 ~ h5 {
   margin-left: 3rem !important;
 }
 
-/* Lists after h4 - 4rem total */
-h4 ~ ul,
-h4 ~ ol {
+/* Indent all content elements after headings based on immediate parent heading */
+/* Uses .heading-section wrapper to isolate each heading and its content for reliable indentation */
+/* Each heading-section contains one heading and its direct content, preventing cross-contamination */
+/* Supports nested heading-sections for sub-sections */
+/* 
+ * Indentation rules:
+ * - Lists (ul, ol): heading's margin-left + 2rem
+ * - Other elements: heading's margin-left + 1rem
+ * - Exceptions (no additional indent): img, div.ytplayer, a.quiz-button (match heading's margin-left exactly)
+ */
+
+/* Content after h2 (h2 has 0rem indent) */
+/* Regular content: 0rem + 1rem = 1rem */
+.heading-section > h2 ~ p,
+.heading-section > h2 ~ div:not(h2):not(h3):not(h4):not(h5):not(h6):not(.heading-section):not(.ytplayer),
+.heading-section > h2 ~ table,
+.heading-section > h2 ~ blockquote,
+.heading-section > h2 ~ pre {
+  margin-left: 1rem !important;
+}
+
+/* Lists after h2: 0rem + 2rem = 2rem */
+.heading-section > h2 ~ ul,
+.heading-section > h2 ~ ol {
+  margin-left: 2rem !important;
+}
+
+/* Exceptions after h2: 0rem (match heading exactly) */
+.heading-section > h2 ~ img,
+.heading-section > h2 ~ div.ytplayer,
+.heading-section > h2 ~ a.quiz-button {
+  margin-left: 0 !important;
+}
+
+/* Content after h3 (h3 has 1rem indent) */
+/* Regular content: 1rem + 1rem = 2rem */
+.heading-section > h3 ~ p,
+.heading-section > h3 ~ div:not(h2):not(h3):not(h4):not(h5):not(h6):not(.heading-section):not(.ytplayer),
+.heading-section > h3 ~ table,
+.heading-section > h3 ~ blockquote,
+.heading-section > h3 ~ pre {
+  margin-left: 2rem !important;
+}
+
+/* Lists after h3: 1rem + 2rem = 3rem */
+.heading-section > h3 ~ ul,
+.heading-section > h3 ~ ol {
+  margin-left: 3rem !important;
+}
+
+/* Exceptions after h3: 1rem (match heading exactly) */
+.heading-section > h3 ~ img,
+.heading-section > h3 ~ div.ytplayer,
+.heading-section > h3 ~ a.quiz-button {
+  margin-left: 1rem !important;
+}
+
+/* Content after h4 (h4 has 2rem indent) */
+/* Regular content: 2rem + 1rem = 3rem */
+.heading-section > h4 ~ p,
+.heading-section > h4 ~ div:not(h2):not(h3):not(h4):not(h5):not(h6):not(.heading-section):not(.ytplayer),
+.heading-section > h4 ~ table,
+.heading-section > h4 ~ blockquote,
+.heading-section > h4 ~ pre {
+  margin-left: 3rem !important;
+}
+
+/* Lists after h4: 2rem + 2rem = 4rem */
+.heading-section > h4 ~ ul,
+.heading-section > h4 ~ ol {
   margin-left: 4rem !important;
 }
 
-/* Indent all content elements after h5 - 4rem total (v15) */
-/* h5 has margin-left: 3rem - comes after h4 rules so it overrides for h5 content */
-h5 ~ p,
-h5 ~ div:not(h2):not(h3):not(h4):not(h5):not(h6),
-h5 ~ img,
-h5 ~ table,
-h5 ~ blockquote,
-h5 ~ pre {
+/* Exceptions after h4: 2rem (match heading exactly) */
+.heading-section > h4 ~ img,
+.heading-section > h4 ~ div.ytplayer,
+.heading-section > h4 ~ a.quiz-button {
+  margin-left: 2rem !important;
+}
+
+/* Content after h5 (h5 has 3rem indent) */
+/* Regular content: 3rem + 1rem = 4rem */
+.heading-section > h5 ~ p,
+.heading-section > h5 ~ div:not(h2):not(h3):not(h4):not(h5):not(h6):not(.heading-section):not(.ytplayer),
+.heading-section > h5 ~ table,
+.heading-section > h5 ~ blockquote,
+.heading-section > h5 ~ pre {
   margin-left: 4rem !important;
 }
 
-/* Lists after h5 - 5rem total */
-h5 ~ ul,
-h5 ~ ol {
+/* Lists after h5: 3rem + 2rem = 5rem */
+.heading-section > h5 ~ ul,
+.heading-section > h5 ~ ol {
   margin-left: 5rem !important;
+}
+
+/* Exceptions after h5: 3rem (match heading exactly) */
+.heading-section > h5 ~ img,
+.heading-section > h5 ~ div.ytplayer,
+.heading-section > h5 ~ a.quiz-button {
+  margin-left: 3rem !important;
 }
 
 div.ytplayer iframe + p,
@@ -2027,7 +2200,8 @@ div.callout {
 }
 
 .margin-top-50 {
-  margin-top: 50px !important;
+  margin-top: 20px !important;
+  width: 90% !important;
 }
 .margin-top-25 {
   margin-top: 25px !important;
@@ -2057,4 +2231,166 @@ div#print-grades-container.ic-Action-header {
 
 div.page {
   margin-bottom: 60px !important;
+}
+
+/* ============================================
+   INLINE STYLE REPLACEMENTS
+   Classes to replace inline styles for better maintainability
+   ============================================ */
+
+/* List style: decimal numbering */
+.list-decimal {
+  list-style-type: decimal !important;
+}
+
+/* Text color utilities */
+.text-green {
+  color: #196b24 !important;
+}
+
+.text-blue {
+  color: #215e99 !important;
+}
+
+.text-purple {
+  color: #7030a0 !important;
+}
+
+/* Image display: inline */
+.img-inline {
+  display: inline !important;
+}
+
+/* Image width responsive - follows pattern img-responsive-{width} */
+.img-responsive-178 {
+  width: 100% !important;
+  max-width: 178px !important;
+}
+
+.img-responsive-250 {
+  width: 100% !important;
+  max-width: 250px !important;
+}
+
+.img-responsive-300 {
+  width: 100% !important;
+  max-width: 300px !important;
+}
+
+.img-responsive-320 {
+  width: 100% !important;
+  max-width: 320px !important;
+}
+
+.img-responsive-400 {
+  width: 100% !important;
+  max-width: 400px !important;
+}
+
+.img-responsive-500 {
+  width: 100% !important;
+  max-width: 500px !important;
+}
+
+.img-responsive-550 {
+  width: 100% !important;
+  max-width: 550px !important;
+}
+
+.img-responsive-600 {
+  width: 100% !important;
+  max-width: 600px !important;
+}
+
+.img-responsive-650 {
+  width: 100% !important;
+  max-width: 650px !important;
+}
+
+/* Image centered */
+img.centered {
+  display: block !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Inline images should remain inline even with centered class */
+img.img-inline.centered {
+  display: inline !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* YouTube player centered */
+div.ytplayer.centered {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+/* Text center alignment */
+.text-center {
+  text-align: center !important;
+}
+
+/* ============================================
+   TABLE STYLES
+   Classes to replace inline table styles
+   ============================================ */
+
+/* Base table styling */
+.table-standard {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 20px auto !important;
+  max-width: 1000px !important;
+}
+
+.table-standard-height {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 20px auto !important;
+  height: 150px !important;
+  max-width: 1000px !important;
+}
+
+/* Table header row styling */
+.table-header-row {
+  background-color: #156082 !important;
+  height: 23px !important;
+}
+
+/* Table header cell styling */
+.table-header-cell {
+  padding: 8px !important;
+  text-align: center !important;
+  color: white !important;
+  height: 23px !important;
+}
+
+/* Table body cell styling */
+.table-body-cell {
+  padding: 8px !important;
+  text-align: center !important;
+  height: 23px !important;
+}
+
+/* Table body row styling - alternating colors */
+.table-row-alt-1 {
+  background-color: #c1e4f5 !important;
+  height: 23px !important;
+}
+
+.table-row-alt-2 {
+  background-color: #f9f9f9 !important;
+  height: 23px !important;
+}
+
+/* Table font sizes */
+.table-font-large {
+  font-size: 18.6667px !important;
+}
+
+.table-font-standard {
+  font-size: 14pt !important;
 }

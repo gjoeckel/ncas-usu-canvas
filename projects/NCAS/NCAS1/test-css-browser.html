@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CSS Comparison Test</title>
+  <script>
+    // Test mode: 'original' or 'optimized'
+    const urlParams = new URLSearchParams(window.location.search);
+    const testMode = urlParams.get('mode') || 'original';
+    const cssFile = testMode === 'optimized' ? 'ncas16-optimized.css' : 'ncas16.css';
+    
+    // Load CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = cssFile;
+    document.head.appendChild(link);
+    
+    // Store test mode
+    window.testMode = testMode;
+  </script>
+</head>
+<body class="not-ncademi-excluded not-ncademi-admin-view">
+  <!-- Minimal test structure matching Canvas -->
+  <header id="content-header" class="course-content-header">
+    <div class="ncademi-header-title">
+      <span class="header-text">Test Header</span>
+    </div>
+    <div class="ncademi-links-wrapper">
+      <nav id="ncademi-nav">
+        <a href="#test1" class="active">Test 1</a>
+        <a href="#test2">Test 2</a>
+      </nav>
+    </div>
+  </header>
+  
+  <div id="content-wrapper">
+    <div id="content" class="ic-Layout-contentMain">
+      <main id="ncas-main" class="main-content">
+        <div class="ncademi-core-skills-page">
+          <div class="custom-container">
+            <a href="#q1" class="custom-link small" data-status="pending">Link 1</a>
+            <a href="#q2" class="custom-link large" data-status="active">Link 2</a>
+          </div>
+        </div>
+        <table id="grades_summary">
+          <thead><tr><th class="status">Status</th></tr></thead>
+          <tbody>
+            <tr><td class="status ncademi-status" data-status="pending"><span class="ncademi-status-text">Pending</span></td></tr>
+          </tbody>
+        </table>
+      </main>
+    </div>
+  </div>
+  
+  <script>
+    // Extract computed styles for comparison
+    window.getTestStyles = function() {
+      const selectors = [
+        '#content-header',
+        '#ncademi-nav a',
+        '#ncademi-nav a.active',
+        '.custom-link.small',
+        'table#grades_summary td.status.ncademi-status'
+      ];
+      
+      const styles = {};
+      const props = ['display', 'position', 'width', 'height', 'color', 'background-color', 
+                     'font-size', 'font-weight', 'margin', 'padding', 'border-radius', 'z-index'];
+      
+      selectors.forEach(sel => {
+        const el = document.querySelector(sel);
+        if (el) {
+          const computed = window.getComputedStyle(el);
+          styles[sel] = {};
+          props.forEach(prop => {
+            const val = computed.getPropertyValue(prop);
+            if (val) styles[sel][prop] = val;
+          });
+        }
+      });
+      
+      return { mode: window.testMode, styles };
+    };
+  </script>
+</body>
+</html>
+
