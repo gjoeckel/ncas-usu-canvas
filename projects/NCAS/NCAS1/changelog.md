@@ -8,6 +8,16 @@
 
 ## Entries
 
+### 2025-11-07 22:54:45 UTC - Local Commit: hide login link after Canvas session detected
+
+**Branch:** feedback-updates
+**Files Modified:** 3
+- ncas18.js
+- ncas18.css
+- changelog.md
+
+---
+
 ### 2025-11-06 15:37:42 UTC - Local Commit: 14 files on feedback-updates
 
 **Branch:** feedback-updates
@@ -22,7 +32,7 @@
 - archive/ncas16-previous.css
 - archive/test-navigation-e2e.js
 - ncas16.css\n- ... and 4 more files
-**Commit:** [pending]
+**Commit:** 3f5d88a
 
 ---
 
