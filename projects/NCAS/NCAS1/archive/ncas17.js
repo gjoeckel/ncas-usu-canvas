@@ -29,21 +29,6 @@
     return;
   }
   
-  // Ensure Canvas ENV.current_user_roles is always an array to prevent third-party scripts
-  // (e.g., course_tracking.js) from crashing when they call .indexOf on anonymous views.
-  if (window.ENV) {
-    const roles = window.ENV.current_user_roles;
-    if (roles == null) {
-      window.ENV.current_user_roles = [];
-    } else if (!Array.isArray(roles)) {
-      try {
-        window.ENV.current_user_roles = Array.from(roles);
-      } catch (e) {
-        window.ENV.current_user_roles = [];
-      }
-    }
-  }
-  
   function waitForDOM(cb) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", cb);
@@ -92,263 +77,6 @@
       a.setAttribute("tabindex", "0"); // Ensure keyboard accessible
     }
     return a;
-  }
-
-  const ASSIGNMENT_STATUS_STORAGE_KEY = 'ncademi_assignment_statuses';
-  let assignmentStatusCache = null;
-  let cachedStudentId = null;
-  let studentIdPromise = null;
-
-  function getAssignmentStatusCache() {
-    if (assignmentStatusCache) {
-      return assignmentStatusCache;
-    }
-
-    assignmentStatusCache = new Map();
-    try {
-      const stored = sessionStorage.getItem(ASSIGNMENT_STATUS_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        Object.entries(parsed).forEach(([id, status]) => {
-          assignmentStatusCache.set(String(id), status);
-        });
-      }
-    } catch (e) {
-      logError("Unable to load assignment status cache", e);
-    }
-
-    return assignmentStatusCache;
-  }
-
-  function persistAssignmentStatusCache() {
-    if (!assignmentStatusCache) {
-      return;
-    }
-
-    try {
-      const obj = Object.fromEntries(assignmentStatusCache.entries());
-      sessionStorage.setItem(ASSIGNMENT_STATUS_STORAGE_KEY, JSON.stringify(obj));
-    } catch (e) {
-      logError("Unable to persist assignment status cache", e);
-    }
-  }
-
-  function cacheAssignmentStatus(assignmentId, status) {
-    if (!assignmentId || typeof status === 'undefined' || status === null) {
-      return;
-    }
-    const cache = getAssignmentStatusCache();
-    const key = String(assignmentId);
-    if (cache.get(key) === status) {
-      return;
-    }
-    cache.set(key, status);
-    persistAssignmentStatusCache();
-  }
-
-  function getCachedAssignmentStatus(assignmentId) {
-    if (!assignmentId) {
-      return null;
-    }
-    const cache = getAssignmentStatusCache();
-    return cache.get(String(assignmentId)) || null;
-  }
-
-  async function resolveStudentId() {
-    if (cachedStudentId) {
-      return cachedStudentId;
-    }
-    if (studentIdPromise) {
-      return studentIdPromise;
-    }
-
-    studentIdPromise = (async () => {
-      let studentId = null;
-      try {
-        if (window.ENV && window.ENV.student_id) {
-          studentId = window.ENV.student_id;
-        } else if (window.ENV && window.ENV.current_user && window.ENV.current_user.id) {
-          studentId = window.ENV.current_user.id;
-        } else {
-          const userResponse = await fetch('/api/v1/users/self', { credentials: 'include' });
-          if (userResponse.ok) {
-            const userData = await userResponse.json();
-            studentId = userData.id;
-          }
-        }
-      } catch (e) {
-        logError("Could not determine student ID", e);
-      } finally {
-        studentIdPromise = null;
-      }
-
-      if (studentId) {
-        cachedStudentId = studentId;
-      }
-      return studentId;
-    })();
-
-    return studentIdPromise;
-  }
-
-  function resetStudentIdCache() {
-    cachedStudentId = null;
-    cachedSignedIn = null;
-  }
-
-  const quizButtonDoneClickHandler = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-  };
-
-  function rememberOriginalQuizButtonState(button) {
-    if (!button.dataset.originalQuizButtonHtml) {
-      button.dataset.originalQuizButtonHtml = button.innerHTML;
-    }
-    if (!button.dataset.originalQuizButtonHref && button.hasAttribute('href')) {
-      button.dataset.originalQuizButtonHref = button.getAttribute('href');
-    }
-    if (!button.dataset.originalQuizButtonTabindex && button.hasAttribute('tabindex')) {
-      button.dataset.originalQuizButtonTabindex = button.getAttribute('tabindex');
-    }
-    if (!button.dataset.originalQuizButtonAriaLabel && button.hasAttribute('aria-label')) {
-      button.dataset.originalQuizButtonAriaLabel = button.getAttribute('aria-label');
-    }
-  }
-
-  function applyQuizButtonDoneState(button) {
-    rememberOriginalQuizButtonState(button);
-    button.classList.add('quiz-button--done');
-    button.innerHTML = 'Quiz Done <span aria-hidden="true">✓</span>';
-    button.setAttribute('aria-disabled', 'true');
-    button.setAttribute('tabindex', '-1');
-    if (button.dataset.originalQuizButtonHref) {
-      button.removeAttribute('href');
-    }
-    button.removeEventListener('click', quizButtonDoneClickHandler);
-    button.addEventListener('click', quizButtonDoneClickHandler);
-  }
-
-  function resetQuizButtonState(button) {
-    button.classList.remove('quiz-button--done');
-    if (button.dataset.originalQuizButtonHtml) {
-      button.innerHTML = button.dataset.originalQuizButtonHtml;
-    }
-    if (button.dataset.originalQuizButtonHref) {
-      button.setAttribute('href', button.dataset.originalQuizButtonHref);
-    }
-    if (button.dataset.originalQuizButtonTabindex) {
-      button.setAttribute('tabindex', button.dataset.originalQuizButtonTabindex);
-    } else {
-      button.removeAttribute('tabindex');
-    }
-    if (button.dataset.originalQuizButtonAriaLabel) {
-      button.setAttribute('aria-label', button.dataset.originalQuizButtonAriaLabel);
-    } else {
-      button.removeAttribute('aria-label');
-    }
-    button.removeAttribute('aria-disabled');
-    button.removeEventListener('click', quizButtonDoneClickHandler);
-  }
-
-  function applyQuizButtonStatus(button, status) {
-    if (!button) return;
-
-    if (status === 'done') {
-      applyQuizButtonDoneState(button);
-    } else {
-      resetQuizButtonState(button);
-    }
-  }
-
-  function getAssignmentIdFromUrl(url) {
-    if (!url) return null;
-    try {
-      const match = url.match(/assignments\/(\d+)/);
-      if (match && match[1]) {
-        return match[1];
-      }
-    } catch (e) {
-      logError("Error parsing assignment ID from URL", e);
-    }
-    return null;
-  }
-
-  let skillQuizButtonUpdatePromise = null;
-
-  async function updateSkillPageQuizButtons() {
-    if (skillQuizButtonUpdatePromise) {
-      return skillQuizButtonUpdatePromise;
-    }
-
-    skillQuizButtonUpdatePromise = (async () => {
-      if (!isCoursePage()) return;
-      if (document.body.classList.contains('ncademi-core-skills-page')) return;
-
-      const quizButtons = Array.from(document.querySelectorAll('a.quiz-button'));
-      if (quizButtons.length === 0) return;
-
-      const courseId = getCourseId();
-      if (!courseId) return;
-
-      const buttonDetails = quizButtons.map(button => {
-        const assignmentId = button.getAttribute('data-assignment-id') || getAssignmentIdFromUrl(button.getAttribute('href') || '');
-        return { button, assignmentId };
-      }).filter(detail => detail.assignmentId);
-
-      if (buttonDetails.length === 0) {
-        return;
-      }
-
-      const statusMap = new Map();
-      const missingAssignmentIds = [];
-
-      buttonDetails.forEach(({ assignmentId }) => {
-        const cachedStatus = getCachedAssignmentStatus(assignmentId);
-        if (cachedStatus) {
-          statusMap.set(assignmentId, cachedStatus);
-        } else {
-          missingAssignmentIds.push(assignmentId);
-        }
-      });
-
-      const uniqueMissingIds = Array.from(new Set(missingAssignmentIds));
-      const signedIn = await waitForSignedInState();
-
-      if (!signedIn) {
-        injectSignInBanner();
-      }
-
-      if (uniqueMissingIds.length > 0 && signedIn) {
-        const studentId = await resolveStudentId();
-        if (studentId) {
-          const submissions = await fetchSubmissions(courseId, studentId, uniqueMissingIds);
-          if (submissions && submissions.length > 0) {
-            submissions.forEach(submission => {
-              const assignmentId = String(submission.assignment_id);
-              const assignment = submission.assignment || {};
-              const pointsPossible = typeof assignment.points_possible !== 'undefined'
-                ? assignment.points_possible
-                : (typeof submission.points_possible !== 'undefined' ? submission.points_possible : 0);
-              const status = calculateStatus(submission.score, pointsPossible, submission);
-              cacheAssignmentStatus(assignmentId, status);
-              statusMap.set(assignmentId, status);
-            });
-          }
-        }
-      }
-
-      buttonDetails.forEach(({ button, assignmentId }) => {
-        const status = statusMap.get(assignmentId) || null;
-        applyQuizButtonStatus(button, status);
-      });
-    })().catch(err => {
-      logError("Error updating skill page quiz button", err);
-    }).finally(() => {
-      skillQuizButtonUpdatePromise = null;
-    });
-
-    return skillQuizButtonUpdatePromise;
   }
 
   // Inject skip link for accessibility (skip to main content)
@@ -660,15 +388,16 @@
         // Always create Progress link, but hide it if user is not signed in
         // This ensures consistent link order (Progress before Feedback)
         const progressLink = createLink(`/courses/${courseId}/grades`, "Progress", active === "progress");
-        progressLink.style.display = 'none';
-        progressLink.setAttribute('hidden', 'true');
         nav.appendChild(progressLink);
         
         // Check sign-in status and show/hide Progress link accordingly
-        if (isUserSignedInFast()) {
-          progressLink.style.display = '';
-          progressLink.removeAttribute('hidden');
-        }
+        isUserSignedIn().then(signedIn => {
+          if (!signedIn) {
+            // User is not signed in - hide Progress link
+            progressLink.style.display = 'none';
+            progressLink.setAttribute('hidden', 'true');
+          }
+        });
         
         nav.appendChild(createLink(`/courses/${courseId}/pages/feedback`, "Feedback", active === "feedback"));
         
@@ -678,16 +407,22 @@
         logOK("Populated nav links");
                   } else {
         // Check sign-in status and show/hide Progress link accordingly
-        const progressLink = nav.querySelector('a[href*="/grades"]');
-        if (progressLink) {
-          if (isUserSignedInFast()) {
-            progressLink.style.display = '';
-            progressLink.removeAttribute('hidden');
+        isUserSignedIn().then(signedIn => {
+          const progressLink = nav.querySelector('a[href*="/grades"]');
+          if (signedIn) {
+            // User is signed in - show Progress link if it exists
+            if (progressLink) {
+              progressLink.style.display = '';
+              progressLink.removeAttribute('hidden');
+            }
           } else {
-            progressLink.style.display = 'none';
-            progressLink.setAttribute('hidden', 'true');
+            // User is not signed in - hide Progress link if it exists
+            if (progressLink) {
+              progressLink.style.display = 'none';
+              progressLink.setAttribute('hidden', 'true');
+            }
           }
-        }
+        });
         
         // Update active state - batch all DOM changes to prevent reflows
         if (active) {
@@ -895,56 +630,26 @@
     return false;
   }
 
-  function submissionIndicatesCompletion(submission) {
-    if (!submission) return false;
-
-    const workflowState = (submission.workflow_state || '').toString().toLowerCase();
-    const postedAt = submission.posted_at || submission.graded_at || submission.submitted_at;
-    const quizSubmissionState = submission.quiz_submission && submission.quiz_submission.workflow_state
-      ? submission.quiz_submission.workflow_state.toString().toLowerCase()
-      : '';
-
-    const completeStates = ['complete', 'completed', 'graded', 'finished', 'posted', 'published'];
-
-    if (completeStates.includes(workflowState)) {
-      return true;
-    }
-
-    if (quizSubmissionState && completeStates.includes(quizSubmissionState)) {
-      return true;
-    }
-
-    if (postedAt) {
-      return true;
-    }
-
-    return false;
-  }
-
   // Calculate status using same logic as grades page
-  function calculateStatus(score, pointsPossible, submissionContext = null) {
+  function calculateStatus(score, pointsPossible) {
     // Y = score, X = pointsPossible
     if (score === null || score === undefined || score === '-') {
-      return submissionIndicatesCompletion(submissionContext) ? 'done' : 'pending'; // Y === '-'
+      return 'pending'; // Y === '-'
     }
     
     const scoreNum = typeof score === 'string' ? parseFloat(score) : score;
     const pointsNum = typeof pointsPossible === 'string' ? parseFloat(pointsPossible) : pointsPossible;
     
     if (isNaN(scoreNum) || isNaN(pointsNum)) {
-      return submissionIndicatesCompletion(submissionContext) ? 'done' : 'pending';
+      return 'pending';
     }
     
     if (scoreNum < pointsNum) {
-      return submissionIndicatesCompletion(submissionContext) ? 'done' : 'active'; // Y < X
+      return 'active'; // Y < X
     } else if (scoreNum === pointsNum && pointsNum > 0) {
       return 'done'; // Y === X
     }
     
-    if (submissionIndicatesCompletion(submissionContext)) {
-      return 'done';
-    }
-
     return 'pending';
   }
 
@@ -997,9 +702,8 @@
       return null;
     }
 
-    // Check cache first (per unique assignment set)
-    const assignmentKey = assignmentIds.map(id => String(id)).sort().join('_');
-    const cacheKey = `ncademi_submissions_${courseId}_${studentId}_${assignmentKey}`;
+    // Check cache first
+    const cacheKey = `ncademi_submissions_${courseId}_${studentId}`;
     const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
       try {
@@ -1019,7 +723,7 @@
     try {
       // Build API URL with assignment IDs
       const assignmentParams = assignmentIds.map(id => `assignment_ids[]=${id}`).join('&');
-      const url = `/api/v1/courses/${courseId}/students/submissions?student_ids[]=${studentId}&${assignmentParams}&per_page=100&include[]=assignment`;
+      const url = `/api/v1/courses/${courseId}/students/submissions?student_ids[]=${studentId}&${assignmentParams}&per_page=100`;
       
       log(`Fetching submissions from Canvas API: ${url}`);
       
@@ -1069,11 +773,10 @@
       // Get points_possible from assignments map (not from submission object)
       const assignment = assignmentsMap.get(assignmentId);
       const pointsPossible = assignment ? (assignment.points_possible || 0) : 0;
-      const status = calculateStatus(score, pointsPossible, submission);
+      const status = calculateStatus(score, pointsPossible);
       
       // Apply data-status attribute
       link.setAttribute('data-status', status);
-      cacheAssignmentStatus(assignmentId, status);
       
       // Update aria-label to include status for screen readers
       const linkText = link.textContent.trim() || link.getAttribute('title') || 'Link';
@@ -1107,45 +810,30 @@
     });
   }
 
-  let cachedSignedIn = null;
-
-  function isUserSignedInFast() {
-    if (cachedSignedIn === true) {
-      return true;
-    }
-
+  // Helper function to check if user is signed in to Canvas
+  async function isUserSignedIn() {
+    // Check ENV first
     const hasENVUser = (window.ENV && window.ENV.current_user && window.ENV.current_user.id) ||
                        (window.ENV && window.ENV.current_user_id) ||
                        (window.ENV && window.ENV.student_id);
-
+    
     if (hasENVUser) {
-      cachedSignedIn = true;
       return true;
     }
-
-    return false;
-  }
-
-  async function waitForSignedInState(options = {}) {
-    const {
-      timeout = 2500,
-      interval = 200
-    } = options;
-
-    if (isUserSignedInFast()) {
-      return true;
-    }
-
-    const start = Date.now();
-
-    while (Date.now() - start < timeout) {
-      await new Promise(resolve => setTimeout(resolve, interval));
-      if (isUserSignedInFast()) {
+    
+    // If ENV doesn't show user, verify via API call
+    try {
+      const userResponse = await fetch('/api/v1/users/self', {
+        credentials: 'include'
+      });
+      if (userResponse.ok && userResponse.status !== 401) {
         return true;
       }
+    } catch (e) {
+      // API call failed, user not signed in
     }
-
-    return isUserSignedInFast();
+    
+    return false;
   }
 
   // Inject status key banner for signed-in users on core-skills page
@@ -1158,7 +846,7 @@
     }
 
     // Check if user is signed in
-    const signedIn = isUserSignedInFast();
+    const signedIn = await isUserSignedIn();
     if (!signedIn) {
       log("Status key banner: User not signed in");
       return; // User not signed in, don't show banner
@@ -1302,7 +990,7 @@
     }
 
     // Check if user is signed in
-    const signedIn = isUserSignedInFast();
+    const signedIn = await isUserSignedIn();
     if (signedIn) {
       return; // User is signed in, don't show banner
     }
@@ -1400,10 +1088,9 @@
 
     // Check if user is signed in to Canvas
     // If not signed in, do not show status icons
-    const signedIn = await waitForSignedInState({ timeout: 3000 });
+    const signedIn = await isUserSignedIn();
     if (!signedIn) {
       log("User not signed in to Canvas, status icons not shown");
-      injectSignInBanner();
       return;
     }
 
@@ -1413,7 +1100,26 @@
       return;
     }
 
-    const studentId = await resolveStudentId();
+    // Get student ID from ENV or current user context
+    let studentId = null;
+    if (window.ENV && window.ENV.student_id) {
+      studentId = window.ENV.student_id;
+    } else if (window.ENV && window.ENV.current_user && window.ENV.current_user.id) {
+      studentId = window.ENV.current_user.id;
+    } else {
+      // Try to get from current user API
+      try {
+        const userResponse = await fetch('/api/v1/users/self', {
+          credentials: 'include'
+        });
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          studentId = userData.id;
+        }
+      } catch (e) {
+        logError("Could not determine student ID", e);
+      }
+    }
 
     if (!studentId) {
       log("No student ID found, cannot fetch submissions");
@@ -1481,26 +1187,93 @@
     logOK("Status icons enabled and applied for signed-in user");
   }
 
-  function updateExternalLoginLinkState(link, loginMarkup) {
+  const externalLogoutHandler = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    performCanvasLogout();
+  };
+
+  function performCanvasLogout() {
+    try {
+      const existingForm = document.querySelector('form[action="/logout"]');
+      if (existingForm) {
+        existingForm.submit();
+        return;
+      }
+
+      const csrfTokenEl = document.querySelector('meta[name="csrf-token"]');
+      const csrfToken = csrfTokenEl ? csrfTokenEl.getAttribute('content') : null;
+
+      const form = document.createElement('form');
+      form.action = '/logout';
+      form.method = 'post';
+      form.style.display = 'none';
+
+      const utf8Input = document.createElement('input');
+      utf8Input.type = 'hidden';
+      utf8Input.name = 'utf8';
+      utf8Input.value = '✓';
+      form.appendChild(utf8Input);
+
+      const methodInput = document.createElement('input');
+      methodInput.type = 'hidden';
+      methodInput.name = '_method';
+      methodInput.value = 'delete';
+      form.appendChild(methodInput);
+
+      if (csrfToken) {
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = 'authenticity_token';
+        tokenInput.value = csrfToken;
+        form.appendChild(tokenInput);
+      }
+
+      document.body.appendChild(form);
+      form.submit();
+    } catch (error) {
+      logError('Error attempting Canvas logout', error);
+      window.location.href = '/logout';
+    }
+  }
+
+  function updateExternalLoginLinkState(link, loginMarkup, logoutMarkup) {
     if (!link) return;
 
-    const signedIn = isUserSignedInFast();
-    const wrapper = link.parentElement;
+    isUserSignedIn().then(signedIn => {
+      if (!link) return;
 
-    if (signedIn) {
-      link.style.display = 'none';
-      link.setAttribute('hidden', 'true');
-      if (wrapper) wrapper.style.display = 'none';
-    } else {
-      link.innerHTML = loginMarkup;
-      link.href = 'https://usucourses.instructure.com/';
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.setAttribute('aria-label', 'Log in to USU Canvas (opens in a new window)');
-      link.removeAttribute('hidden');
-      link.style.display = '';
-      if (wrapper) wrapper.style.display = '';
-    }
+      if (signedIn) {
+        if (link.getAttribute('data-ncademi-link-mode') !== 'logout') {
+          link.innerHTML = logoutMarkup;
+          link.href = '#logout';
+          link.removeAttribute('target');
+          link.removeAttribute('rel');
+          link.setAttribute('aria-label', 'Log out of USU Canvas');
+          link.setAttribute('data-ncademi-link-mode', 'logout');
+          link.classList.add('ncademi-external-link-logout');
+          link.classList.remove('ncademi-external-link-login');
+          link.removeEventListener('click', externalLogoutHandler);
+          link.addEventListener('click', externalLogoutHandler);
+          logOK('External login link switched to logout mode');
+        }
+      } else {
+        if (link.getAttribute('data-ncademi-link-mode') !== 'login') {
+          link.innerHTML = loginMarkup;
+          link.href = 'https://usucourses.instructure.com/';
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.setAttribute('aria-label', 'Log in to USU Canvas (opens in a new window)');
+          link.setAttribute('data-ncademi-link-mode', 'login');
+          link.classList.add('ncademi-external-link-login');
+          link.classList.remove('ncademi-external-link-logout');
+          link.removeEventListener('click', externalLogoutHandler);
+          logOK('External login link switched to login mode');
+        }
+      }
+    }).catch(error => {
+      logError('Error determining external login link state', error);
+    });
   }
 
   function ensureExternalLoginLink(header) {
@@ -1516,6 +1289,8 @@
     }
 
     const externalLinkMarkup = 'Log in to USU Canvas <span class="external_link_icon" role="presentation"><svg viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg"><path d="M1226.667 267c88.213 0 160 71.787 160 160v426.667H1280v-160H106.667v800C106.667 1523 130.56 1547 160 1547h1066.667c29.44 0 53.333-24 53.333-53.333v-213.334h106.667v213.334c0 88.213-71.787 160-160 160H160c-88.213 0-160-71.787-160-160V427c0-88.213 71.787-160 160-160Zm357.706 442.293 320 320c20.8 20.8 20.8 54.614 0 75.414l-320 320-75.413-75.414 228.907-228.906H906.613V1013.72h831.254L1508.96 784.707l75.413-75.414Zm-357.706-335.626H160c-29.44 0-53.333 24-53.333 53.333v160H1280V427c0-29.333-23.893-53.333-53.333-53.333Z" fill-rule="evenodd"></path></svg><span class="screenreader-only">Links to an external site.</span></span>';
+    const externalLogoutMarkup = 'Log out of USU Canvas <span class="external_link_icon" role="presentation"><svg viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg"><path d="M960 0c530.133 0 960 429.867 960 960s-429.867 960-960 960S0 1490.133 0 960 429.867 0 960 0Zm0 180.48c-430.336 0-779.52 349.184-779.52 779.52S529.664 1739.52 960 1739.52 1739.52 1390.336 1739.52 960 1390.336 180.48 960 180.48ZM964.395 414.72c54.016 0 97.92 43.84 97.92 97.92v413.44h221.866l-319.787 319.786-319.786-319.786h221.866V512.64c0-54.08 43.84-97.92 97.92-97.92Z" fill-rule="evenodd"></path></svg><span class="screenreader-only">Performs logout</span></span>';
+
     let externalLink = externalWrapper.querySelector('.ncademi-external-link');
     if (!externalLink) {
       externalLink = document.createElement('a');
@@ -1524,7 +1299,7 @@
       logOK("External login link injected");
     }
 
-    updateExternalLoginLinkState(externalLink, externalLinkMarkup);
+    updateExternalLoginLinkState(externalLink, externalLinkMarkup, externalLogoutMarkup);
   }
 
   function populateStatusColumn() {
@@ -2059,9 +1834,7 @@
         const observer = new MutationObserver(() => {
           // Re-check for links and update status on Core Skills page
           if (document.body.classList.contains('ncademi-core-skills-page')) {
-            if (isUserSignedInFast()) {
-              updateCoreSkillsCheckmarks();
-            }
+            updateCoreSkillsCheckmarks();
           }
           // Re-check for banner injection if container appears
           injectSignInBanner();
@@ -2070,7 +1843,6 @@
               injectStatusKeyBanner();
             });
           }
-          updateSkillPageQuizButtons();
         });
         observer.observe(document.body, {
           childList: true,
@@ -2081,9 +1853,7 @@
         // Also try after a short delay to catch any late-loading content
         setTimeout(() => {
           if (document.body.classList.contains('ncademi-core-skills-page')) {
-            if (isUserSignedInFast()) {
-              updateCoreSkillsCheckmarks();
-            }
+            updateCoreSkillsCheckmarks();
           }
           injectSignInBanner();
           if (document.body.classList.contains('ncademi-status-enabled')) {
@@ -2091,7 +1861,6 @@
               injectStatusKeyBanner();
             });
           }
-          updateSkillPageQuizButtons();
         }, 1000);
       }
     } else {
@@ -2107,7 +1876,6 @@
     // Inject content wrapper overlay (after body classes are set)
     // Inject immediately to prevent layout shift - overlay is positioned absolutely so won't affect layout
     injectContentWrapperOverlay();
-    updateSkillPageQuizButtons();
     
     // Handle grades page (Progress)
     // Note: H1 heading hiding is now handled by CSS (no inline styles needed)

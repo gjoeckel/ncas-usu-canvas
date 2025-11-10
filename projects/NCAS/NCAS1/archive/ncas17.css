@@ -1,15 +1,16 @@
 /*
- * NCAS16 v16 CSS - Custom Canvas LMS Enhancement Styles
+ * NCAS17 v17 CSS - Custom Canvas LMS Enhancement Styles
  * Updated: 2025-01-02
  * Scope: Maintain exact visuals with minimal JS; CSS drives layout and states
  * Purpose: Custom navigation, layout, and content styling for Canvas course pages
  * Note: Header element is injected via JavaScript; CSS styles the injected elements
  * 
- * Structure (v16):
+ * Structure (v17):
  * - Title floats left (static, independent position)
  * - Links wrapper centers on full header width (overlaps title)
  * - Heading indentation: All child elements respect heading indentation using heading-section wrappers
  * - Status indicators: Quiz status icons on Core Skills page, status column on Progress page
+ * - External login link: "Log in to USU Canvas" button anchored to right edge of header
  */
 
 /* ============================================
@@ -230,12 +231,58 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     background-repeat: no-repeat;
   }
 
+  #content-header.course-content-header .ncademi-external-link-wrapper {
+    position: absolute !important;
+    right: 20px !important;
+    bottom: 5px !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    pointer-events: auto !important;
+    gap: 0 !important;
+  }
+
+  #content-header.course-content-header .ncademi-external-link-wrapper a {
+    pointer-events: auto !important;
+    white-space: nowrap !important;
+  }
+
+  #content-header.course-content-header .ncademi-external-link-wrapper .ncademi-external-link {
+    font-size: 1rem !important;
+    padding: 0 12px !important;
+  }
+
+  #content-header.course-content-header .ncademi-external-link-wrapper .external_link_icon {
+    margin-inline-start: 5px;
+    display: inline-block;
+    text-indent: initial;
+    vertical-align: middle;
+    margin-top: -12px;
+    width: 1em;
+    height: 1em;
+  }
+
+  #content-header.course-content-header .ncademi-external-link-wrapper .external_link_icon svg {
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
+    fill: currentColor;
+  }
+
+  #content-header.course-content-header .ncademi-external-link-wrapper a .icon-external-link {
+    margin-left: 8px;
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+
   /* ============================================
      NAVIGATION LINK STYLING
      ============================================ */
 
   /* Base navigation link styling - inactive/regular links */
-  #content-header.course-content-header #ncademi-nav a {
+  #content-header.course-content-header #ncademi-nav a,
+  #content-header.course-content-header .ncademi-external-link-wrapper a {
     display: flex;
     align-items: center;
     padding: 0 24px;
@@ -289,7 +336,10 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
   /* Rounded double border: black inside, white outside */
   #content-header.course-content-header #ncademi-nav a:hover:not(.active):not([style*="background: rgb(236, 142, 34)"]),
   #content-header.course-content-header #ncademi-nav a:focus:not(.active):not([style*="background: rgb(236, 142, 34)"]),
-  #content-header.course-content-header #ncademi-nav a:focus-visible:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
+  #content-header.course-content-header #ncademi-nav a:focus-visible:not(.active):not([style*="background: rgb(236, 142, 34)"]),
+  #content-header.course-content-header .ncademi-external-link-wrapper a:hover,
+  #content-header.course-content-header .ncademi-external-link-wrapper a:focus,
+  #content-header.course-content-header .ncademi-external-link-wrapper a:focus-visible {
     background: transparent !important;
     color: rgb(255, 255, 255) !important;
     text-decoration: underline !important;
@@ -692,8 +742,8 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
      RESPONSIVE DESIGN
      ============================================ */
 
-  /* Mobile responsiveness (max-width: 900px) - stacked vertical layout */
-  @media (max-width: 900px) {
+  /* Mobile responsiveness (max-width: 1000px) - stacked vertical layout */
+  @media (max-width: 1000px) {
     /* Header container - stack vertically */
     #content-header.course-content-header {
       height: auto !important;
@@ -778,8 +828,31 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     /* Mobile: Override border-radius for hover/focus states (no rounded corners on mobile) */
     #content-header.course-content-header #ncademi-nav a:hover:not(.active):not([style*="background: rgb(236, 142, 34)"]),
     #content-header.course-content-header #ncademi-nav a:focus:not(.active):not([style*="background: rgb(236, 142, 34)"]),
-    #content-header.course-content-header #ncademi-nav a:focus-visible:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
+    #content-header.course-content-header #ncademi-nav a:focus-visible:not(.active):not([style*="background: rgb(236, 142, 34)"]),
+    #content-header.course-content-header .ncademi-external-link-wrapper a:hover,
+    #content-header.course-content-header .ncademi-external-link-wrapper a:focus,
+    #content-header.course-content-header .ncademi-external-link-wrapper a:focus-visible {
       border-radius: 0 !important;
+    }
+
+    #content-header.course-content-header .ncademi-external-link-wrapper {
+      position: static !important;
+      width: 100% !important;
+      justify-content: center !important;
+      padding: 10px 30px 0 !important;
+      height: auto !important;
+      min-height: auto !important;
+    }
+
+    #content-header.course-content-header .ncademi-external-link-wrapper a {
+      width: 100% !important;
+      justify-content: center;
+      margin-bottom: 10px !important;
+    }
+
+    #content-header.course-content-header .ncademi-external-link-wrapper .ncademi-external-link {
+      font-size: 1rem !important;
+      padding: 12px 12px !important;
     }
 
     /* Bottom border - appears after all nav links */
@@ -1162,6 +1235,7 @@ body.ncademi-core-skills-page.ncademi-status-enabled .ncademi-status-key-banner 
   font-size: 1rem;
   line-height: 1.5;
   color: #333333;
+  text-align: center;
 }
 
 .ncademi-signin-banner-message a {

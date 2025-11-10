@@ -1025,7 +1025,7 @@
     // Create message text with link
     const message = document.createElement('p');
     message.className = 'ncademi-signin-banner-message';
-    message.innerHTML = 'Create a <a href="http://usucourses.instructure.com/" target="_blank" rel="noopener noreferrer">free Canvas account</a> and sign in to take quizzes and track your progress.';
+    message.innerHTML = 'Create a <a href="https://usucourses.instructure.com/enroll/G87RJM" target="_blank" rel="noopener noreferrer">free USU Canvas account</a> to take quizzes.';
     
     // Create dismiss button (X)
     const dismissBtn = document.createElement('button');
