@@ -8,6 +8,22 @@
 
 ## Entries
 
+### 2025-11-11 19:51:30 UTC - Local Commit: finalize NCAS19 nav pill styling
+
+**Branch:** feedback-updates
+**Files Modified:** 9
+- archive/ncas18.css
+- archive/ncas18.js
+- archive/ncas18-simple.css
+- archive/ncas18-simple.js
+- archive/ncas19.css
+- archive/ncas19.js
+- ncas19.css
+- ncas19.js
+- changelog.md
+
+---
+
 ### 2025-11-07 22:54:45 UTC - Local Commit: hide login link after Canvas session detected
 
 **Branch:** feedback-updates
