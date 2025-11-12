@@ -8,6 +8,38 @@
 
 ## Entries
 
+### 2025-11-12 19:22:46 UTC - Enhanced Core Skills overlay validation
+
+**Branch:** feedback-updates
+**Files Modified:** 1
+- projects/NCAS/NCAS1/ncas21.js
+
+**Changes:**
+- Created `validateCoreSkillsPageLoaded()` function to programmatically validate all Core Skills page elements before allowing overlay fade-out
+  - Validates content-wrapper exists with content
+  - Validates Core Skills links are present
+  - For Canvas users: Validates status icons are applied and status key banner is visible (if status enabled)
+  - For non-Canvas users: Validates sign-in banner is visible
+  - Waits for all images to load (with timeout protection)
+  - Includes max attempts limit (5 seconds) to prevent infinite waiting
+- Updated `loadUsuCanvasUserCoreSkills` flow (initial redirect):
+  - Overlay now waits for `validateCoreSkillsPageLoaded()` to complete before fading out
+  - Ensures all page elements are validated as loaded before revealing content
+- Updated `updateUsuCanvasCoreSkills` flow (subsequent navigations):
+  - Creates overlay for subsequent Core Skills navigations (if not already active)
+  - Overlay message: "Loading Core Skills page..."
+  - Waits for `validateCoreSkillsPageLoaded()` to complete before fading out
+  - Works for both Canvas users (flag present) and non-Canvas users (flag not present)
+
+**Impact:**
+- Prevents overlay from fading out prematurely before all page elements are loaded
+- Improves user experience by ensuring complete page readiness before revealing content
+- Handles both initial redirect flow and subsequent navigation scenarios
+
+**Commit:** [pending]
+
+---
+
 ### 2025-11-10 19:54:50 UTC - Local Commit: 8 files on feedback-updates
 
 **Branch:** feedback-updates

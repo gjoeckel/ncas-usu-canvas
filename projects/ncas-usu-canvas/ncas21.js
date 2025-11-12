@@ -1,5 +1,5 @@
 /**
- * NCADEMI Navigation JavaScript (NCAS19)
+ * NCADEMI Navigation JavaScript (NCAS21)
  * Always injects complete header element - no HTML header elements needed
  * 
  * Goal: Preserve exact visuals with minimal JS.
@@ -8,7 +8,7 @@
  * - Rely on CSS for layout/chrome hiding; JS just wires nav and A11Y
  * - Header element is created entirely via JavaScript and injected at body.firstChild
  *
- * Structure (NCAS19):
+ * Structure (NCAS21):
  * - Title floats left (static, independent)
  * - Links wrapper centers on full header width (overlaps title)
  */
@@ -16,7 +16,7 @@
 (function () {
   "use strict";
 
-  const LOG_PREFIX = "🚀 NCADEMI Navigation NCAS19";
+  const LOG_PREFIX = "🚀 NCADEMI Navigation NCAS21";
   const DEBUG_MODE = true;
 
   function log(msg, data = null) { if (DEBUG_MODE) console.log(`${LOG_PREFIX}: ${msg}`, data || ""); }
@@ -56,6 +56,7 @@
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  /* CORE SKILLS PAGE CODE DISABLED - NCAS21
   async function runCoreSkillsStatusUpdate(attempt = 0) {
     if (coreSkillsStatusDisabled) {
       if (!coreSkillsStatusState.skipLogged) {
@@ -68,7 +69,18 @@
     resetCoreSkillsStatusStateForCurrentPath();
     log(`scheduleCoreSkillsStatusUpdate: attempt ${attempt}`);
 
-    const signedIn = await ensureSignedInState({ timeout: 3000 });
+    // Check if user was redirected from Start Here (flag indicates user is logged in)
+    const loggedInRedirect = sessionStorage.getItem('ncademi-logged-in-redirect') === 'true';
+    let signedIn;
+    
+    if (loggedInRedirect) {
+      // User was redirected from Start Here, already verified as logged in
+      signedIn = true;
+      log("runCoreSkillsStatusUpdate: User verified as logged in from Start Here redirect");
+    } else {
+      signedIn = await ensureSignedInState({ timeout: 3000 });
+    }
+    
     if (!signedIn) {
       coreSkillsStatusDisabled = true;
       coreSkillsStatusState.suppressed = true;
@@ -96,6 +108,7 @@
     return runCoreSkillsStatusUpdate(attempt + 1);
   }
 
+  /* CORE SKILLS PAGE CODE DISABLED - NCAS21
   function scheduleCoreSkillsStatusUpdate(options = {}) {
     const force = options.force === true;
     resetCoreSkillsStatusStateForCurrentPath();
@@ -115,7 +128,9 @@
     }
     return coreSkillsStatusPromise;
   }
+  */
 
+  /* CORE SKILLS PAGE CODE DISABLED - NCAS21
   async function waitForCoreSkillsStatusIfNeeded() {
     if (!document.body.classList.contains('ncademi-core-skills-page')) {
       return;
@@ -131,6 +146,7 @@
       }
     }
   }
+  */
 
   function isCoursePage() {
     return window.location.pathname.includes("/courses/");
@@ -153,7 +169,15 @@
     const p = window.location.pathname;
     if (!courseId) return null;
     if (p.includes("/pages/start-here")) return "start-here";
-    if (p === `/courses/${courseId}` || p === `/courses/${courseId}/` || p.includes("/pages/core-skills")) return "home";
+    
+    // All users on course home default to "Start Here" active state
+    // This prevents visual flash when redirect happens
+    const isCourseHome = p === `/courses/${courseId}` || p === `/courses/${courseId}/`;
+    if (isCourseHome) {
+      return "start-here";
+    }
+    
+    if (p.includes("/pages/core-skills")) return "home";
     if (p === `/courses/${courseId}/grades` || p === `/courses/${courseId}/grades/` || p.startsWith(`/courses/${courseId}/grades`)) return "progress";
     if (p.includes("/pages/feedback")) return "feedback";
     return null;
@@ -284,6 +308,477 @@
     return String(pathname).replace(/\/+$/, '');
   }
 
+  /**
+   * Create or get existing full-body overlay
+   * Overlay persists across redirects if possible, or creates new one seamlessly
+   */
+  function createOrGetOverlay() {
+    let overlay = document.getElementById('ncademi-loading-overlay');
+    
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'ncademi-loading-overlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ffffff;
+        z-index: 999999;
+        opacity: 1;
+        transition: opacity 400ms ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      `;
+      
+      // Create message text container
+      const messageText = document.createElement('div');
+      messageText.id = 'ncademi-loading-overlay-message';
+      messageText.style.cssText = `
+        font-size: 2rem;
+        text-align: center;
+        opacity: 1;
+        transition: opacity 400ms ease;
+      `;
+      
+      overlay.appendChild(messageText);
+      
+      // Append directly to body to ensure it's always on top (covers everything including nav bar)
+      if (document.body) {
+        document.body.appendChild(overlay);
+      } else {
+        // If body doesn't exist yet, wait for DOM and then append
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            if (document.body) {
+              document.body.appendChild(overlay);
+            }
+          });
+        }
+      }
+    }
+    
+    return overlay;
+  }
+
+  /**
+   * Update overlay message text
+   */
+  function updateOverlayMessage(message) {
+    const overlay = document.getElementById('ncademi-loading-overlay');
+    if (overlay) {
+      const messageText = overlay.querySelector('#ncademi-loading-overlay-message');
+      if (messageText) {
+        // Ensure opacity is 1 and transition is set
+        if (!messageText.style.transition) {
+          messageText.style.transition = 'opacity 400ms ease';
+        }
+        messageText.style.opacity = '1';
+        messageText.textContent = message;
+      }
+    }
+  }
+
+  /**
+   * Cross-fade overlay message (fade out old, fade in new)
+   */
+  function crossFadeOverlayMessage(newMessage) {
+    const overlay = document.getElementById('ncademi-loading-overlay');
+    if (!overlay) return;
+    
+    const messageText = overlay.querySelector('#ncademi-loading-overlay-message');
+    if (!messageText) return;
+    
+    // Add transition for opacity if not already present
+    if (!messageText.style.transition) {
+      messageText.style.transition = 'opacity 400ms ease';
+    }
+    
+    // Fade out current message
+    messageText.style.opacity = '0';
+    
+    // After fade out, update text and fade in
+    setTimeout(() => {
+      messageText.textContent = newMessage;
+      messageText.style.opacity = '1';
+    }, 400);
+  }
+
+  /**
+   * Preload Core Skills page assets (HTML and images)
+   * Called after Start Here page loads for non-logged-in users
+   */
+  function preloadCoreSkillsAssets() {
+    const courseId = getCourseId();
+    if (!courseId) return;
+    
+    const coreSkillsPath = `/courses/${courseId}/pages/core-skills`;
+    
+    // Prefetch the Core Skills page HTML
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = coreSkillsPath;
+    link.as = 'document';
+    document.head.appendChild(link);
+    log('Prefetching Core Skills page HTML');
+    
+    // Preload skill icon images (known file IDs from Core Skills page)
+    // These are the skill module icons that appear on the Core Skills page
+    const skillImageIds = [
+      '1197429', // Alternative Text
+      '1197430', // Captions
+      '1197431', // Clear Writing
+      '1197432', // Color Use
+      '1197421', // Headings
+      '1197434', // Links
+      '1197435', // Lists
+      '1197436', // Tables
+      '1197433'  // Text Contrast
+    ];
+    
+    skillImageIds.forEach((fileId) => {
+      const imgLink = document.createElement('link');
+      imgLink.rel = 'preload';
+      imgLink.href = `https://usucourses.instructure.com/courses/${courseId}/files/${fileId}/preview`;
+      imgLink.as = 'image';
+      document.head.appendChild(imgLink);
+    });
+    
+    log(`Preloading ${skillImageIds.length} Core Skills icon images`);
+    
+    // Inject sign-in banner at the same time (will only inject if on Core Skills page)
+    injectSignInBanner();
+  }
+
+  /**
+   * Programmatically detect when page body is loaded
+   * Waits for content-wrapper and its content to be ready
+   */
+  function waitForPageBodyLoaded() {
+    return new Promise((resolve) => {
+      // First wait for DOM to be ready
+      waitForDOM(() => {
+        // Wait for content-wrapper to exist
+        const checkContentWrapper = () => {
+          const contentWrapper = document.getElementById('content-wrapper');
+          if (contentWrapper) {
+            // Wait a bit more for content to render
+            // Check for any content inside content-wrapper
+            const hasContent = contentWrapper.children.length > 0 || 
+                              contentWrapper.textContent.trim().length > 0;
+            
+            if (hasContent) {
+              // Additional small delay to ensure rendering is complete
+              setTimeout(resolve, 100);
+            } else {
+              // Content wrapper exists but no content yet, check again
+              setTimeout(checkContentWrapper, 100);
+            }
+          } else {
+            // Content wrapper doesn't exist yet, check again
+            setTimeout(checkContentWrapper, 100);
+          }
+        };
+        
+        checkContentWrapper();
+      });
+    });
+  }
+
+  /**
+   * Validate all Core Skills page elements are loaded
+   * Checks for: content-wrapper, links, banners, status icons (if Canvas user), images
+   * Returns Promise that resolves when all elements are validated as loaded
+   */
+  function validateCoreSkillsPageLoaded() {
+    return new Promise((resolve) => {
+      const maxAttempts = 50; // 5 seconds max (50 * 100ms)
+      let attempts = 0;
+      
+      const checkElements = () => {
+        attempts++;
+        
+        // 1. Check content-wrapper exists with content
+        const contentWrapper = document.getElementById('content-wrapper');
+        if (!contentWrapper || contentWrapper.children.length === 0) {
+          if (attempts < maxAttempts) {
+            setTimeout(checkElements, 100);
+            return;
+          }
+          log("validateCoreSkillsPageLoaded: Content wrapper not ready after max attempts");
+          resolve(); // Resolve anyway to prevent infinite wait
+          return;
+        }
+        
+        // 2. Check Core Skills links exist
+        const links = document.querySelectorAll('body.ncademi-core-skills-page .custom-link.small, body.ncademi-core-skills-page .custom-link.large');
+        if (links.length === 0) {
+          if (attempts < maxAttempts) {
+            setTimeout(checkElements, 100);
+            return;
+          }
+          log("validateCoreSkillsPageLoaded: Core Skills links not found after max attempts");
+          resolve(); // Resolve anyway
+          return;
+        }
+        
+        // 3. Check for Canvas user flag
+        const usuCanvasUser = sessionStorage.getItem('usu-canvas-user') === 'true';
+        
+        if (usuCanvasUser) {
+          // Canvas user: Check for status icons and status key banner
+          // Check if status icons are applied (links have data-status attribute)
+          const linksWithStatus = Array.from(links).filter(link => link.hasAttribute('data-status'));
+          
+          // Check for status key banner
+          const statusKeyBanner = document.querySelector('.ncademi-status-key-banner');
+          const statusKeyBannerVisible = statusKeyBanner && 
+            window.getComputedStyle(statusKeyBanner).display !== 'none';
+          
+          // If status-enabled class is present, we expect status icons
+          const statusEnabled = document.body.classList.contains('ncas-status-enabled');
+          
+          if (statusEnabled) {
+            // Status is enabled, validate status icons and banner
+            if (linksWithStatus.length === 0) {
+              // Status enabled but no status icons yet, keep checking
+              if (attempts < maxAttempts) {
+                setTimeout(checkElements, 100);
+                return;
+              }
+              log("validateCoreSkillsPageLoaded: Status enabled but no status icons found after max attempts");
+              resolve(); // Resolve anyway to prevent infinite wait
+              return;
+            }
+            
+            // Status key banner should exist if status is enabled
+            if (!statusKeyBannerVisible) {
+              if (attempts < maxAttempts) {
+                setTimeout(checkElements, 100);
+                return;
+              }
+              log("validateCoreSkillsPageLoaded: Status enabled but status key banner not visible after max attempts");
+              resolve(); // Resolve anyway
+              return;
+            }
+          }
+          // If status is not enabled yet, that's OK - validation will continue to image check
+        } else {
+          // Not Canvas user: Check for sign-in banner
+          const signInBanner = document.querySelector('.ncademi-signin-banner');
+          const signInBannerVisible = signInBanner && 
+            window.getComputedStyle(signInBanner).display !== 'none';
+          
+          if (!signInBannerVisible) {
+            if (attempts < maxAttempts) {
+              setTimeout(checkElements, 100);
+              return;
+            }
+            log("validateCoreSkillsPageLoaded: Sign-in banner not visible after max attempts");
+            resolve(); // Resolve anyway to prevent infinite wait
+            return;
+          }
+        }
+        
+        // 4. Check all images are loaded (if any)
+        const images = Array.from(contentWrapper.querySelectorAll('img'));
+        if (images.length > 0) {
+          const imagePromises = images.map(img => {
+            if (img.complete) {
+              return Promise.resolve();
+            }
+            return new Promise((imgResolve) => {
+              img.addEventListener('load', imgResolve, { once: true });
+              img.addEventListener('error', imgResolve, { once: true }); // Count errors as loaded
+              // Timeout after 2 seconds per image
+              setTimeout(imgResolve, 2000);
+            });
+          });
+          
+          Promise.all(imagePromises).then(() => {
+            // All images loaded or errored, resolve
+            logOK("validateCoreSkillsPageLoaded: All Core Skills page elements validated as loaded");
+            resolve();
+          });
+        } else {
+          // No images, resolve immediately
+          logOK("validateCoreSkillsPageLoaded: All Core Skills page elements validated as loaded");
+          resolve();
+        }
+      };
+      
+      // Start checking
+      checkElements();
+    });
+  }
+
+  function handleInitialRedirects() {
+    const courseId = getCourseId();
+    if (!courseId) {
+      // Ensure body is visible if no course ID
+      if (document.body && document.body.style.display === 'none') {
+        document.body.style.display = '';
+      }
+      return;
+    }
+
+    const currentPath = normalizePathname(window.location.pathname || '');
+    const startHerePath = normalizePathname(`/courses/${courseId}/pages/start-here`);
+    const courseHomePath = normalizePathname(`/courses/${courseId}`);
+    const courseHomePathSlash = normalizePathname(`/courses/${courseId}/`);
+    const isOnCourseHome = currentPath === courseHomePath || currentPath === courseHomePathSlash;
+
+    // Redirect course home to Start Here (ALWAYS)
+    if (isOnCourseHome) {
+      log(`Redirecting course home to Start Here`);
+      
+      // Show overlay with "Loading the course..." message immediately
+      const overlay = createOrGetOverlay();
+      updateOverlayMessage('Loading the course...');
+      
+      // Set flag to indicate overlay is active and store start time
+      sessionStorage.setItem('ncademi-overlay-active', 'true');
+      sessionStorage.setItem('ncademi-overlay-start-time', Date.now().toString());
+      
+      // Ensure body is visible so overlay can be shown
+      if (document.body) {
+        document.body.style.display = '';
+      }
+      
+      // Small delay to ensure overlay is visible before redirect
+      setTimeout(() => {
+        window.location.replace(startHerePath);
+      }, 50);
+      return;
+    }
+
+    // Ensure body is visible on all other pages (including Start Here)
+    if (document.body && document.body.style.display === 'none') {
+      document.body.style.display = '';
+    }
+  }
+
+  /**
+   * onCourseLoad: Determines Canvas user status and handles initial flow
+   * ALL Canvas user validation happens on Start Here page - this is the ONLY place
+   * 
+   * Flow:
+   * 1. Show "Loading the course..." message immediately
+   * 2. Ensure message persists for 1 second minimum
+   * 3. Run user detection
+   * 4. Based on result:
+   *    A. User NOT logged in:
+   *       - NOT flagged (usu-canvas-user flag not set)
+   *       - Sent to Start Here page
+   *       - Overlay fades out after page loads
+   *    B. User logged in:
+   *       - IS flagged (usu-canvas-user flag set to 'true')
+   *       - Redirected to Core Skills page
+   *       - loadUsuCanvasUserCoreSkills() triggered
+   *       - Overlay fades out after Core Skills setup completes
+   */
+  function onCourseLoad() {
+    const courseId = getCourseId();
+    if (!courseId) return;
+
+    const currentPath = normalizePathname(window.location.pathname || '');
+    const startHerePath = normalizePathname(`/courses/${courseId}/pages/start-here`);
+    const coreSkillsPath = normalizePathname(`/courses/${courseId}/pages/core-skills`);
+    const isOnStartHere = currentPath === startHerePath;
+    const isOnCoreSkills = currentPath === normalizePathname(coreSkillsPath);
+
+    // Check if overlay should be active (from redirect or Core Skills page)
+    const overlayActive = sessionStorage.getItem('ncademi-overlay-active') === 'true';
+    const overlayStartTime = sessionStorage.getItem('ncademi-overlay-start-time');
+    const elapsedTime = overlayStartTime ? Date.now() - parseInt(overlayStartTime, 10) : 0;
+    const minDisplayTime = 1000; // 1 second minimum
+    const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+
+    // Handle Start Here page
+    if (isOnStartHere) {
+      // Ensure overlay is visible with "Loading the course..." message
+      if (overlayActive) {
+        const overlay = createOrGetOverlay();
+        updateOverlayMessage('Loading the course...');
+        log('Overlay active on Start Here page - ensuring 1 second minimum display');
+      }
+
+      // Wait for remaining time to ensure 1 second minimum, then run user detection
+      setTimeout(async () => {
+        // Check for Canvas user
+        const signedIn = await waitForSignedInState({ timeout: 2000 });
+        
+        if (signedIn) {
+          // User is signed in - set flag and cross-fade message, then redirect to Core Skills
+          log('USU Canvas user detected - setting flag, cross-fading message and redirecting to Core Skills');
+          
+          // Set flag to indicate USU Canvas user detected
+          sessionStorage.setItem('usu-canvas-user', 'true');
+          
+          // Cross-fade to new message
+          crossFadeOverlayMessage('USU Canvas user detected. Retrieving your information...');
+          
+          // Wait for cross-fade to complete, then redirect
+          setTimeout(() => {
+            window.location.replace(coreSkillsPath);
+          }, 400);
+        } else {
+          // User is not logged in - wait for Start Here page body to load, then fade out
+          log('User is not logged in, waiting for Start Here page body to load');
+          
+          if (overlayActive) {
+            // Wait for Start Here page body to load, then fade out
+            waitForPageBodyLoaded().then(() => {
+              const overlay = document.getElementById('ncademi-loading-overlay');
+              if (overlay) {
+                fadeOutOverlay(overlay);
+                sessionStorage.removeItem('ncademi-overlay-active');
+                sessionStorage.removeItem('ncademi-overlay-start-time');
+                log('Start Here page body loaded, overlay faded out');
+                
+                // Preload Core Skills assets in the background for faster navigation
+                preloadCoreSkillsAssets();
+              }
+            });
+          }
+        }
+      }, remainingTime);
+      return;
+    }
+
+    // Handle Core Skills page (if redirected here with overlay active)
+    if (isOnCoreSkills && overlayActive) {
+      log('Core Skills page loaded with overlay active');
+      
+      // Ensure overlay is visible with correct message
+      const overlay = createOrGetOverlay();
+      updateOverlayMessage('USU Canvas user detected. Retrieving your information...');
+      
+      // Wait for Core Skills page to load completely (all elements)
+      waitForPageBodyLoaded().then(async () => {
+        // injectSignInBanner() checks for flag and skips injection if Canvas user detected
+        await injectSignInBanner();
+        
+        // Load Core Skills setup for USU Canvas user (if flag exists)
+        await loadUsuCanvasUserCoreSkills();
+        
+        // Validate all page elements are loaded before fading overlay
+        await validateCoreSkillsPageLoaded();
+        
+        // All elements validated, fade out overlay
+        if (overlay) {
+          fadeOutOverlay(overlay);
+          sessionStorage.removeItem('ncademi-overlay-active');
+          sessionStorage.removeItem('ncademi-overlay-start-time');
+          log('Core Skills page completely loaded and validated, overlay faded out');
+        }
+      });
+    }
+  }
+
   function getStoredCoreSkillPaths() {
     try {
       const raw = sessionStorage.getItem(CORE_SKILL_PATH_STORAGE_KEY);
@@ -312,6 +807,7 @@
   }
 
   function refreshCoreSkillPathWhitelist() {
+    /* CORE SKILLS PAGE CODE DISABLED - NCAS21
     if (!document.body.classList.contains('ncademi-core-skills-page')) {
       return;
     }
@@ -337,6 +833,9 @@
     } catch (err) {
       logError("Unable to refresh core skill path whitelist", err);
     }
+    */
+    // Function disabled - Core Skills page code commented out
+    return;
   }
 
   const QUIZ_BUTTON_EXCLUDED_PATH_PATTERNS = Object.freeze([
@@ -388,6 +887,7 @@
       return false;
     }
 
+    /* CORE SKILLS PAGE CODE DISABLED - NCAS21
     if (document.body.classList.contains('ncademi-core-skills-page')) {
       return false;
     }
@@ -398,6 +898,7 @@
         return false;
       }
     }
+    */
 
     if (QUIZ_BUTTON_EXCLUDED_PATH_PATTERNS.some(pattern => pattern.test(currentPath))) {
       return false;
@@ -1493,6 +1994,7 @@
   }
 
   // Extract assignment IDs and points_possible from Core Skills links
+  /* CORE SKILLS PAGE CODE DISABLED - NCAS21
   function extractAssignmentIdsFromLinks() {
     refreshCoreSkillPathWhitelist();
     const links = document.querySelectorAll('body.ncademi-core-skills-page .custom-link.small, body.ncademi-core-skills-page .custom-link.large');
@@ -1535,8 +2037,9 @@
     
     return { assignmentIds, linkMap, assignmentsMap };
   }
+  */
 
-
+  /* CORE SKILLS PAGE CODE DISABLED - NCAS21
   // Apply status to Core Skills links
   function applyStatusToCoreSkillsLinks(statusMap, linkMap) {
     if (!linkMap) return;
@@ -1570,6 +2073,7 @@
 
     return appliedCount;
   }
+  */
 
   let cachedSignedIn = null;
 
@@ -1653,6 +2157,7 @@
   }
 
   // Inject status key banner for signed-in users on core-skills page
+  /* CORE SKILLS PAGE CODE DISABLED - NCAS21
   async function injectStatusKeyBanner() {
     log("Status key banner: Function called");
     
@@ -1661,8 +2166,18 @@
       return; // Not on Core Skills page
     }
 
-    // Check if user is signed in
-    const signedIn = isUserSignedInFast();
+    // Check if user was redirected from Start Here (flag indicates user is logged in)
+    const loggedInRedirect = sessionStorage.getItem('ncademi-logged-in-redirect') === 'true';
+    let signedIn;
+    
+    if (loggedInRedirect) {
+      // User was redirected from Start Here, already verified as logged in
+      signedIn = true;
+      log("Status key banner: User verified as logged in from Start Here redirect");
+    } else {
+      signedIn = isUserSignedInFast();
+    }
+    
     if (!signedIn) {
       log("Status key banner: User not signed in");
       return; // User not signed in, don't show banner
@@ -1792,37 +2307,54 @@
     
     logOK("Status key banner injected for signed-in user");
   }
+  */
 
-  // Inject sign-in banner for users not signed in on core-skills page
-  async function injectSignInBanner() {
+  // Inject sign-in banner for Core Skills page (shows by default, skips if Canvas user detected)
+  async function injectSignInBanner(retryCount = 0) {
+    log("Sign-in banner: Function called");
+    
     if (!document.body.classList.contains('ncademi-core-skills-page')) {
+      log("Sign-in banner: Not on Core Skills page");
       return; // Not on Core Skills page
+    }
+
+    // Check if user is a Canvas user (flag exists) - skip injection, banner will be hidden anyway
+    const usuCanvasUser = sessionStorage.getItem('usu-canvas-user') === 'true';
+    if (usuCanvasUser) {
+      log("Sign-in banner: Canvas user detected (flag exists), skipping injection");
+      return; // Canvas user, don't inject banner
     }
 
     // Check if banner was already dismissed this session
     const bannerDismissed = sessionStorage.getItem('ncademi-signin-banner-dismissed');
     if (bannerDismissed === 'true') {
-      return; // Banner already dismissed
+      log("Sign-in banner: Banner was previously dismissed");
+      return; // Banner was dismissed
     }
 
-    // Check if user is signed in
-    const signedIn = isUserSignedInFast();
-    if (signedIn) {
-      return; // User is signed in, don't show banner
+    // Check if banner already exists and is visible
+    const existingBanner = document.querySelector('.ncademi-signin-banner');
+    if (existingBanner) {
+      const isVisible = window.getComputedStyle(existingBanner).display !== 'none';
+      if (isVisible) {
+        log("Sign-in banner: Banner already exists and is visible");
+        return; // Banner already injected and visible
+      } else {
+        // Banner exists but is hidden (dismissed), remove it and continue
+        log("Sign-in banner: Removing hidden banner before re-injecting");
+        existingBanner.remove();
+      }
     }
 
-    // Check if banner already exists
-    if (document.querySelector('.ncademi-signin-banner')) {
-      return; // Banner already injected
-    }
+    // Wait for page content to be loaded before trying to find links container
+    await waitForPageBodyLoaded();
 
-    // Find the links container (course-modules or first custom-container)
+    // Find the links container (same logic as status key banner)
     let linksContainer = document.querySelector('.course-modules');
     if (!linksContainer) {
       linksContainer = document.querySelector('.custom-container');
     }
     if (!linksContainer) {
-      // Fallback: find first container with custom-link elements
       const firstLink = document.querySelector('body.ncademi-core-skills-page .custom-link');
       if (firstLink) {
         linksContainer = firstLink.closest('.custom-row') || firstLink.closest('.custom-container');
@@ -1830,8 +2362,17 @@
     }
 
     if (!linksContainer) {
-      log("Could not find links container for sign-in banner");
-      return;
+      // Retry up to 3 times with increasing delays
+      if (retryCount < 3) {
+        log(`Could not find links container for sign-in banner - retrying (attempt ${retryCount + 1}/3)`);
+        setTimeout(() => {
+          injectSignInBanner(retryCount + 1);
+        }, 500 * (retryCount + 1));
+        return;
+      } else {
+        log("Could not find links container for sign-in banner after multiple retries");
+        return;
+      }
     }
 
     // Create banner element
@@ -1844,12 +2385,13 @@
     const message = document.createElement('p');
     message.className = 'ncademi-signin-banner-message';
     message.innerHTML = 'Create a <a href="https://usucourses.instructure.com/enroll/G87RJM" target="_blank" rel="noopener noreferrer">free USU Canvas account</a> to take quizzes.';
+    banner.appendChild(message);
     
-    // Create dismiss button (X)
+    // Create dismiss button
     const dismissBtn = document.createElement('button');
     dismissBtn.className = 'ncademi-signin-banner-dismiss';
     dismissBtn.setAttribute('aria-label', 'Dismiss sign-in message');
-    dismissBtn.innerHTML = '×'; // × symbol
+    dismissBtn.innerHTML = '×';
     dismissBtn.type = 'button';
     
     // Add dismiss functionality
@@ -1859,19 +2401,15 @@
       log("Sign-in banner dismissed by user");
     });
     
-    // Build structure
-    banner.appendChild(message);
     banner.appendChild(dismissBtn);
     
-    // Insert banner directly above the links container
+    // Insert banner directly above the links container (sign-in banner goes above, status key goes below)
     linksContainer.parentNode.insertBefore(banner, linksContainer);
     
-    // Match banner width to container width after insertion (up to 640px max-width)
-    // Use requestAnimationFrame to ensure layout is complete
+    // Match banner width to container width (up to 640px max-width)
     const updateBannerWidth = () => {
       const containerWidth = linksContainer.offsetWidth || linksContainer.getBoundingClientRect().width;
       if (containerWidth > 0) {
-        // Use container width but respect max-width of 640px
         const bannerWidth = Math.min(containerWidth, 640);
         banner.style.width = `${bannerWidth}px`;
       }
@@ -1880,7 +2418,6 @@
     requestAnimationFrame(() => {
       updateBannerWidth();
       
-      // Update width on window resize to keep banner aligned with container
       const resizeHandler = () => {
         if (banner.style.display !== 'none') {
           updateBannerWidth();
@@ -1888,14 +2425,399 @@
       };
       
       window.addEventListener('resize', resizeHandler, { passive: true });
-      
-      // Store resize handler for cleanup if needed
       banner._resizeHandler = resizeHandler;
     });
     
-    logOK("Sign-in banner injected for non-signed-in user");
+    logOK("Sign-in banner injected (always shown by default)");
   }
 
+  /**
+   * Extract assignment IDs from Core Skills links
+   * Returns { assignmentIds, linkMap, assignmentsMap }
+   */
+  function extractAssignmentIdsFromLinks() {
+    const links = document.querySelectorAll('body.ncademi-core-skills-page .custom-link.small, body.ncademi-core-skills-page .custom-link.large');
+    const assignmentIds = [];
+    const linkMap = new Map(); // Map assignment ID to link element
+    const assignmentsMap = new Map(); // Map assignment ID to { id, points_possible }
+    
+    links.forEach(link => {
+      normalizeAssignmentLink(link);
+
+      // First, try to get assignment ID from data-assignment-id attribute (static, preferred)
+      let assignmentId = link.getAttribute('data-assignment-id');
+      
+      // If not found, try to extract from href (fallback for dynamic links)
+      if (!assignmentId) {
+        const href = link.getAttribute('href') || '';
+        // Match pattern: /courses/{courseId}/assignments/{assignmentId}
+        const match = href.match(/\/courses\/\d+\/assignments\/(\d+)/);
+        if (match && match[1]) {
+          assignmentId = match[1];
+        }
+      }
+      
+      if (assignmentId) {
+        if (!assignmentIds.includes(assignmentId)) {
+          assignmentIds.push(assignmentId);
+        }
+        linkMap.set(assignmentId, link);
+        
+        // Extract points_possible from data-points-possible attribute (hardcoded in HTML)
+        const pointsPossible = link.getAttribute('data-points-possible');
+        if (pointsPossible) {
+          assignmentsMap.set(assignmentId, {
+            id: assignmentId,
+            points_possible: parseFloat(pointsPossible) || 0
+          });
+        }
+      }
+    });
+    
+    return { assignmentIds, linkMap, assignmentsMap };
+  }
+
+  /**
+   * Apply status to Core Skills links
+   * Updates data-status attribute and aria-label for accessibility
+   */
+  function applyStatusToCoreSkillsLinks(statusMap, linkMap) {
+    if (!linkMap) return 0;
+
+    const statuses = statusMap instanceof Map ? statusMap : new Map();
+    let appliedCount = 0;
+
+    linkMap.forEach((link, assignmentId) => {
+      normalizeAssignmentLink(link);
+      const normalizedId = String(assignmentId);
+      const status = statuses.get(normalizedId) || quizStatusService.getStatus(normalizedId);
+      if (!status) return;
+
+      cacheAssignmentStatus(normalizedId, status);
+      link.setAttribute('data-status', status);
+
+      const linkText = link.textContent.trim() || link.getAttribute('title') || 'Link';
+      const statusLabels = {
+        'pending': 'Pending',
+        'active': 'Active',
+        'done': 'Done'
+      };
+      const statusLabel = statusLabels[status] || status;
+      link.setAttribute('aria-label', `${linkText}, Status: ${statusLabel}`);
+      appliedCount++;
+    });
+
+    if (appliedCount > 0) {
+      logOK(`Applied status to ${appliedCount} links on Core Skills page`);
+    }
+
+    return appliedCount;
+  }
+
+  /**
+   * Inject status key banner for signed-in users on Core Skills page
+   */
+  async function injectStatusKeyBanner() {
+    log("Status key banner: Function called");
+    
+    if (!document.body.classList.contains('ncademi-core-skills-page')) {
+      log("Status key banner: Not on Core Skills page");
+      return; // Not on Core Skills page
+    }
+
+    // Check if banner was dismissed
+    const bannerDismissed = localStorage.getItem('ncademi-status-key-banner-dismissed');
+    if (bannerDismissed === 'true') {
+      log("Status key banner: Banner was previously dismissed");
+      return; // Banner was dismissed
+    }
+
+    // Check if banner already exists and is visible
+    const existingBanner = document.querySelector('.ncademi-status-key-banner');
+    if (existingBanner) {
+      const isVisible = window.getComputedStyle(existingBanner).display !== 'none';
+      if (isVisible) {
+        log("Status key banner: Banner already exists and is visible");
+        return; // Banner already injected and visible
+      } else {
+        // Banner exists but is hidden (dismissed), remove it and continue
+        log("Status key banner: Removing hidden banner before re-injecting");
+        existingBanner.remove();
+      }
+    }
+
+    // Find the links container (same logic as sign-in banner)
+    let linksContainer = document.querySelector('.course-modules');
+    if (!linksContainer) {
+      linksContainer = document.querySelector('.custom-container');
+    }
+    if (!linksContainer) {
+      const firstLink = document.querySelector('body.ncademi-core-skills-page .custom-link');
+      if (firstLink) {
+        linksContainer = firstLink.closest('.custom-row') || firstLink.closest('.custom-container');
+      }
+    }
+
+    if (!linksContainer) {
+      log("Could not find links container for status key banner");
+      return;
+    }
+
+    // Create banner element
+    const banner = document.createElement('div');
+    banner.className = 'ncademi-status-key-banner';
+    banner.setAttribute('role', 'region');
+    banner.setAttribute('aria-label', 'Status icon legend');
+    
+    // Create label text "Quiz status:"
+    const labelText = document.createElement('span');
+    labelText.className = 'ncademi-status-key-label';
+    labelText.textContent = 'Quiz status:';
+    banner.appendChild(labelText);
+    
+    // Create status items
+    const statuses = [
+      { status: 'pending', label: 'Pending', icon: 'pending' },
+      { status: 'active', label: 'Active', icon: 'active' },
+      { status: 'done', label: 'Done', icon: 'done' }
+    ];
+
+    statuses.forEach((item, index) => {
+      // Create status item
+      const statusItem = document.createElement('div');
+      statusItem.className = 'ncademi-status-key-item';
+      
+      // Create icon
+      const icon = document.createElement('span');
+      icon.className = `ncademi-status-key-icon ${item.icon}`;
+      icon.setAttribute('aria-hidden', 'true');
+      
+      // Create text
+      const text = document.createElement('span');
+      text.className = 'ncademi-status-key-text';
+      text.textContent = item.label;
+      
+      statusItem.appendChild(icon);
+      statusItem.appendChild(text);
+      banner.appendChild(statusItem);
+    });
+    
+    // Create dismiss button
+    const dismissBtn = document.createElement('button');
+    dismissBtn.className = 'ncademi-status-key-banner-dismiss';
+    dismissBtn.setAttribute('aria-label', 'Dismiss status key');
+    dismissBtn.innerHTML = '×';
+    dismissBtn.type = 'button';
+    
+    // Add dismiss functionality
+    dismissBtn.addEventListener('click', function() {
+      banner.style.display = 'none';
+      localStorage.setItem('ncademi-status-key-banner-dismissed', 'true');
+      log("Status key banner dismissed by user");
+    });
+    
+    banner.appendChild(dismissBtn);
+    
+    // Insert banner directly below the links container
+    if (linksContainer.nextSibling) {
+      linksContainer.parentNode.insertBefore(banner, linksContainer.nextSibling);
+    } else {
+      linksContainer.parentNode.appendChild(banner);
+    }
+    
+    // Match banner width to container width (up to 640px max-width)
+    const updateBannerWidth = () => {
+      const containerWidth = linksContainer.offsetWidth || linksContainer.getBoundingClientRect().width;
+      if (containerWidth > 0) {
+        const bannerWidth = Math.min(containerWidth, 640);
+        banner.style.width = `${bannerWidth}px`;
+      }
+    };
+    
+    requestAnimationFrame(() => {
+      updateBannerWidth();
+      
+      const resizeHandler = () => {
+        if (banner.style.display !== 'none') {
+          updateBannerWidth();
+        }
+      };
+      
+      window.addEventListener('resize', resizeHandler, { passive: true });
+      banner._resizeHandler = resizeHandler;
+    });
+    
+    logOK("Status key banner injected for signed-in user");
+  }
+
+  /**
+   * loadUsuCanvasUserCoreSkills: Initial Core Skills setup when USU Canvas user is first detected
+   * 
+   * E2E Process:
+   * 1. User navigates to course home → redirected to Start Here (via handleInitialRedirects)
+   * 2. onCourseLoad() runs on Start Here page:
+   *    - Shows "Loading the course..." overlay
+   *    - Waits 1 second minimum
+   *    - Detects Canvas user status via waitForSignedInState()
+   *    - If Canvas user detected:
+   *      a. Sets usu-canvas-user flag to 'true' in sessionStorage
+   *      b. Cross-fades overlay message to "USU Canvas user detected. Retrieving your information..."
+   *      c. Redirects to Core Skills page
+   * 3. Core Skills page loads with overlay active
+   * 4. loadUsuCanvasUserCoreSkills() is triggered:
+   *    - Validates page is Core Skills
+   *    - Checks for usu-canvas-user flag (must exist)
+   *    - Validates course ID and student ID
+   *    - Hides sign-in banner (user is logged in)
+   *    - Extracts assignment IDs from Core Skills links
+   *    - Prefetches Progress page data (grades)
+   *    - Fetches quiz statuses for all assignments
+   *    - Applies status icons to Core Skills links (pending/active/done)
+   *    - Adds ncas-status-enabled class to body
+   *    - Injects status key banner (legend)
+   * 5. Overlay fades out after setup completes
+   * 
+   * Called after redirect from Start Here page with overlay active
+   */
+  async function loadUsuCanvasUserCoreSkills() {
+    log("loadUsuCanvasUserCoreSkills: Initial setup for USU Canvas user");
+    
+    if (!document.body.classList.contains('ncademi-core-skills-page')) {
+      log("loadUsuCanvasUserCoreSkills: Not on Core Skills page");
+      return false;
+    }
+
+    // Check for flag
+    const usuCanvasUser = sessionStorage.getItem('usu-canvas-user') === 'true';
+    if (!usuCanvasUser) {
+      log("loadUsuCanvasUserCoreSkills: Flag not found, skipping");
+      return false;
+    }
+
+    const courseId = getCourseId();
+    if (!courseId) {
+      log("loadUsuCanvasUserCoreSkills: No course ID found");
+      return false;
+    }
+
+    const studentId = await resolveStudentId();
+    if (!studentId) {
+      log("loadUsuCanvasUserCoreSkills: No student ID found");
+      return false;
+    }
+
+    // Note: Sign-in banner is not injected for Canvas users (injectSignInBanner checks flag and skips)
+    // No need to hide banner here since it won't exist
+
+    // Extract assignment IDs from links
+    const { assignmentIds, linkMap } = extractAssignmentIdsFromLinks();
+    
+    if (assignmentIds.length === 0) {
+      log("loadUsuCanvasUserCoreSkills: No assignment IDs found in Core Skills links");
+      return false;
+    }
+
+    log("loadUsuCanvasUserCoreSkills: Prefetching Progress page data");
+    await quizStatusService.prefetchProgressPage(courseId);
+
+    const statusMap = await quizStatusService.ensureStatuses({ courseId, assignmentIds });
+    const appliedCount = applyStatusToCoreSkillsLinks(statusMap, linkMap);
+
+    if (appliedCount > 0) {
+      document.body.classList.add('ncas-status-enabled');
+      requestAnimationFrame(() => {
+        injectStatusKeyBanner();
+      });
+      logOK("loadUsuCanvasUserCoreSkills: Status icons enabled and applied");
+      return true;
+    }
+
+    log("loadUsuCanvasUserCoreSkills: Status map did not contain data for Core Skills links");
+    return false;
+  }
+
+  /**
+   * updateUsuCanvasCoreSkills: Update Core Skills quiz status icons when flag is present (subsequent navigations)
+   * Only updates existing visible elements - no sign-in banner hiding (banner already handled by loadUsuCanvasUserCoreSkills)
+   * 
+   * E2E Process:
+   * 1. User navigates directly to Core Skills page (via nav bar or direct URL)
+   * 2. applyPageSpecificLogic() runs and detects Core Skills page
+   * 3. Sign-in banner is injected (shows by default)
+   * 4. updateUsuCanvasCoreSkills() is called:
+   *    - Validates page is Core Skills
+   *    - Checks for usu-canvas-user flag in sessionStorage
+   *    - If flag NOT found: Returns early, does nothing (user treated as not logged in)
+   *    - If flag found: Proceeds with status update
+   * 5. Waits for page body to be fully loaded (ensures links are in DOM)
+   * 6. Extracts assignment IDs from existing Core Skills links
+   * 7. Prefetches Progress page data (grades)
+   * 8. Fetches quiz statuses for all assignments
+   * 9. Applies status icons to existing links (updates data-status attributes)
+   * 10. Adds ncas-status-enabled class to body
+   * 11. Injects status key banner if it doesn't already exist
+   * 
+   * Note: This function does NOT hide the sign-in banner - that's only done in loadUsuCanvasUserCoreSkills()
+   * during the initial redirect flow. For subsequent navigations, the banner remains visible if user is not logged in.
+   */
+  async function updateUsuCanvasCoreSkills() {
+    log("updateUsuCanvasCoreSkills: Checking for flag");
+    
+    if (!document.body.classList.contains('ncademi-core-skills-page')) {
+      log("updateUsuCanvasCoreSkills: Not on Core Skills page");
+      return false; // Not on Core Skills page
+    }
+
+    // Check for flag
+    const usuCanvasUser = sessionStorage.getItem('usu-canvas-user') === 'true';
+    if (!usuCanvasUser) {
+      log("updateUsuCanvasCoreSkills: Flag not found, doing nothing (user treated as not logged in)");
+      return false; // No flag, do nothing - user is treated as not logged in
+    }
+
+    log("updateUsuCanvasCoreSkills: Flag found, updating quiz status icons");
+
+    // Wait for page body to be loaded to ensure links are available
+    await waitForPageBodyLoaded();
+
+    const courseId = getCourseId();
+    if (!courseId) {
+      log("updateUsuCanvasCoreSkills: No course ID found");
+      return false;
+    }
+
+    // Extract assignment IDs from existing links
+    const { assignmentIds, linkMap } = extractAssignmentIdsFromLinks();
+    
+    if (assignmentIds.length === 0) {
+      log("updateUsuCanvasCoreSkills: No assignment IDs found in links");
+      return false;
+    }
+
+    // Prefetch Progress page data
+    await quizStatusService.prefetchProgressPage(courseId);
+
+    // Fetch statuses and apply to existing links
+    const statusMap = await quizStatusService.ensureStatuses({ courseId, assignmentIds });
+    const appliedCount = applyStatusToCoreSkillsLinks(statusMap, linkMap);
+
+    if (appliedCount > 0) {
+      document.body.classList.add('ncas-status-enabled');
+      // Only inject status key banner if it doesn't exist
+      if (!document.querySelector('.ncademi-status-key-banner')) {
+        requestAnimationFrame(() => {
+          injectStatusKeyBanner();
+        });
+      }
+      logOK("updateUsuCanvasCoreSkills: Quiz status icons updated");
+      return true;
+    }
+
+    log("updateUsuCanvasCoreSkills: No statuses applied");
+    return false;
+  }
+
+  /* CORE SKILLS PAGE CODE DISABLED - NCAS21
   // Main function to update Core Skills checkmarks
   async function updateCoreSkillsCheckmarks(options = {}) {
     const { signedIn } = options;
@@ -1905,10 +2827,19 @@
       return false; // Not on Core Skills page
     }
 
+    // Check if user was redirected from Start Here (flag indicates user is logged in)
+    const loggedInRedirect = sessionStorage.getItem('ncademi-logged-in-redirect') === 'true';
+    
     // Check if user is signed in to Canvas
-    // If not signed in, do not show status icons
+    // If flag is set, skip Canvas check (user is already verified as logged in)
     let resolvedSignedIn;
-    if (typeof signedIn === 'boolean') {
+    if (loggedInRedirect) {
+      // User was redirected from Start Here, already verified as logged in
+      resolvedSignedIn = true;
+      // Clear the flag after using it
+      sessionStorage.removeItem('ncademi-logged-in-redirect');
+      log("updateCoreSkillsCheckmarks: User verified as logged in from Start Here redirect");
+    } else if (typeof signedIn === 'boolean') {
       resolvedSignedIn = signedIn;
     } else {
       resolvedSignedIn = await waitForSignedInState({ timeout: 3000 });
@@ -1948,7 +2879,7 @@
     const appliedCount = applyStatusToCoreSkillsLinks(statusMap, linkMap);
 
     if (appliedCount > 0) {
-      document.body.classList.add('ncademi-status-enabled');
+      document.body.classList.add('ncas-status-enabled');
       requestAnimationFrame(() => {
         injectStatusKeyBanner();
       });
@@ -1959,6 +2890,7 @@
     log("Status map did not contain data for Core Skills links");
     return false;
   }
+  */
 
   function updateExternalLoginLinkState(link, loginMarkup) {
     if (!link) return;
@@ -2185,13 +3117,17 @@
   }
 
   function injectBodyOverlayForRedirect() {
+    // CORE SKILLS PAGE CODE DISABLED - NCAS21
+    // Body restoration is now handled in handleInitialRedirects()
     // Check if this is a redirect from course home
     const isRedirectFromHome = sessionStorage.getItem('ncademi-redirect-from-home') === 'true';
     if (!isRedirectFromHome) {
+      /* CORE SKILLS PAGE CODE DISABLED - NCAS21
       // Ensure body is visible if not a redirect
       if (document.body && document.body.style.display === 'none') {
         document.body.style.display = '';
       }
+      */
       return;
     }
 
@@ -2267,9 +3203,9 @@
     const totalImages = images.length;
     
     function fadeOverlayWhenReady() {
-      waitForCoreSkillsStatusIfNeeded().finally(() => {
-        fadeOutOverlay(overlay);
-      });
+      // CORE SKILLS PAGE CODE DISABLED - NCAS21
+      // waitForCoreSkillsStatusIfNeeded() was commented out, so fade overlay directly
+      fadeOutOverlay(overlay);
     }
 
     if (totalImages === 0) {
@@ -2388,22 +3324,12 @@
     return;
   }
 
-  // Redirect course home page to core-skills
-  const courseId = getCourseId();
-  const currentPath = window.location.pathname;
-  if (courseId && (currentPath === `/courses/${courseId}` || currentPath === `/courses/${courseId}/`)) {
-    const redirectUrl = `/courses/${courseId}/pages/core-skills`;
-    log(`Redirecting course home to: ${redirectUrl}`);
-    // Hide body before redirect to prevent flash
-    if (document.body) {
-      document.body.style.display = 'none';
-      log("Body hidden before redirect");
-    }
-    // Store flag in sessionStorage to indicate redirect happened
-    sessionStorage.setItem('ncademi-redirect-from-home', 'true');
-    window.location.replace(redirectUrl);
-    return;
-  }
+  // Handle redirects: course home always redirects to Start Here
+  handleInitialRedirects();
+
+  // onCourseLoad: Determines Canvas user status and handles initial flow
+  // ALL Canvas user validation happens on Start Here page - this is the ONLY place
+  onCourseLoad();
 
   // Early admin check
   if (isAdmin()) {
@@ -2583,13 +3509,59 @@
       document.body.classList.remove('ncademi-home-page');
     }
     
+    // Add Core Skills page class for CSS targeting (e.g., hiding h1.page-title)
+    if (isCoreSkillsPage) {
+      document.body.classList.add('ncademi-core-skills-page');
+      
+      // Check if overlay should be shown for subsequent navigations
+      // (not from initial redirect - that's handled in onCourseLoad)
+      const overlayActive = sessionStorage.getItem('ncademi-overlay-active') === 'true';
+      let overlay = null;
+      
+      if (!overlayActive) {
+        // Create overlay for subsequent navigation to Core Skills
+        overlay = createOrGetOverlay();
+        updateOverlayMessage('Loading Core Skills page...');
+        sessionStorage.setItem('ncademi-overlay-active', 'true');
+        log('Overlay created for subsequent Core Skills navigation');
+      } else {
+        // Overlay already exists (from initial redirect)
+        overlay = document.getElementById('ncademi-loading-overlay');
+      }
+      
+      // Inject sign-in banner (shows by default, hides if user is logged in)
+      waitForDOM(async () => {
+        // Wait for page body to load
+        await waitForPageBodyLoaded();
+        
+        await injectSignInBanner();
+        
+        // Check for flag and update quiz status icons if present (subsequent navigations)
+        await updateUsuCanvasCoreSkills();
+        
+        // Validate all page elements are loaded before fading overlay
+        await validateCoreSkillsPageLoaded();
+        
+        // All elements validated, fade out overlay if it exists
+        if (overlay) {
+          fadeOutOverlay(overlay);
+          sessionStorage.removeItem('ncademi-overlay-active');
+          sessionStorage.removeItem('ncademi-overlay-start-time');
+          log('Core Skills page (subsequent navigation) completely loaded and validated, overlay faded out');
+        }
+      });
+    } else {
+      document.body.classList.remove('ncademi-core-skills-page');
+    }
+    
+    /* CORE SKILLS PAGE CODE DISABLED - NCAS21
     if (isCoreSkillsPage) {
       document.body.classList.add('ncademi-core-skills-page');
       
       // Check if user is signed in and inject appropriate banners
       injectSignInBanner();
       // Ensure status-enabled class is present before injecting banner
-      if (document.body.classList.contains('ncademi-status-enabled')) {
+      if (document.body.classList.contains('ncas-status-enabled')) {
         requestAnimationFrame(() => {
           injectStatusKeyBanner();
         });
@@ -2610,7 +3582,7 @@
           }
           // Re-check for banner injection if container appears
           injectSignInBanner();
-          if (document.body.classList.contains('ncademi-status-enabled')) {
+          if (document.body.classList.contains('ncas-status-enabled')) {
             requestAnimationFrame(() => {
               injectStatusKeyBanner();
             });
@@ -2631,7 +3603,7 @@
             }
           }
           injectSignInBanner();
-          if (document.body.classList.contains('ncademi-status-enabled')) {
+          if (document.body.classList.contains('ncas-status-enabled')) {
             requestAnimationFrame(() => {
               injectStatusKeyBanner();
             });
@@ -2642,6 +3614,7 @@
     } else {
       document.body.classList.remove('ncademi-core-skills-page');
     }
+    */
     
     if (isDefaultCourseHome) {
       document.body.classList.add('ncademi-default-course-home');

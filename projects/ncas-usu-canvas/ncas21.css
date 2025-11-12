@@ -1,11 +1,11 @@
 /*
- * NCAS19 v19 CSS - Custom Canvas LMS Enhancement Styles
- * Updated: 2025-01-02
+ * NCAS21 v21 CSS - Custom Canvas LMS Enhancement Styles
+ * Updated: 2025-11-11
  * Scope: Maintain exact visuals with minimal JS; CSS drives layout and states
  * Purpose: Custom navigation, layout, and content styling for Canvas course pages
  * Note: Header element is injected via JavaScript; CSS styles the injected elements
  * 
- * Structure (v19):
+ * Structure (v21):
  * - Title floats left (static, independent position)
  * - Links wrapper centers on full header width (overlaps title)
  * - Heading indentation: All child elements respect heading indentation using heading-section wrappers
@@ -113,6 +113,11 @@ table {
 /* Fade out overlay when all images are loaded */
 #content-wrapper-overlay.fade-out {
   opacity: 0;
+}
+
+/* Fade out full-body loading overlay */
+#ncademi-loading-overlay.fade-out {
+  opacity: 0 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -354,13 +359,14 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
      NAVIGATION LINK STYLING
      ============================================ */
 
-  /* Base navigation link styling - inactive/regular links */
+  /* Base navigation link styling - inactive/regular links
+     3px transparent border reserves space for focus/hover outline */
   #content-header.course-content-header #ncademi-nav a,
   #content-header.course-content-header .ncademi-external-link-wrapper a {
     display: flex;
     align-items: center;
     padding: 0 24px;
-    margin: 0;
+    margin: 0 2px;
     margin-bottom: 0 !important;
     color: rgb(255, 255, 255);
     text-decoration: none;
@@ -378,9 +384,9 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     height: 50px; /* Height matches blue band */
   }
 
-  /* First link (Start Here) - add left margin to show 5px of blue band when active */
+  /* First link (Start Here) - add left margin to show band when active */
   #content-header.course-content-header #ncademi-nav a:first-child {
-    margin-left: 30px !important; /* Increased by 25px (was 5px) to add whitespace on left edge */
+    margin-left: 30px !important;
   }
 
   /* Active/selected navigation link - orange tab that breaks out of background */
@@ -390,24 +396,25 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     font-weight: 600 !important;
     background: #ec8e22 !important; /* NCADEMI orange - using hex instead of rgb for exact color match */
     border-radius: 8px !important;
-    border: 3px solid #ffffff !important;
+    border: 3px solid transparent !important;
     position: relative;
     z-index: 2; /* Above background gradient */
-    height: 50px !important; /* Tab height */
+    height: 40px !important;
     display: flex !important;
     align-items: center !important;
-    margin-bottom: 0 !important;
+    margin-bottom: 5px !important;
     margin-top: 0 !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
-    padding-left: 24px !important;
-    padding-right: 24px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
     /* Make selected link non-interactive */
     pointer-events: none !important;
     cursor: default !important;
   }
 
-  /* Navigation link hover/focus/focus-visible effects - inactive links */
+  /* Navigation link hover/focus/focus-visible effects - inactive links
+     Promote white 3px border without shifting layout */
   #content-header.course-content-header #ncademi-nav a:hover:not(.active):not([style*="background: rgb(236, 142, 34)"]),
   #content-header.course-content-header #ncademi-nav a:focus:not(.active):not([style*="background: rgb(236, 142, 34)"]),
   #content-header.course-content-header #ncademi-nav a:focus-visible:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
@@ -436,6 +443,11 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
     text-decoration: none !important;
     outline: none !important;
     box-shadow: none !important;
+  }
+
+  /* Progress link - ensure transparent border for visual space consistency when visible */
+  #content-header.course-content-header #ncademi-nav a[href*="/grades"]:not([hidden]) {
+    border: 3px solid transparent !important;
   }
 
   /* Home link detection - targets course home page links (any course ID) */
@@ -1168,7 +1180,7 @@ body:not(.ncademi-excluded):not(.ncademi-admin-view) {
 }
 
 /* Show banner when status is enabled (user signed in) */
-body.ncademi-core-skills-page.ncademi-status-enabled .ncademi-status-key-banner {
+body.ncademi-core-skills-page.ncas-status-enabled .ncademi-status-key-banner {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1258,9 +1270,10 @@ body.ncademi-core-skills-page.ncademi-status-enabled .ncademi-status-key-banner 
 /* Banner dismiss buttons - consolidated shared styles */
 .ncademi-status-key-banner-dismiss,
 .ncademi-signin-banner-dismiss {
-  position: absolute;
-  top: 8px;
-  right: 8px;
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  left: auto !important;
   width: 28px;
   height: 28px;
   padding: 0;
@@ -1638,24 +1651,35 @@ body.ncademi-core-skills-page .custom-link.large {
   padding-left: 10px; /* Keep existing left padding */
 }
 
-body.ncademi-core-skills-page .custom-link.small {
-  position: relative;
-  padding-top: 10px;
-  padding-right: 10px;
-  padding-bottom: 10px;
-  padding-left: 10px;
-}
-
 /* Step 2: Create icon using ::after pseudo-element - Hidden by default, only shown when user is signed in */
-/* Status icons are hidden by default and only shown when ncademi-status-enabled class is added to body */
+/* Status icons are hidden by default and only shown when ncas-status-enabled class is added to body */
 body.ncademi-core-skills-page .custom-link.small::after,
 body.ncademi-core-skills-page .custom-link.large::after {
   display: none !important; /* Hidden by default - only show when status is enabled */
 }
 
+  .ncademi-feedback-contact-row {
+    display: flex !important;
+    gap: 40px !important;
+    align-items: flex-start !important;
+    margin: 40px 0 !important;
+    flex-wrap: wrap;
+  }
+
+  .ncademi-feedback-contact-row .heading-group {
+    flex: 1 1 320px !important;
+  }
+
+  @media (max-width: 768px) {
+    .ncademi-feedback-contact-row {
+      flex-direction: column !important;
+      gap: 20px !important;
+    }
+  }
+
 /* Only show status icons when user is signed in and status has been applied */
-body.ncademi-core-skills-page.ncademi-status-enabled .custom-link.small::after,
-body.ncademi-core-skills-page.ncademi-status-enabled .custom-link.large::after {
+body.ncademi-core-skills-page.ncas-status-enabled .custom-link.small::after,
+body.ncademi-core-skills-page.ncas-status-enabled .custom-link.large::after {
   display: flex !important; /* Show icon when status is enabled */
   content: '—' / ""; /* Em dash for pending status */
   font-family: Arial, sans-serif; /* Font that renders well */
@@ -1684,8 +1708,8 @@ body.ncademi-core-skills-page.ncademi-status-enabled .custom-link.large::after {
 }
 
 /* Pending style - Gray dash on white fill with gray border, and gray link text */
-body.ncademi-core-skills-page.ncademi-status-enabled .custom-link[data-status="pending"].small::after,
-body.ncademi-core-skills-page.ncademi-status-enabled .custom-link[data-status="pending"].large::after {
+body.ncademi-core-skills-page.ncas-status-enabled .custom-link[data-status="pending"].small::after,
+body.ncademi-core-skills-page.ncas-status-enabled .custom-link[data-status="pending"].large::after {
   background-color: #ffffff !important;
   color: #666666 !important;
   border: 2px solid #666666 !important;
@@ -1695,8 +1719,8 @@ body.ncademi-core-skills-page.ncademi-status-enabled .custom-link[data-status="p
 /* Link text is NOT dynamic based on status - styling handled by .link-text rules above */
 
 /* Active style - Orange/brown checkmark on white fill with orange/brown border */
-body.ncademi-core-skills-page.ncademi-status-enabled .custom-link[data-status="active"].small::after,
-body.ncademi-core-skills-page.ncademi-status-enabled .custom-link[data-status="active"].large::after {
+body.ncademi-core-skills-page.ncas-status-enabled .custom-link[data-status="active"].small::after,
+body.ncademi-core-skills-page.ncas-status-enabled .custom-link[data-status="active"].large::after {
   background-color: #ffffff !important;
   color: #955823 !important;
   border: 2px solid #955823 !important;
@@ -1704,8 +1728,8 @@ body.ncademi-core-skills-page.ncademi-status-enabled .custom-link[data-status="a
 }
 
 /* Done style - White checkmark on green fill with green border */
-body.ncademi-core-skills-page.ncademi-status-enabled .custom-link[data-status="done"].small::after,
-body.ncademi-core-skills-page.ncademi-status-enabled .custom-link[data-status="done"].large::after {
+body.ncademi-core-skills-page.ncas-status-enabled .custom-link[data-status="done"].small::after,
+body.ncademi-core-skills-page.ncas-status-enabled .custom-link[data-status="done"].large::after {
   background-color: #38993D !important;
   color: #ffffff !important;
   border: 2px solid #38993D !important;
@@ -1713,10 +1737,10 @@ body.ncademi-core-skills-page.ncademi-status-enabled .custom-link[data-status="d
 }
 
 /* Step 3: Ensure checkmark remains visible on hover/focus (optional - can be removed if you want it to hide) */
-body.ncademi-core-skills-page.ncademi-status-enabled .custom-link.small:hover::after,
-body.ncademi-core-skills-page.ncademi-status-enabled .custom-link.large:hover::after,
-body.ncademi-core-skills-page.ncademi-status-enabled .custom-link.small:focus::after,
-body.ncademi-core-skills-page.ncademi-status-enabled .custom-link.large:focus::after {
+body.ncademi-core-skills-page.ncas-status-enabled .custom-link.small:hover::after,
+body.ncademi-core-skills-page.ncas-status-enabled .custom-link.large:hover::after,
+body.ncademi-core-skills-page.ncas-status-enabled .custom-link.small:focus::after,
+body.ncademi-core-skills-page.ncas-status-enabled .custom-link.large:focus::after {
   opacity: 1; /* Keep visible on hover/focus */
 }
 
@@ -2120,16 +2144,6 @@ h4 {
   line-height: 1.4;
 }
 
-h5 {
-  font-family: "Calibri", sans-serif !important;
-  font-size: 1rem !important;
-  font-weight: 600 !important;
-  color: #333333;
-  text-align: left;
-  margin: 1em 0 0.5em 3rem;
-  line-height: 1.4;
-}
-
 /* Heading indentation within heading-group and heading-section - relative to PRECEDING nearest heading one level up */
 /* Each heading level only looks at its immediate parent level (one level up) */
 /* With section structure, headings are always first child of their section */
@@ -2367,10 +2381,10 @@ body.ncademi-core-skills-page h1.page-title {
   padding: 0 !important;
   margin: -1px !important;
   overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important; /* Modern approach - visually hides but keeps in DOM for screen readers */
+  clip: rect(0, 0, 0, 0) !important; /* Fallback for older browsers */
   white-space: nowrap !important;
   border: 0 !important;
-  border-bottom: none !important;
 }
 
 /* Icon container - positioned over the border under h1.page-title */
@@ -2481,6 +2495,11 @@ div.page {
   max-width: 178px !important;
 }
 
+.img-responsive-200 {
+  width: 100% !important;
+  max-width: 200px !important;
+}
+
 .img-responsive-250 {
   width: 100% !important;
   max-width: 250px !important;
@@ -2533,6 +2552,18 @@ img.img-inline.centered {
   display: inline !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
+}
+
+/* YouTube player wrapper */
+div.ytplayer {
+  display: block !important;
+  margin: 1em 0 !important;
+}
+
+div.ytplayer iframe {
+  max-width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9 !important;
 }
 
 /* YouTube player centered */
