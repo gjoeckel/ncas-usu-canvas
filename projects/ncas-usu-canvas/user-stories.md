@@ -119,26 +119,19 @@ So that **I know what skills are available and how to get started**.
   - Overlay appears with "Loading Core Skills page..." message
   - Overlay persists until page is fully loaded
 - Page loads with Core Skills content
-- Sign-in banner appears at the top of the Core Skills links:
-  - Message: "Create a [free USU Canvas account](link) to take quizzes."
-  - Dismiss button (×) in upper-right corner
-  - Border, rounded corners, centered layout
 - Core Skills links are displayed (no status icons)
+- Each link takes the user to an individual skill page where the quiz call-to-action and sign-in banner are shown
 - Navigation bar shows "Core Skills" link as active
 - User can:
   - Read about available skills
   - Click links to view skill pages
-  - Dismiss the sign-in banner (dismissed for current session)
   - Click "Create a free USU Canvas account" link to go to account creation page
 
 **ACCEPTANCE CRITERIA**
 
 - [ ] Core Skills page loads correctly
-- [ ] Sign-in banner appears for non-logged-in users
-- [ ] Sign-in banner has dismiss button in upper-right corner
-- [ ] Dismissing banner hides it for current session
-- [ ] "Create a free USU Canvas account" link works
 - [ ] Core Skills links are displayed without status icons
+- [ ] Users are instructed to open an individual skill page to see the Create Account banner
 - [ ] Navigation bar shows "Core Skills" as active
 - [ ] Overlay fades out after page is fully loaded
 - [ ] Works on mobile and desktop
@@ -147,9 +140,9 @@ So that **I know what skills are available and how to get started**.
 **TECHNICAL NOTES**
 
 Page/Location: Core Skills (`/courses/{courseId}/pages/core-skills`)
-Elements Affected: Sign-in banner, Core Skills links, overlay
+Elements Affected: Core Skills links, overlay
 CSS/JS/Both: Both
-Key Functions: `injectSignInBanner()`, `applyPageSpecificLogic()`, `validateCoreSkillsPageLoaded()`
+Key Functions: `applyPageSpecificLogic()`, `validateCoreSkillsPageLoaded()`
 
 **ADDITIONAL CONTEXT**
 
@@ -205,8 +198,8 @@ So that **I can create a free USU Canvas account to take quizzes**.
 **WHAT THE USER SEES/EXPERIENCES**
 
 - User clicks "Create a free USU Canvas account" link from:
-  - Sign-in banner on Core Skills page, OR
-  - Direct navigation to account creation page
+  - Sign-in banner on any Core Skill detail page, OR
+  - Direct navigation to the account creation page
 - Page navigates to account creation page (`/courses/{courseId}/pages/create-a-free-usu-canvas-account`)
 - Account creation instructions and enrollment link are displayed
 - User can follow instructions to create account
@@ -231,59 +224,90 @@ This is a standard Canvas page with enrollment instructions. No special enhancem
 
 ---
 
-### Story A6: Using the Create an Account Banner
+### Story A6: Core Skills Page Without a Banner
 
 **USER STORY**
 
 As a **student** (not logged in to USU Canvas),
-I want to **interact with the sign-in banner on the Core Skills page**,
-So that **I can either create an account or dismiss the banner**.
+I want to **browse the Core Skills overview without an additional banner**,
+So that **I can focus on choosing a skill page and follow the call-to-action there**.
 
 **WHAT THE USER SEES/EXPERIENCES**
 
 - User is on Core Skills page
-- Sign-in banner is visible with message and link
-- User can:
-  - Click "Create a free USU Canvas account" link:
-    - Opens account creation page in new tab
-    - Link has proper security attributes (target="_blank", rel="noopener noreferrer")
-  - Click dismiss button (×) in upper-right corner:
-    - Banner is hidden immediately
-    - Banner remains hidden for current session
-    - Banner will reappear in new session
-- Banner is WCAG compliant:
-  - Proper contrast ratios
-  - Keyboard accessible
-  - Screen reader compatible
+- No sign-in banner is displayed on the overview page
+- The grid of skill links loads immediately after the overlay fades out
+- Each skill card links to a detail page where the quiz banner and CTA are presented
+- Navigation and overlay behavior remain unchanged
 
 **ACCEPTANCE CRITERIA**
 
-- [ ] Sign-in banner is visible on Core Skills page
-- [ ] "Create a free USU Canvas account" link opens in new tab
-- [ ] Link has proper security attributes
-- [ ] Dismiss button is in upper-right corner
-- [ ] Clicking dismiss button hides banner
-- [ ] Banner stays hidden for current session
-- [ ] Banner reappears in new session
-- [ ] Banner is keyboard accessible
-- [ ] Banner is screen reader compatible
+- [ ] Core Skills page does **not** render `.ncademi-signin-banner`
+- [ ] Overlay and navigation behavior remain unchanged
+- [ ] Users are directed to individual skill pages for quiz call-to-action messaging
 - [ ] Works on mobile and desktop
 - [ ] Accessible (screen reader compatible, keyboard navigation)
 
 **TECHNICAL NOTES**
 
 Page/Location: Core Skills (`/courses/{courseId}/pages/core-skills`)
-Elements Affected: Sign-in banner, dismiss button
-CSS/JS/Both: Both
-Key Functions: `injectSignInBanner()`
+Elements Affected: None (sign-in banner removed)
+CSS/JS/Both: Both (handled via `injectSignInBanner()` early return and CSS defaults)
 
 **ADDITIONAL CONTEXT**
 
-Banner dismissal is stored in sessionStorage, so it persists during the session but resets on new session.
+Individual skill pages now own the sign-in banner experience; the overview remains clean for browsing.
 
 ---
 
-### Story A7: Using Log in to USU Canvas Link
+### Story A7: Skill Page Check Your Understanding Section
+
+**USER STORY**
+
+As a **student** (not logged in to USU Canvas),
+I want to **understand why I cannot take the quiz on an individual skill page**,
+So that **I know how to create a Canvas account and unlock the quiz**.
+
+**WHAT THE USER SEES/EXPERIENCES**
+
+- User navigates to any Core Skill detail page (Alternative Text, Captions, Clear Writing, Color Use, Headings, Links, Lists, Tables, Text Contrast)
+- In the “Check Your Understanding” section the user sees:
+  - The standard descriptive text for the quiz
+  - A persistent sign-in banner immediately following the section heading
+  - The quiz call-to-action hidden (no button or quiz description is visible)
+- The sign-in banner messaging matches Core Skills:
+  - “Create a free USU Canvas account to take quizzes.”
+  - Link opens in a new tab with proper security attributes
+- There is **no** dismiss button; the banner remains visible until the user signs in
+- Once the user signs in (via Core Skills or elsewhere) and reloads the page:
+  - The sign-in banner disappears automatically
+  - The entire quiz description + “Take the Quiz” button becomes visible
+  - The button updates to reflect quiz status (“Take the Quiz” vs “Done”) after Canvas status checks run
+
+**ACCEPTANCE CRITERIA**
+
+- [ ] Every skill page shows the sign-in banner inside the “Check Your Understanding” section for non-logged-in users
+- [ ] Sign-in banner messaging matches the global “Create a free USU Canvas account” CTA and includes the secure link
+- [ ] Banner is **not** dismissible on skill pages
+- [ ] Quiz call-to-action and descriptive text remain hidden until the user is signed in
+- [ ] After sign-in, banner is hidden and quiz section is visible without requiring manual refresh
+- [ ] Works on mobile and desktop
+- [ ] Accessible (screen reader compatible, keyboard navigation)
+
+**TECHNICAL NOTES**
+
+Page/Location: All Core Skill detail pages
+Elements Affected: `.ncademi-signin-banner`, `.ncas-quiz-section`, quiz buttons
+CSS/JS/Both: Both
+Key Functions: `updateSkillPageQuizButtons()`, `requestSkillPageQuizButtons()`, `initializeSignInBannerDismissButtons()`
+
+**ADDITIONAL CONTEXT**
+
+The banner is intentionally persistent on skill pages to ensure non-logged-in users always see the call-to-action before the quiz section.
+
+---
+
+### Story A8: Using Log in to USU Canvas Link
 
 **USER STORY**
 
@@ -722,7 +746,7 @@ Feedback page is accessible to all users regardless of login status.
 - Status icons update automatically when user navigates to Core Skills page
 
 ### Banner System
-- Sign-in banner: Shown to non-logged-in users on Core Skills page
+- Sign-in banner: Shown to non-logged-in users on each Core Skill detail page
 - Status key banner: Shown to logged-in users on Core Skills page
 - Both banners are dismissible and WCAG compliant
 

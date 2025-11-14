@@ -57,8 +57,8 @@ This enhancement system:
 ncas-usu-canvas/
 ├── README.md              # This file
 ├── user-stories.md        # Detailed user interaction stories
-├── ncas21.css            # Custom CSS styles
-└── ncas21.js             # Custom JavaScript functionality
+├── ncas23.css            # Custom CSS styles
+└── ncas23.js             # Custom JavaScript functionality
 ```
 
 ## Installation & Deployment
@@ -99,11 +99,11 @@ ncas-usu-canvas/
 1. In the Theme Editor, navigate to the **Upload** tab
 2. **Upload CSS File**:
    - Click the **Select** button next to the **CSS File** field
-   - Browse and select `ncas21.css`
+   - Browse and select `ncas23.css`
    - Wait for upload to complete
 3. **Upload JavaScript File**:
    - Click the **Select** button next to the **JavaScript File** field
-   - Browse and select `ncas21.js`
+   - Browse and select `ncas23.js`
    - Wait for upload to complete
 
 #### 5. Preview and Apply Changes
