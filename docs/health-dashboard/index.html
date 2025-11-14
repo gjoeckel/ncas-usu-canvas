@@ -40,6 +40,30 @@
         border-radius: 8px;
         background: #fafafa;
       }
+      .form-field {
+        margin-top: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #0f2439;
+      }
+      input {
+        padding: 0.45rem 0.6rem;
+        border: 1px solid #c7d1de;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        font-family: inherit;
+      }
+      .run-controls {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        flex-wrap: wrap;
+      }
       button {
         background: #0f7ac9;
         color: #fff;
@@ -80,17 +104,35 @@
 
     <div class="actions">
       <h2>Run a Health Check</h2>
-      <p>
-        To run a fresh health check, trigger the <strong>Canvas Health Check</strong> workflow in GitHub Actions.
-      </p>
-      <button id="workflow-button" onclick="openWorkflow()">Open Workflow</button>
+      <p>Trigger the GitHub Action from this page. You will need a GitHub Personal Access Token (PAT) with <code>workflow</code> scope.</p>
+      <div class="form-field">
+        <label for="token-input">GitHub PAT</label>
+        <input type="password" id="token-input" placeholder="ghp_..." autocomplete="off" />
+        <div class="run-controls">
+          <button type="button" class="btn-secondary" onclick="saveToken()">Save Token</button>
+          <button type="button" class="btn-secondary" onclick="clearToken()">Clear Token</button>
+        </div>
+      </div>
+      <div class="form-field">
+        <label for="branch-input">Branch</label>
+        <input type="text" id="branch-input" placeholder="main" />
+      </div>
+      <div class="run-controls">
+        <button id="run-button" onclick="runHealthCheck()">Run Health Check</button>
+        <button id="workflow-button" type="button" onclick="openWorkflow()">Open Workflow on GitHub</button>
+      </div>
       <p class="note">
-        Tip: You can also trigger the workflow via the GitHub REST API with a personal access token that has
-        <code>workflow</code> scope.
+        Tokens are stored only in your browser's localStorage and used solely to call the GitHub Actions dispatch API.
       </p>
+      <p id="run-status" class="note"></p>
     </div>
 
     <script>
+      const STORAGE_KEYS = {
+        token: 'canvasHealthPAT',
+        branch: 'canvasHealthBranch'
+      };
+
       async function loadResults() {
         const summaryEl = document.getElementById('summary');
         const table = document.getElementById('results-table');
@@ -137,15 +179,94 @@
         }
       }
 
+      function getRepoOwner() {
+        return 'gjoeckel';
+      }
+
+      function restoreInputs() {
+        const tokenInput = document.getElementById('token-input');
+        const branchInput = document.getElementById('branch-input');
+        const savedToken = localStorage.getItem(STORAGE_KEYS.token);
+        const savedBranch = localStorage.getItem(STORAGE_KEYS.branch);
+        if (savedToken) tokenInput.value = savedToken;
+        branchInput.value = savedBranch || 'main';
+      }
+
+      function saveToken() {
+        const token = document.getElementById('token-input').value.trim();
+        if (!token) {
+          setStatus('Please enter a token before saving.', true);
+          return;
+        }
+        localStorage.setItem(STORAGE_KEYS.token, token);
+        setStatus('Token saved locally.', false);
+      }
+
+      function clearToken() {
+        document.getElementById('token-input').value = '';
+        localStorage.removeItem(STORAGE_KEYS.token);
+        setStatus('Token cleared.', false);
+      }
+
+      function setStatus(message, isError = false) {
+        const statusEl = document.getElementById('run-status');
+        statusEl.textContent = message || '';
+        statusEl.style.color = isError ? '#c0392b' : '#0f2439';
+      }
+
+      async function runHealthCheck() {
+        const tokenInput = document.getElementById('token-input');
+        const branchInput = document.getElementById('branch-input');
+        const runButton = document.getElementById('run-button');
+        const token = tokenInput.value.trim();
+        const branch = branchInput.value.trim() || 'main';
+
+        if (!token) {
+          setStatus('GitHub PAT is required to dispatch the workflow.', true);
+          return;
+        }
+
+        localStorage.setItem(STORAGE_KEYS.token, token);
+        localStorage.setItem(STORAGE_KEYS.branch, branch);
+
+        runButton.disabled = true;
+        setStatus('Dispatching workflow…');
+
+        try {
+          const owner = getRepoOwner();
+          const response = await fetch(
+            `https://api.github.com/repos/${owner}/ncas-usu-canvas/actions/workflows/canvas-health-check.yml/dispatches`,
+            {
+              method: 'POST',
+              headers: {
+                Accept: 'application/vnd.github+json',
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ ref: branch })
+            }
+          );
+
+          if (!response.ok) {
+            const detail = await response.json().catch(() => ({}));
+            throw new Error(detail.message || `GitHub API returned ${response.status}`);
+          }
+
+          setStatus('Workflow dispatched. Refresh the page after the run completes to see new results.');
+        } catch (error) {
+          setStatus(error.message, true);
+        } finally {
+          runButton.disabled = false;
+        }
+      }
+
       function openWorkflow() {
-        const host = window.location.hostname.endsWith('.github.io')
-          ? window.location.hostname.replace('.github.io', '')
-          : 'gjoeckel';
-        const workflowUrl = `https://github.com/${host}/ncas-usu-canvas/actions/workflows/canvas-health-check.yml`;
+        const workflowUrl = `https://github.com/${getRepoOwner()}/ncas-usu-canvas/actions/workflows/canvas-health-check.yml`;
         window.open(workflowUrl, '_blank');
       }
 
       loadResults();
+      restoreInputs();
     </script>
   </body>
 </html>

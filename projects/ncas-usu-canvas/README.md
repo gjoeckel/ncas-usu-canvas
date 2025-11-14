@@ -220,6 +220,15 @@ To ensure Canvas hasn’t moved any DOM dependencies, run the **Canvas Health Ch
 2. In GitHub, open **Settings → Pages** and set **Source** to *Deploy from a branch*, **Branch** to the branch you committed (usually `main`), and the folder to `/docs`.
 3. Save the settings—GitHub will build the site. The dashboard is then reachable at `https://<your-account>.github.io/ncas-usu-canvas/health-dashboard/` and fetches the JSON produced by the workflow.
 
+### Running the health check directly from the dashboard
+The dashboard now exposes a “Run Health Check” panel:
+
+1. Generate a GitHub Personal Access Token with **workflow** (and repo-read) scope.
+2. Paste the PAT into the dashboard field, optionally save it to your browser (stored via `localStorage` only).
+3. Choose the branch to validate (defaults to `main` after merge; use `feedback-updates` until then).
+4. Click **Run Health Check** to dispatch the GitHub Actions workflow without leaving the dashboard.
+5. Once the workflow completes, refresh the page to see the updated results.
+
 Each run fetches the critical Canvas pages (Core Skills, Start Here, all skill pages, etc.) and verifies that required selectors still exist. If any dependency breaks, the workflow fails so we can react before production users are impacted.
 
 ## Support
