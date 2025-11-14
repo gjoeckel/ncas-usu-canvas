@@ -138,7 +138,11 @@
       }
 
       function openWorkflow() {
-        window.open('https://github.com/NCADEMI/ncas-usu-canvas/actions/workflows/canvas-health-check.yml', '_blank');
+        const host = window.location.hostname.endsWith('.github.io')
+          ? window.location.hostname.replace('.github.io', '')
+          : 'gjoeckel';
+        const workflowUrl = `https://github.com/${host}/ncas-usu-canvas/actions/workflows/canvas-health-check.yml`;
+        window.open(workflowUrl, '_blank');
       }
 
       loadResults();

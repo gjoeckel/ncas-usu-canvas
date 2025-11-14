@@ -215,6 +215,11 @@ To ensure Canvas hasn’t moved any DOM dependencies, run the **Canvas Health Ch
 2. **Trigger the workflow** – In GitHub, go to **Actions → Canvas Health Check → Run workflow**.
 3. **View results** – The GitHub Pages dashboard at `docs/health-dashboard/index.html` loads `docs/health-results/latest.json` to display the latest pass/fail report.
 
+### Publishing the dashboard on GitHub Pages
+1. Commit the contents of `docs/` (already in this branch) to the default branch.
+2. In GitHub, open **Settings → Pages** and set **Source** to *Deploy from a branch*, **Branch** to the branch you committed (usually `main`), and the folder to `/docs`.
+3. Save the settings—GitHub will build the site. The dashboard is then reachable at `https://<your-account>.github.io/ncas-usu-canvas/health-dashboard/` and fetches the JSON produced by the workflow.
+
 Each run fetches the critical Canvas pages (Core Skills, Start Here, all skill pages, etc.) and verifies that required selectors still exist. If any dependency breaks, the workflow fails so we can react before production users are impacted.
 
 ## Support
