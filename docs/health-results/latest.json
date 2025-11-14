@@ -1,0 +1,202 @@
+{
+  "timestamp": "2025-11-14T19:18:59.836Z",
+  "overallStatus": "pass",
+  "results": [
+    {
+      "slug": "core-skills",
+      "description": "Core Skills overview",
+      "status": "pass",
+      "message": "All checks passed",
+      "checks": [
+        {
+          "description": "Contains course-modules container",
+          "passed": true
+        },
+        {
+          "description": "Contains at least one custom-link",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "slug": "start-here",
+      "description": "Start Here page",
+      "status": "pass",
+      "message": "All checks passed",
+      "checks": [
+        {
+          "description": "Mentions \"Check Your Understanding\"",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "slug": "feedback",
+      "description": "Feedback page",
+      "status": "pass",
+      "message": "All checks passed",
+      "checks": [
+        {
+          "description": "Contains feedback content",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "slug": "create-a-free-usu-canvas-account",
+      "description": "Create account instructions",
+      "status": "pass",
+      "message": "All checks passed",
+      "checks": [
+        {
+          "description": "Mentions enrollment dialog",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "slug": "alternative-text",
+      "description": "Skill page: alternative-text",
+      "status": "pass",
+      "message": "All checks passed",
+      "checks": [
+        {
+          "description": "Has sign-in banner markup",
+          "passed": true
+        },
+        {
+          "description": "Has quiz section",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "slug": "captions",
+      "description": "Skill page: captions",
+      "status": "pass",
+      "message": "All checks passed",
+      "checks": [
+        {
+          "description": "Has sign-in banner markup",
+          "passed": true
+        },
+        {
+          "description": "Has quiz section",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "slug": "clear-writing",
+      "description": "Skill page: clear-writing",
+      "status": "pass",
+      "message": "All checks passed",
+      "checks": [
+        {
+          "description": "Has sign-in banner markup",
+          "passed": true
+        },
+        {
+          "description": "Has quiz section",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "slug": "color-use",
+      "description": "Skill page: color-use",
+      "status": "pass",
+      "message": "All checks passed",
+      "checks": [
+        {
+          "description": "Has sign-in banner markup",
+          "passed": true
+        },
+        {
+          "description": "Has quiz section",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "slug": "headings",
+      "description": "Skill page: headings",
+      "status": "pass",
+      "message": "All checks passed",
+      "checks": [
+        {
+          "description": "Has sign-in banner markup",
+          "passed": true
+        },
+        {
+          "description": "Has quiz section",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "slug": "links",
+      "description": "Skill page: links",
+      "status": "pass",
+      "message": "All checks passed",
+      "checks": [
+        {
+          "description": "Has sign-in banner markup",
+          "passed": true
+        },
+        {
+          "description": "Has quiz section",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "slug": "lists",
+      "description": "Skill page: lists",
+      "status": "pass",
+      "message": "All checks passed",
+      "checks": [
+        {
+          "description": "Has sign-in banner markup",
+          "passed": true
+        },
+        {
+          "description": "Has quiz section",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "slug": "tables",
+      "description": "Skill page: tables",
+      "status": "pass",
+      "message": "All checks passed",
+      "checks": [
+        {
+          "description": "Has sign-in banner markup",
+          "passed": true
+        },
+        {
+          "description": "Has quiz section",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "slug": "text-contrast",
+      "description": "Skill page: text-contrast",
+      "status": "pass",
+      "message": "All checks passed",
+      "checks": [
+        {
+          "description": "Has sign-in banner markup",
+          "passed": true
+        },
+        {
+          "description": "Has quiz section",
+          "passed": true
+        }
+      ]
+    }
+  ]
+}

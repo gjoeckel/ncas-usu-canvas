@@ -1,230 +1,379 @@
-# NCAS USU Canvas Enhancement System
+# Cursor Global Configuration
 
-## Overview
+**Portable Cursor IDE configuration for AI-assisted development with full MCP automation**
 
-The NCAS (NCADEMI Canvas) enhancement system provides a customized user experience for the USU Canvas course, including enhanced navigation, quiz status tracking, and user authentication flows. This system consists of custom CSS and JavaScript files that are injected into the Canvas LMS theme.
-
-## Purpose
-
-This enhancement system:
-- Provides a streamlined navigation experience with a custom navigation bar
-- Implements intelligent user authentication detection and redirect flows
-- Displays quiz status icons for logged-in Canvas users
-- Shows contextual banners and messages based on user authentication status
-- Ensures all page elements are fully loaded before revealing content
-- Maintains WCAG accessibility compliance
-
-## Features
-
-### Navigation System
-- **Custom Navigation Bar**: Pill-style navigation with active state indicators
-- **Pages Supported**:
-  - Start Here (landing page for all users)
-  - Core Skills (main course content)
-  - Progress (grades page, visible only to logged-in users)
-  - Feedback (course feedback page)
-- **Accessibility**: Full keyboard navigation, ARIA labels, skip links
-
-### User Authentication Flow
-- **Public Users (Not Logged In)**:
-  - Automatically redirected to "Start Here" page on course load
-  - See sign-in banner on Core Skills page
-  - Can navigate to account creation page
-  - Progress link hidden until logged in
-
-- **USU Canvas Users (Logged In)**:
-  - Detected on "Start Here" page
-  - Automatically redirected to "Core Skills" page
-  - Quiz status icons displayed on Core Skills links
-  - Status key banner shows legend for quiz status icons
-  - Progress link visible in navigation
-
-### Quiz Status System
-- **Status Icons**: Visual indicators (Pending, Active, Done) on Core Skills quiz links
-- **Status Key Banner**: Legend explaining status icons (dismissible)
-- **Real-time Updates**: Status icons update based on quiz completion status
-- **Progress Page Integration**: Fetches quiz statuses from Canvas grades page
-
-### Loading Overlay System
-- **Initial Load**: Shows "Loading the course..." overlay
-- **User Detection**: Cross-fades to "USU Canvas user detected..." for logged-in users
-- **Validation**: Overlay persists until all page elements are programmatically validated as loaded
-- **Subsequent Navigations**: Overlay shown for Core Skills page navigations
-
-## File Structure
-
-```
-ncas-usu-canvas/
-├── README.md              # This file
-├── user-stories.md        # Detailed user interaction stories
-├── ncas21.css            # Custom CSS styles
-└── ncas21.js             # Custom JavaScript functionality
-```
-
-## Installation & Deployment
-
-### Prerequisites
-
-1. **Canvas LMS Administrator Access**: You must have administrative access to your Canvas LMS instance
-2. **Custom Branding Enabled**: Contact your Canvas Customer Success Manager to enable custom branding for your account or sub-account
-3. **Theme Editor Access**: Ensure you have access to the Theme Editor in Canvas
-
-### Step-by-Step Installation
-
-#### 1. Enable Custom Branding (If Not Already Enabled)
-
-- Contact your Canvas Customer Success Manager
-- Request custom branding to be enabled for your account/sub-account
-- This feature allows the upload of custom CSS and JavaScript files
-
-#### 2. Access the Theme Editor
-
-1. Log in to your Canvas LMS instance as an administrator
-2. In the **Global Navigation**, click on the **Admin** link
-3. Select the account you want to customize
-4. In the **Account Navigation**, click on **Themes**
-
-#### 3. Create or Edit a Theme
-
-**To Create a New Theme:**
-- Click on the **+ Theme** button
-- Give your theme a descriptive name (e.g., "NCAS USU Canvas Enhancement")
-
-**To Edit an Existing Theme:**
-- Hover over the theme you want to edit
-- Click **Open in Theme Editor**
-
-#### 4. Upload CSS and JavaScript Files
-
-1. In the Theme Editor, navigate to the **Upload** tab
-2. **Upload CSS File**:
-   - Click the **Select** button next to the **CSS File** field
-   - Browse and select `ncas21.css`
-   - Wait for upload to complete
-3. **Upload JavaScript File**:
-   - Click the **Select** button next to the **JavaScript File** field
-   - Browse and select `ncas21.js`
-   - Wait for upload to complete
-
-#### 5. Preview and Apply Changes
-
-1. Click on **Preview Your Changes** to see how the customizations will appear
-2. Test the following:
-   - Navigation bar appears and functions correctly
-   - User authentication flow works (redirects, banners)
-   - Quiz status icons display for logged-in users
-   - Overlay system functions properly
-3. If satisfied, click **Save Theme**
-4. Click **Apply Theme** to implement the changes across your course
-
-### Important Considerations
-
-- **Testing**: Always test customizations in a development/staging environment before applying to production
-- **Accessibility**: Ensure customizations don't break screen reader compatibility or keyboard navigation
-- **Canvas Updates**: Custom CSS/JS may need updates when Canvas releases new versions
-- **Browser Compatibility**: Test across different browsers (Chrome, Firefox, Safari, Edge)
-- **Mobile Responsiveness**: Verify functionality on mobile devices
-
-## Technical Architecture
-
-### JavaScript Architecture
-
-The system uses a modular approach with the following key components:
-
-- **Navigation System**: Creates and manages custom navigation bar
-- **User Authentication Detection**: Detects Canvas user login status
-- **Redirect Flow Management**: Handles initial course load redirects
-- **Quiz Status Service**: Fetches and manages quiz completion statuses
-- **Overlay Management**: Creates and manages loading overlays
-- **Banner System**: Injects and manages contextual banners
-- **Page Validation**: Validates all page elements are loaded before revealing content
-
-### CSS Architecture
-
-The CSS follows a component-based structure:
-
-- **Navigation Styles**: Pill-style navigation with active/hover states
-- **Page-Specific Styles**: Styles for Core Skills, Start Here, Feedback pages
-- **Banner Styles**: Sign-in banner and status key banner styling
-- **Overlay Styles**: Loading overlay with fade transitions
-- **Accessibility Styles**: Screen reader compatible hiding, focus indicators
-- **Responsive Styles**: Mobile and desktop breakpoints
-
-### Key Functions
-
-**Core Functions:**
-- `onCourseLoad()`: Determines user Canvas status and handles initial redirects
-- `loadUsuCanvasUserCoreSkills()`: Initial setup for logged-in Canvas users
-- `updateUsuCanvasCoreSkills()`: Updates quiz status icons for subsequent navigations
-- `validateCoreSkillsPageLoaded()`: Validates all page elements are loaded
-- `injectSignInBanner()`: Injects sign-in banner for non-logged-in users
-- `injectStatusKeyBanner()`: Injects status key banner for logged-in users
-
-**Utility Functions:**
-- `waitForPageBodyLoaded()`: Waits for page content to be ready
-- `createOrGetOverlay()`: Creates or retrieves loading overlay
-- `crossFadeOverlayMessage()`: Smoothly transitions overlay messages
-- `extractAssignmentIdsFromLinks()`: Extracts quiz assignment IDs from links
-- `applyStatusToCoreSkillsLinks()`: Applies status icons to links
-
-## Browser Compatibility
-
-- **Chrome**: Full support (recommended)
-- **Firefox**: Full support
-- **Safari**: Full support
-- **Edge**: Full support
-- **Internet Explorer**: Not supported
-
-## Accessibility
-
-This system is designed with accessibility in mind:
-
-- **WCAG 2.1 AA Compliance**: Meets minimum accessibility standards
-- **Screen Reader Support**: ARIA labels, semantic HTML, proper heading structure
-- **Keyboard Navigation**: Full keyboard accessibility, skip links
-- **Focus Indicators**: Visible focus states for all interactive elements
-- **Color Contrast**: Meets WCAG contrast requirements
-
-## Troubleshooting
-
-### Navigation Bar Not Appearing
-- Check that both CSS and JS files are uploaded correctly
-- Verify theme is applied to the correct account/sub-account
-- Check browser console for JavaScript errors
-
-### Quiz Status Icons Not Showing
-- Verify user is logged in to Canvas
-- Check browser console for API errors
-- Ensure Progress page is accessible
-
-### Overlay Not Fading Out
-- Check browser console for validation errors
-- Verify all page elements are loading correctly
-- Check network tab for failed resource loads
-
-### Redirects Not Working
-- Verify "Start Here" page exists in Canvas
-- Check that course home page is set correctly
-- Verify JavaScript is not blocked by browser extensions
-
-## Support
-
-For issues or questions:
-1. Check browser console for error messages
-2. Verify all files are uploaded correctly
-3. Test in incognito/private browsing mode to rule out extension conflicts
-4. Contact Canvas support if theme editor issues persist
-
-## Version History
-
-- **v21**: Enhanced overlay validation, improved user authentication flow, quiz status system
-- Previous versions archived in project repository
-
-## License
-
-This work is licensed under a [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
+This repository provides a complete, portable Cursor IDE setup with 39 MCP tools, 12 global workflows, and automated session management that works on both macOS/Linux and Windows.
 
 ---
 
-**Last Updated**: November 12, 2025
+## 🎯 What You Get
 
+- **39 MCP Tools** across 8 servers (filesystem, memory, GitHub, shell, browser automation, and more)
+- **12 Global Workflows** (ai-start, ai-end, ai-local-commit, mcp-health, yolo-full, etc.)
+- **Automated Session Management** with context preservation
+- **Smart Git Workflows** with conflict prevention and auto-changelog
+- **Fully Portable** - place anywhere on your machine
+- **Cross-platform** - Works on macOS, Linux, and Windows
+
+**Project Structure:**
+```
+~/cursor-global/
+├── config/                 # Cursor IDE configuration files
+│   ├── workflows.json     # Global workflows (ai-*, mcp-*, yolo-full)
+│   ├── mcp.json          # MCP server configuration
+│   ├── settings.json     # Cursor IDE settings
+│   └── global-scripts.json # Script registry
+├── scripts/               # Automation scripts
+│   ├── session-*.sh      # AI session management
+│   ├── git-*.sh          # Git automation
+│   ├── *-mcp-*.sh        # MCP server management
+│   ├── load-github-token.* # Token management
+│   └── *.sh              # Other utilities
+├── secrets/               # API tokens and credentials (gitignored)
+│   ├── github-token.txt  # GitHub Personal Access Token
+│   └── README.md         # Security documentation
+├── changelogs/            # AI session summaries and context
+├── projects/              # Project-specific files and extensions
+└── README.md              # This file
+```
+
+---
+
+## 📋 Prerequisites
+
+### All Platforms
+- **Node.js v18+** - Required for MCP servers ([Download](https://nodejs.org/))
+- **Git** - For version control and workflows
+
+### Windows Additional Requirements
+- **Git for Windows** (includes Git Bash) - ([Download](https://git-scm.com/download/win))
+
+### ⚠️ Windows Installation Note: PowerShell vs Git Bash
+
+**For AI Agent Installations (Default):**
+
+The default process is to **use PowerShell ONLY to install Git for Windows**, then **switch to Git Bash** for all subsequent operations. This is the recommended approach due to well-documented issues with Cursor-PowerShell-Windows integration that can cause workflow execution failures and script compatibility problems.
+
+**Process:**
+1. Use PowerShell (or browser) to install Git for Windows
+2. Open Git Bash for all cursor-global setup and operations
+3. Use `setup-windows.ps1` only if PowerShell is specifically required
+
+**Why:** Git Bash provides consistent bash script execution that matches the macOS/Linux experience, avoiding PowerShell-specific issues with Cursor workflows.
+
+---
+
+## 🚀 Quick Setup
+
+### macOS / Linux
+
+```bash
+# 1. Clone repository
+git clone https://github.com/gjoeckel/cursor-global.git
+cd cursor-global
+
+# 2. Run setup (auto-detects location!)
+chmod +x setup.sh
+./setup.sh
+
+# 3. Reload shell
+source ~/.zshrc  # or ~/.bashrc
+
+# 4. Build custom MCP servers (REQUIRED)
+cd ~/Projects  # or wherever you keep projects
+git clone https://github.com/gjoeckel/my-mcp-servers.git
+cd my-mcp-servers/my-mcp-servers
+npm run install-all
+
+# 5. Restart Cursor IDE
+
+# Done! ✅
+```
+
+### Windows 11 (Git Bash - Recommended for AI Agents)
+
+**Recommended approach:** Use Git Bash for consistent cross-platform behavior
+
+```bash
+# Open Git Bash (NOT PowerShell)
+
+# 1. Clone repository
+git clone https://github.com/gjoeckel/cursor-global.git
+cd cursor-global
+
+# 2. Run bash setup for Windows
+./setup-windows.sh
+
+# 3. Build custom MCP servers (REQUIRED)
+cd /c/Users/YOUR_USERNAME/Projects
+git clone https://github.com/gjoeckel/my-mcp-servers.git
+cd my-mcp-servers/my-mcp-servers
+npm run install-all
+
+# Additional packages (if needed)
+cd packages/sequential-thinking-minimal && npm install
+cd ../everything-minimal && npm install
+cd ../agent-autonomy && npm install
+
+# 4. Restart Cursor IDE
+
+# Done! ✅
+```
+
+### Windows 11 (PowerShell - Alternative)
+
+**Use only if Git Bash is not available:**
+
+```powershell
+# Open PowerShell
+
+# 1. Clone repository
+git clone https://github.com/gjoeckel/cursor-global.git
+cd cursor-global
+
+# 2. Run PowerShell setup
+.\setup-windows.ps1
+
+# 3. Build custom MCP servers (REQUIRED)
+cd C:\Users\YOUR_USERNAME\Projects
+git clone https://github.com/gjoeckel/my-mcp-servers.git
+cd my-mcp-servers\my-mcp-servers
+npm run install-all
+
+# Additional packages (if needed)
+cd packages\sequential-thinking-minimal; npm install
+cd ..\everything-minimal; npm install
+cd ..\agent-autonomy; npm install
+
+# 4. Restart Cursor IDE
+
+# Done! ✅
+```
+
+---
+
+## ⚠️ Important: Custom MCP Servers Are REQUIRED
+
+This system **requires** building the custom MCP servers from source. This is NOT optional because:
+
+1. **Core Functionality**: Provides 16 of the 39 tools (GitHub, shell, browser automation, etc.)
+2. **Already Integrated**: All workflows and configs expect these servers
+3. **Custom Features**: Agent autonomy, sequential thinking, and other unique tools
+
+### Windows-Specific Requirements
+
+**After building custom MCP servers, you MUST:**
+
+1. **Fix ES module configuration** in 5 packages (already done in my-mcp-servers repo):
+   - Update tsconfig.json to use `"module": "ESNext"` instead of `"commonjs"`
+   - Add `"type": "module"` to agent-autonomy/package.json if missing
+
+2. **Create Windows-specific mcp.json** in `~/.cursor/`:
+   - Use `node` command (not `npx`) for custom servers
+   - Use full Windows paths: `C:\\Users\\USERNAME\\Projects\\my-mcp-servers\\...`
+   - The repository's `config/mcp.json` is a template - Windows users need custom config
+   - The `setup-windows.ps1` script handles this automatically
+
+**Why:** npx with git URLs doesn't work reliably on Windows with ES module packages. Local builds with full paths are the validated approach.
+
+---
+
+## 🔧 Configuration Files
+
+The setup automatically creates configurations in `~/.cursor/`:
+
+- **mcp.json** - Configures all 8 MCP servers (23 official + 16 custom tools)
+- **workflows.json** - Defines 12 global workflows
+- **settings.json** - Cursor IDE settings for autonomy
+
+### MCP Servers Included
+
+| Server | Tools | Type | Description |
+|--------|-------|------|-------------|
+| filesystem | 15 | Official | File operations |
+| memory | 8 | Official | Knowledge graph storage |
+| github-minimal | 4 | Custom | GitHub repository operations |
+| shell-minimal | 4 | Custom | Safe shell command execution |
+| puppeteer-minimal | 4 | Custom | Browser automation |
+| sequential-thinking | 4 | Custom | Step-by-step problem solving |
+| everything-minimal | 4 | Custom | Protocol validation |
+| agent-autonomy | 4 | Custom | Workflow automation |
+
+**Total:** 12 global workflows (including yolo-full)
+
+### Two MCP Configuration Approaches
+
+**macOS/Linux (npx approach - template in config/mcp.json):**
+```json
+{
+  "github-minimal": {
+    "command": "npx",
+    "args": ["-y", "git+https://github.com/gjoeckel/my-mcp-servers.git#main:packages/github-minimal"]
+  }
+}
+```
+- Uses npx to fetch from git
+- No hardcoded paths
+- May work on macOS/Linux (needs testing)
+
+**Windows (local build approach - validated & working):**
+```json
+{
+  "github-minimal": {
+    "command": "node",
+    "args": ["C:\\Users\\USERNAME\\Projects\\my-mcp-servers\\my-mcp-servers\\packages\\github-minimal\\build\\index.js"]
+  }
+}
+```
+- Uses locally built packages
+- Full Windows paths
+- ✅ Validated and confirmed working on Windows 11
+- The `setup-windows.ps1` script generates this automatically
+
+---
+
+## 💡 Using the System
+
+### In Cursor Chat
+
+Type any workflow name:
+- `ai-start` - Load session context and initialize environment
+- `ai-end` - Save session context and generate changelog
+- `ai-local-commit` - Commit with automatic changelog update
+- `ai-local-merge` - Smart merge with conflict prevention
+- `mcp-health` - Check MCP server status
+
+### Available Workflows
+
+**Session Management:**
+- ai-start, ai-end, ai-update, ai-repeat, ai-compress
+
+**Utilities:**
+- ai-clean, ai-docs-sync
+
+**MCP Management:**
+- mcp-health, mcp-restart
+
+**Git Operations:**
+- ai-local-commit, ai-local-merge, ai-merge-finalize
+
+---
+
+## 🔍 Troubleshooting
+
+### MCP Servers Not Starting
+
+**Check:**
+```bash
+# macOS/Linux
+ps aux | grep mcp
+
+# Windows
+Get-Process | Where-Object {$_.Name -like "*node*"}
+```
+
+**Fix:** Restart Cursor IDE completely (quit and relaunch)
+
+### Workflows Not Found
+
+**Verify symlink exists:**
+```bash
+ls -la ~/.cursor/workflows.json
+```
+
+**Fix:** Re-run setup script
+
+### Custom MCP Servers Missing
+
+**Verify builds exist:**
+```bash
+ls -la ~/Projects/my-mcp-servers/my-mcp-servers/packages/*/build/index.js
+```
+
+**Fix:** Run `npm run install-all` in my-mcp-servers directory
+
+---
+
+## 📖 Additional Documentation
+
+- `config/workflows.md` - Complete workflow reference
+- `config/README.md` - Configuration details
+- `RECOMMENDED-EXTENSIONS.md` - Recommended Cursor extensions
+
+---
+
+## 🌐 Platform Support
+
+| Platform | Status | Notes |
+|----------|--------|-------|
+| **macOS** | ✅ Fully Supported | Original development platform |
+| **Linux** | ✅ Fully Supported | Uses same setup as macOS |
+| **Windows 11** | ✅ Fully Supported | Validated and working, uses Git Bash |
+| **Windows 10** | ⚠️ Expected to work | May need PowerShell 5.1 adjustments |
+
+---
+
+## ⚙️ Environment Variables (Optional)
+
+### GitHub Token (for github-minimal MCP)
+
+```bash
+# macOS/Linux
+echo 'export GITHUB_TOKEN=your_token_here' >> ~/.zshrc
+source ~/.zshrc
+
+# Windows (PowerShell as admin)
+[Environment]::SetEnvironmentVariable("GITHUB_TOKEN", "your_token", "User")
+# Then restart Cursor
+```
+
+Get token at: https://github.com/settings/tokens (scopes: repo, workflow, read:org)
+
+---
+
+## 🎯 Portability
+
+This system is **fully portable** - you can:
+- Place `cursor-global` anywhere on your machine
+- Move it to a USB drive
+- Sync via Dropbox/iCloud
+- Copy to multiple machines
+
+**Just run the setup script from wherever you place it**, and everything adapts automatically!
+
+All scripts use self-location detection - no hardcoded paths.
+
+---
+
+## 🔄 Updating
+
+```bash
+cd /path/to/cursor-global
+git pull origin main
+
+# Re-run setup if configs changed
+./setup.sh  # or setup-windows.ps1 on Windows
+
+# Restart Cursor IDE
+```
+
+---
+
+## 🤝 Contributing
+
+Improvements welcome! Please:
+1. Test thoroughly on your platform
+2. Document platform-specific changes
+3. Update this README if adding features
+
+---
+
+## 📄 License
+
+These configurations and scripts are provided as-is for personal use. Modify freely!
+
+---
+
+**Last Updated:** October 15, 2025  
+**Repository:** https://github.com/gjoeckel/cursor-global  
+**Status:** Production Ready - 39 Tools, 12 Workflows, Cross-platform

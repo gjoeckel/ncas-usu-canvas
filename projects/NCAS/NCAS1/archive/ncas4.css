@@ -1,0 +1,1016 @@
+/*
+ * NCAS4 v4 CSS - Custom Canvas LMS Enhancement Styles
+ * Updated: 2025-01-01
+ * Scope: Maintain exact visuals with minimal JS; CSS drives layout and states
+ * Purpose: Custom navigation, layout, and content styling for Canvas course pages
+ */
+
+/* ============================================
+   SCOPE DEFINITION
+   Only apply styles on course pages, excluding:
+   - Admin/accounts pages (.ncademi-excluded)
+   - Admin user views (.ncademi-admin-view)
+   ============================================ */
+
+body:not(.ncademi-excluded):not(.ncademi-admin-view) {
+  /* ============================================
+     HEADER AND NAVIGATION STRUCTURE
+     ============================================ */
+
+  /* Header container - contains h1 title and navigation bar */
+  #ncas-header.ncademi-header,
+  .ncademi-header {
+    position: static; /* WCAG: No fixed positioning for better accessibility */
+    width: 100%;
+    height: 150px; /* Desktop: 150px total (90px h1 + 60px nav) */
+    background-color: #0c2336;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    flex-shrink: 0; /* Prevent header from shrinking */
+    z-index: 1000; /* Ensure header stays above content */
+  }
+
+  /* Header h1 title styling */
+  .ncademi-header h1 {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    margin: 0;
+    color: #ffffff;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.2;
+    background-color: #0c2336;
+  }
+
+  /* Navigation container - consolidated layout and visual styling */
+  .ncademi-header #ncademi-nav {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100%;
+    height: 60px; /* Desktop navigation bar height */
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 4px;
+    z-index: 999; /* Below header, above content */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0px 20px;
+    flex-direction: row;
+    /* Visual background: transparent base with orange bottom border and blue gradient band */
+    background-color: transparent;
+    border-bottom: 5px solid #ec8e22; /* Orange accent border */
+    margin: 0;
+    /* Create 50px blue band behind active tab */
+    background-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      transparent calc(100% - 50px),
+      #025191 calc(100% - 50px),
+      #025191 100%
+    );
+    background-size: 100% 100%;
+    background-position: bottom;
+    background-repeat: no-repeat;
+  }
+
+  /* ============================================
+     NAVIGATION LINK STYLING
+     ============================================ */
+
+  /* Base navigation link styling - inactive/regular links */
+  .ncademi-header #ncademi-nav a {
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    margin: 0;
+    margin-top: 5px !important;
+    color: rgb(255, 255, 255);
+    text-decoration: none;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+    border: none;
+    background: transparent;
+    border-radius: 0px;
+    position: relative;
+    width: auto;
+    text-align: left;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-bottom: 3px solid transparent; /* Prevent text jumping on hover */
+    height: 55px; /* Center text vertically in 55px container (50px blue band + 5px border) */
+  }
+
+  /* Active/selected navigation link - orange tab that breaks out of background */
+  .ncademi-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"],
+  .ncademi-header #ncademi-nav a.active {
+    color: rgb(0, 0, 0) !important;
+    font-weight: 600 !important;
+    background: rgb(236, 142, 34) !important; /* NCADEMI orange */
+    border-radius: 8px 8px 0px 0px !important;
+    margin-bottom: -5px !important; /* Tab extends to bottom border - no gap */
+    border-bottom: 5px solid #ec8e22 !important;
+    position: relative;
+    z-index: 2; /* Above background gradient */
+    height: 45px !important; /* Tab height - breaks out of 55px container */
+    display: flex !important;
+    align-items: center !important;
+    margin-top: 5px !important; /* Position tab with 5px margin from top */
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+    /* Make selected link non-interactive */
+    pointer-events: none !important;
+    cursor: default !important;
+  }
+
+  /* Navigation link hover effects - underline for inactive links only */
+  .ncademi-header #ncademi-nav a:hover:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
+    background: transparent !important;
+    color: rgb(255, 255, 255) !important;
+    text-decoration: underline !important;
+    text-decoration-color: rgb(255, 255, 255) !important;
+    text-decoration-thickness: 2px !important;
+  }
+
+  /* Active links: maintain styling on hover (no visual change) */
+  .ncademi-header #ncademi-nav a.active:hover,
+  .ncademi-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:hover {
+    background: rgb(236, 142, 34) !important;
+    color: rgb(0, 0, 0) !important;
+    text-decoration: none !important;
+  }
+
+  /* Navigation link focus effects - rounded double border for inactive links only */
+  .ncademi-header #ncademi-nav a:focus:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
+    background: transparent !important;
+    color: rgb(255, 255, 255) !important;
+    /* Rounded double border: black inside, white outside */
+    outline: 3px solid #ffffff !important;
+    outline-offset: 1px !important;
+    box-shadow: inset 0 0 0 1px #000000 !important;
+    border-radius: 4px !important;
+  }
+
+  /* Active links: no focus styling (non-interactive) */
+  .ncademi-header #ncademi-nav a.active:focus,
+  .ncademi-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    background: rgb(236, 142, 34) !important;
+    color: rgb(0, 0, 0) !important;
+  }
+
+  /* Navigation link focus-visible - accessibility indicator for inactive links only */
+  .ncademi-header #ncademi-nav a:focus-visible:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
+    background: transparent !important;
+    /* Rounded double border: black inside, white outside */
+    outline: 3px solid #ffffff !important;
+    outline-offset: 1px !important;
+    box-shadow: inset 0 0 0 1px #000000 !important;
+    border-radius: 4px !important;
+  }
+
+  /* Active links: no focus-visible styling (non-interactive) */
+  .ncademi-header #ncademi-nav a.active:focus-visible,
+  .ncademi-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    background: rgb(236, 142, 34) !important;
+    color: rgb(0, 0, 0) !important;
+  }
+
+  /* Home link detection - targets course home page links (any course ID) */
+  .ncademi-header
+    #ncademi-nav
+    a[href*="/courses/"]:not([href*="/assignments"]):not([href*="/pages"]):not([href*="/modules"]):not([href*="/grades"]):not([href*="/external_tools"]) {
+    position: relative; /* Base styling inherited from main nav link styles */
+  }
+
+  /* Course link transitions - ensures smooth animations for all course links */
+  .ncademi-header #ncademi-nav a[href*="usucourses.instructure.com/courses/"] {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ============================================
+     MAIN CONTENT AREA
+     ============================================ */
+
+  /* Main content container - prevents scrolling under header */
+  #ncas-main.main-content {
+    padding: 150px 0 0 0 !important; /* Top padding matches header height */
+    background-color: #ffffff;
+    width: 100% !important;
+    max-width: none !important;
+    flex: 1; /* WCAG: Allow main to grow and fill remaining space */
+    margin-top: 0 !important;
+    overflow-y: auto !important; /* WCAG: Ensure content is scrollable */
+    position: relative;
+    min-height: 0; /* WCAG: Allow flex item to shrink below content size */
+    z-index: 1; /* Below header/nav */
+  }
+
+  /* ============================================
+     PUBLIC LICENSE BLOCK ALIGNMENT
+     ============================================ */
+
+  /* Public license block - constrained to align with link container edges */
+  /* Calculation: 3 link-containers × 210px (200px width + 5px padding each side) + 2 gaps × 10px = 650px */
+  .public-license {
+    width: 650px !important;
+    max-width: calc(100vw - 40px) !important; /* Responsive: allow shrinking on small screens with 20px margin on each side */
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: block !important;
+    box-sizing: border-box;
+    text-align: center !important; /* Center align all text content */
+  }
+
+  /* 10px spacing between image and text */
+  .public-license-image-link {
+    margin-right: 10px !important;
+    display: inline-block !important;
+  }
+
+  .public-license-text {
+    display: inline !important;
+  }
+
+  /* ============================================
+     BODY LAYOUT AND STRUCTURE
+     ============================================ */
+
+  /* Body flexbox layout - WCAG compliant vertical stacking */
+  body {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden; /* Prevent horizontal scrollbar */
+  }
+
+  /* Canvas main content area - full width flexbox layout */
+  #not_right_side.ic-app-main-content {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+  }
+
+  /* Canvas layout columns - full width */
+  div#main.ic-Layout-columns {
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* Content wrapper - full width */
+  #content-wrapper {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Ensure proper spacing between header and main */
+  .ncademi-header + #ncas-main {
+    margin-top: 0; /* Body padding handles spacing, not this margin */
+  }
+
+  /* Smooth transitions for all interactive elements */
+  .ncademi-header #ncademi-nav a,
+  .col-lg-4,
+  .col-md-4,
+  .col-12 {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ============================================
+     CANVAS UI ELEMENT HIDING
+     ============================================ */
+
+  /* Hide original Canvas left-side navigation */
+  #left-side {
+    display: none !important;
+  }
+
+  /* Hide Canvas header navigation and logo */
+  .ic-app-header__main-navigation {
+    display: none !important;
+  }
+
+  .ic-app-header__logomark-container {
+    display: none !important;
+    position: static !important;
+  }
+
+  /* Hide Canvas header - match both with and without .no-user class */
+  header#header.ic-app-header.no-print,
+  header#header.ic-app-header.no-print.no-user {
+    display: none !important;
+  }
+
+  /* Hide Canvas header elements */
+  .ic-app-header,
+  .ic-app-header__main-navigation,
+  .ic-app-header__logomark-container {
+    position: static !important;
+    display: none !important;
+  }
+
+  /* Hide Canvas right-side column - multiple selectors for high specificity */
+  div#right-side-wrapper.ic-app-main-content__secondary,
+  #application div#right-side-wrapper.ic-app-main-content__secondary,
+  body div#right-side-wrapper.ic-app-main-content__secondary,
+  #right-side-wrapper,
+  .ic-app-main-content__secondary,
+  #right-side {
+    display: none !important;
+  }
+
+  /* Hide Canvas navigation toggle and breadcrumbs */
+  div.ic-app-nav-toggle-and-crumbs.no-print {
+    display: none !important;
+  }
+
+  /* Hide mobile Canvas header and navigation */
+  header#mobile-header.no-print {
+    display: none !important;
+  }
+
+  nav#mobileContextNavContainer {
+    display: none !important;
+  }
+
+  /* Hide breadcrumbs container */
+  div.ic-app-crumbs {
+    display: none !important;
+  }
+
+  /* Hide header bar and toolbar elements */
+  div.header-bar-outer-container {
+    display: none !important;
+  }
+
+  /* Hide all sticky elements that could interfere with layout */
+  .sticky,
+  .sticky-toolbar,
+  [data-sticky],
+  .header-bar,
+  .page-toolbar,
+  .sticky-header,
+  .fixed-header {
+    display: none !important;
+    position: static !important;
+  }
+
+  /* Header should remain static for flexbox layout (not fixed) */
+  #ncas-header.ncademi-header {
+    position: static !important;
+  }
+
+  /* Ensure main element has no top margin */
+  main#ncas-main.main-content {
+    margin-top: 0px;
+  }
+
+  /* ============================================
+     CANVAS DESIGNPLUS CONTENT LAYOUT
+     ============================================ */
+
+  /* Main Content Wrapper - reduced top margin to bring content closer to nav */
+  .dp-wrapper {
+    margin-top: 0;
+    padding-top: 0;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* Column Container */
+  .dp-column-container {
+    margin-top: 0;
+    padding-top: 0;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* Row spacing - increased by 10px to prevent overlap */
+  .row.dp-col-3-eq {
+    margin-bottom: 40px; /* Increased from 30px */
+    margin-top: 20px; /* Add space above each row */
+    width: 100% !important;
+  }
+
+  /* First row gets less top margin */
+  .row.dp-col-3-eq:first-child {
+    margin-top: 10px;
+  }
+
+  /* ============================================
+     CELL/COLUMN HOVER EFFECTS
+     ============================================ */
+
+  /* Column base styles */
+  .col-lg-4,
+  .col-md-4,
+  .col-12 {
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid transparent; /* Transparent border for hover effect */
+    cursor: pointer; /* Make cells focusable for keyboard navigation */
+  }
+
+  /* Consolidated hover and focus effects - CSS handles both */
+  .col-lg-4:hover,
+  .col-md-4:hover,
+  .col-12:hover,
+  .col-lg-4:focus,
+  .col-md-4:focus,
+  .col-12:focus {
+    border: 2px solid rgb(236, 142, 34); /* NCADEMI accent orange */
+    border-radius: 8px;
+    outline: none; /* Remove default outline for focus */
+  }
+
+  /* ============================================
+     RESPONSIVE DESIGN
+     ============================================ */
+
+  /* Mobile responsiveness (max-width: 768px) */
+  @media (max-width: 768px) {
+    body {
+      padding-top: 170px !important; /* Adjusted for mobile header height (150px + 20px) */
+    }
+
+    #ncas-header.ncademi-header,
+    .ncademi-header {
+      height: 170px; /* Increased header height for mobile */
+    }
+
+    .ncademi-header h1 {
+      font-size: 20px;
+      padding: 10px 15px;
+    }
+
+    .ncademi-header #ncademi-nav {
+      flex-direction: column;
+      height: 80px;
+      padding: 10px 20px;
+    }
+
+    .ncademi-header #ncademi-nav a {
+      width: 100%;
+      text-align: center;
+      margin: 4px 0;
+    }
+
+    #ncas-main.main-content,
+    #ncas-main.ncademi-main-layout {
+      margin-top: 0; /* Body padding handles spacing */
+    }
+
+    .dp-wrapper {
+      margin-top: 10px;
+    }
+
+    .row.dp-col-3-eq {
+      margin-bottom: 30px; /* Adjusted for mobile */
+    }
+
+    .col-lg-4,
+    .col-md-4,
+    .col-12 {
+      margin-bottom: 15px;
+    }
+  }
+
+  /* Tablet responsiveness (max-width: 992px, min-width: 769px) */
+  @media (max-width: 992px) and (min-width: 769px) {
+    .row.dp-col-3-eq {
+      margin-bottom: 35px; /* Adjusted for tablet */
+    }
+  }
+
+  /* ============================================
+     ACCESSIBILITY IMPROVEMENTS
+     ============================================ */
+
+  /* Focus indicators for better accessibility */
+  .col-lg-4:focus-visible,
+  .col-md-4:focus-visible,
+  .col-12:focus-visible {
+    border: 2px solid rgb(236, 142, 34);
+    box-shadow: 0 0 0 2px rgba(236, 142, 34, 0.3);
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .col-lg-4:hover,
+    .col-md-4:hover,
+    .col-12:hover,
+    .col-lg-4:focus,
+    .col-md-4:focus,
+    .col-12:focus {
+      border: 3px solid rgb(236, 142, 34);
+    }
+
+    .ncademi-header #ncademi-nav a:hover,
+    .ncademi-header #ncademi-nav a:focus {
+      border: 3px solid rgb(236, 142, 34);
+    }
+  }
+
+  /* ============================================
+     UTILITY CLASSES (JavaScript-Driven Styles)
+     Note: These classes are applied by JavaScript for responsive behavior
+     ============================================ */
+
+  /* Mobile responsive utility classes */
+  .ncademi-mobile-header {
+    height: 170px !important;
+  }
+
+  .ncademi-mobile-nav {
+    flex-direction: column !important;
+    height: 80px !important;
+  }
+
+  .ncademi-mobile-body {
+    padding-top: 170px !important;
+  }
+
+  /* Desktop responsive utility classes */
+  .ncademi-desktop-header {
+    height: 150px !important;
+  }
+
+  .ncademi-desktop-nav {
+    flex-direction: row !important;
+    height: 60px !important;
+  }
+
+  .ncademi-desktop-body {
+    padding-top: 150px !important;
+  }
+
+  /* Main content layout utility */
+  #ncas-main.ncademi-main-layout {
+    margin-top: 0 !important; /* Body padding handles spacing */
+  }
+
+} /* End body:not(.ncademi-excluded):not(.ncademi-admin-view) */
+
+/* ============================================
+   CUSTOM LAYOUT STYLES
+   Applied globally (outside scope wrapper)
+   ============================================ */
+
+/* Custom Container Styles */
+.custom-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.top-row {
+  margin-bottom: 45px; /* Increased from 40px to add 5px more space */
+}
+
+.course-modules {
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Custom Row Styles */
+.custom-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Link Container */
+.link-container {
+  width: 200px;
+  height: auto;
+  padding: 5px;
+}
+
+/* Custom Link Styles */
+.custom-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff !important;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 120px;
+  padding: 10px;
+}
+
+.large {
+  height: 200px;
+  min-height: 200px;
+}
+
+.small {
+  height: 150px;
+  min-height: 150px;
+}
+
+/* Custom Link Hover and Focus States */
+.custom-link.small:hover,
+.custom-link.large:hover {
+  border-color: rgb(236, 142, 34);
+  box-shadow: 0 4px 8px rgba(236, 142, 34, 0.3);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.custom-link.small:focus,
+.custom-link.large:focus {
+  border-color: rgb(236, 142, 34);
+  box-shadow: 0 4px 8px rgba(236, 142, 34, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Only .small and .large links receive focus - make all other links not focusable */
+.custom-link:not(.small):not(.large) {
+  pointer-events: none;
+}
+
+.custom-link:not(.small):not(.large) * {
+  pointer-events: none;
+}
+
+/* Make images and text within non-focusable links also non-focusable */
+.custom-link:not(.small):not(.large) img,
+.custom-link:not(.small):not(.large) .link-text {
+  pointer-events: none;
+}
+
+/* Custom Link Images */
+.custom-link img {
+  max-width: 100%;
+  max-height: 80%;
+  object-fit: contain;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+/* Custom Link Text */
+.link-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  line-height: 1.2;
+  margin-top: auto;
+}
+
+/* Custom Link Hover Text Color */
+.custom-link.small:hover .link-text,
+.custom-link.large:hover .link-text,
+.custom-link.small:focus .link-text,
+.custom-link.large:focus .link-text {
+  color: #007bff;
+}
+
+/* WCAG 2.2 AA Compliance Enhancements */
+.custom-link.small:focus-visible,
+.custom-link.large:focus-visible {
+  outline: none;
+  border-color: rgb(236, 142, 34);
+  box-shadow: 0 4px 8px rgba(236, 142, 34, 0.3);
+  transform: translateY(-2px);
+}
+
+/* High contrast mode support for custom links */
+@media (prefers-contrast: high) {
+  .custom-link.small,
+  .custom-link.large {
+    border-color: #000;
+    background-color: #fff;
+  }
+
+  .custom-link.small:hover,
+  .custom-link.large:hover,
+  .custom-link.small:focus,
+  .custom-link.large:focus {
+    border-color: #000;
+    background-color: #fff;
+    outline: 3px solid #000;
+  }
+
+  .link-text {
+    color: #000;
+  }
+
+  .custom-link.small:hover .link-text,
+  .custom-link.large:hover .link-text,
+  .custom-link.small:focus .link-text,
+  .custom-link.large:focus .link-text {
+    color: #000;
+  }
+}
+
+/* Reduced motion support for custom links */
+@media (prefers-reduced-motion: reduce) {
+  .custom-link.small,
+  .custom-link.large {
+    transition: none;
+  }
+
+  .custom-link.small:hover,
+  .custom-link.large:hover,
+  .custom-link.small:focus,
+  .custom-link.large:focus {
+    transform: none;
+  }
+}
+
+/* ============================================
+   GRADES PAGE STYLING
+   Applied globally (outside scope wrapper)
+   ============================================ */
+
+/* Hide Canvas grade summary menu and navigation pills (not for admins) */
+body:not(.ncademi-admin-view) div#GradeSummarySelectMenuGroup {
+  display: none !important;
+}
+
+body:not(.ncademi-admin-view) ul#navpills {
+  display: none !important;
+}
+
+/* Grades table styling - font sizes apply to both admins and students */
+table#grades_summary {
+  /* Increase th font size to 1.25rem */
+  thead th,
+  tbody th {
+    font-size: 1.25rem !important;
+  }
+
+  /* Increase td font size to 1rem */
+  tbody td {
+    font-size: 1rem !important;
+  }
+
+  /* Style for injected grade icons */
+  tbody tr th.title {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  tbody tr th.title img.ncademi-grade-icon {
+    width: 60px !important;
+    height: 60px !important;
+    margin-right: 8px !important;
+    vertical-align: middle !important;
+    display: inline-block !important;
+    flex-shrink: 0;
+    object-fit: contain;
+  }
+
+  tbody tr th.title a {
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+/* Hide grade table columns (not for admins) */
+body:not(.ncademi-admin-view) table#grades_summary thead tr th:nth-child(2),
+body:not(.ncademi-admin-view) table#grades_summary thead tr th.status,
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.due,
+body:not(.ncademi-admin-view) table#grades_summary tbody tr td.status,
+body:not(.ncademi-admin-view) table#grades_summary tbody tr.group_total,
+body:not(.ncademi-admin-view) table#grades_summary tbody tr th.title div.context {
+  display: none !important;
+}
+
+/* ============================================
+   PAGE CONTENT STYLING
+   Applied globally (outside scope wrapper)
+   Based on analysis of https://ncademi.org/
+   ============================================ */
+
+/* Base heading styles - matching NCADEMI.org computed CSS */
+h1 {
+  font-family: "Calibri", sans-serif;
+  font-size: 2em; /* Base browser default */
+  font-weight: bold;
+  color: #005190;
+  text-align: left;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  line-height: 1.2;
+}
+
+h2 {
+  font-family: "Calibri", sans-serif;
+  font-size: 1.5em; /* Base browser default */
+  font-weight: bold;
+  color: #ec8e22; /* NCADEMI orange */
+  text-align: left;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+h3 {
+  font-family: "Calibri", sans-serif;
+  font-size: 1.17em; /* Base browser default */
+  font-weight: bold;
+  color: #005190;
+  text-align: left;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  line-height: 1.4;
+}
+
+h4 {
+  font-family: "Calibri", sans-serif;
+  font-size: 1em; /* Base browser default */
+  font-weight: bold;
+  color: #005190;
+  text-align: left;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  line-height: 1.4;
+}
+
+h5 {
+  font-family: "Calibri", sans-serif;
+  font-size: 0.83em; /* Base browser default */
+  font-weight: bold;
+  color: #005190;
+  text-align: left;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  line-height: 1.4;
+}
+
+/* Page title styling - context-specific override inheriting from h1 */
+h1.page-title {
+  color: #025191;
+  border-bottom: 2px solid #025191;
+  padding-bottom: 0.5em; /* Space between text and border */
+  margin-bottom: 0.5em; /* Space after border */
+  width: 100%; /* Ensure border spans full width */
+  position: relative; /* For icon positioning */
+}
+
+/* Icon image styling - floats right and aligns with border */
+img.icon {
+  width: 70px;
+  height: 70px;
+  float: right;
+  margin-top: -0.5em; /* Pull up to align with border line */
+  margin-left: 1rem; /* Space between icon and content */
+  display: block;
+}
+
+/* Callout/alert box styling */
+div.callout {
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+  border-left: 4px solid #0066cc;
+  background-color: #f0f7ff;
+  border-radius: 4px;
+}
+
+/* ============================================
+   PAGES PAGE SPECIFIC STYLING
+   Only applies to /courses/[XXXX]/pages/* URLs
+   Applied globally (outside scope wrapper)
+   ============================================ */
+
+body.ncademi-pages-page:not(.ncademi-excluded) {
+  /* Header element - constrained to 50px for pages pages */
+  #ncas-header.ncademi-header,
+  .ncademi-header {
+    height: 50px !important; /* Constrained to nav bar height only */
+  }
+
+  /* Header h1 styling - HIDDEN on pages pages */
+  .ncademi-header h1 {
+    display: none !important;
+  }
+
+  /* Navigation inside header */
+  .ncademi-header #ncademi-nav {
+    height: 50px !important; /* Constrained height */
+  }
+
+  /* Navigation links - adjusted for 50px height */
+  .ncademi-header #ncademi-nav a {
+    height: 50px !important;
+    margin-top: 0 !important;
+  }
+
+  /* Active navigation link - adjusted for 45px height */
+  .ncademi-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"],
+  .ncademi-header #ncademi-nav a.active {
+    height: 45px !important;
+    margin-top: 5px !important;
+  }
+
+  /* Navigation link focus effects - adjusted for 50px (excludes active/selected links) */
+  .ncademi-header #ncademi-nav a:focus:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
+    height: 50px !important;
+    margin-top: 0 !important;
+  }
+
+  /* Ensure selected/active links have no focus styling on pages pages */
+  .ncademi-header #ncademi-nav a.active:focus,
+  .ncademi-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Focus-visible effects - adjusted for 50px (excludes active/selected links) */
+  .ncademi-header #ncademi-nav a:focus-visible:not(.active):not([style*="background: rgb(236, 142, 34)"]) {
+    height: 50px !important;
+    margin-top: 0 !important;
+  }
+
+  /* Ensure selected/active links have no focus-visible styling on pages pages */
+  .ncademi-header #ncademi-nav a.active:focus-visible,
+  .ncademi-header #ncademi-nav a[style*="background: rgb(236, 142, 34)"]:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Main element - adjusted padding for 50px header */
+  #ncas-main.main-content {
+    padding: 50px 0 0 0 !important; /* Adjusted for 50px header */
+  }
+
+  /* Mobile responsiveness for pages pages */
+  @media (max-width: 768px) {
+    body {
+      padding-top: 50px !important; /* Adjusted for 50px nav bar height */
+    }
+
+    #ncas-header.ncademi-header,
+    .ncademi-header {
+      height: 50px !important; /* Constrained to nav bar height only */
+    }
+
+    .ncademi-header h1 {
+      display: none !important; /* Hide h1 on mobile pages pages too */
+    }
+
+    .ncademi-header #ncademi-nav {
+      height: 50px !important; /* Constrained height */
+    }
+
+    /* Responsive utility classes for pages pages */
+    .ncademi-mobile-header {
+      height: 50px !important;
+    }
+
+    .ncademi-mobile-nav {
+      height: 50px !important;
+    }
+
+    .ncademi-mobile-body {
+      padding-top: 50px !important;
+    }
+  }
+
+  /* Desktop responsive styles for pages pages */
+  .ncademi-desktop-header {
+    height: 50px !important;
+  }
+
+  .ncademi-desktop-nav {
+    height: 50px !important;
+  }
+
+  .ncademi-desktop-body {
+    padding-top: 50px !important;
+  }
+}

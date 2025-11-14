@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Canvas Dev Interceptor (Minimal)",
+  "version": "0.3.2",
+  "description": "Minimal DNR redirect: hardcoded Canvas targets → localhost template.",
+  "permissions": [
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "declarativeNetRequestFeedback",
+    "browsingData"
+  ],
+  "host_permissions": [
+    "*://instructure-uploads.s3.amazonaws.com/*",
+    "http://localhost:3000/*",
+    "https://localhost:3000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "CDI Minimal",
+    "default_popup": "popup.html"
+  }
+}
+
+

@@ -1,0 +1,37 @@
+# Cursor Global - Git Ignore
+# Secrets and credentials
+secrets/
+*.secret
+*.key
+*.pem
+*.p12
+
+# Environment files
+.env
+.env.*
+
+# Session data
+sessions/
+*.session
+
+# Logs
+*.log
+logs/
+
+# Node modules
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+~*
+projects/NCAS/NCAS1/network.txt

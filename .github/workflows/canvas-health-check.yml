@@ -1,0 +1,46 @@
+name: Canvas Health Check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    env:
+      CANVAS_API_TOKEN: ${{ secrets.CANVAS_API_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Run Canvas health check
+        run: node scripts/canvas-health-check.js
+
+      - name: Upload health artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-health-results
+          path: docs/health-results/latest.*
+
+      - name: Commit updated results
+        id: commit-results
+        run: |
+          if git status --porcelain docs/health-results | grep -q .; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add docs/health-results
+            git commit -m "Update health check results"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No changes to commit"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push changes
+        if: steps.commit-results.outputs.changed == 'true'
+        run: git push
+

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Optimization Test Page</title>
+  <!-- CSS will be injected via JavaScript -->
+</head>
+<body class="not-ncademi-excluded not-ncademi-admin-view">
+  <!-- Header structure -->
+  <header id="content-header" class="course-content-header">
+    <div class="ncademi-header-title">
+      <span class="header-text">NCADEMI Core Accessibility Skills</span>
+    </div>
+    <div class="ncademi-links-wrapper">
+      <nav id="ncademi-nav">
+        <a href="#start-here" id="nav-start-here">Start Here</a>
+        <a href="#core-skills" id="nav-core-skills" class="active">Core Skills</a>
+        <a href="#progress" id="nav-progress">Progress</a>
+        <a href="#feedback" id="nav-feedback">Feedback</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Skip link -->
+  <a href="#main-content" class="ncademi-skip-link">Skip to main content</a>
+
+  <!-- Main content wrapper -->
+  <div id="content-wrapper">
+    <div id="content" class="ic-Layout-contentMain">
+      <main id="ncas-main" class="main-content">
+        
+        <!-- Core Skills page structure -->
+        <div class="ncademi-core-skills-page">
+          <div class="custom-container">
+            <div class="custom-row">
+              <div class="link-container">
+                <a href="#quiz1" class="custom-link small" data-status="pending">
+                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23ccc'/%3E%3C/svg%3E" alt="Quiz 1">
+                  <span class="link-text">Quiz 1</span>
+                </a>
+              </div>
+              <div class="link-container">
+                <a href="#quiz2" class="custom-link large" data-status="active">
+                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23ccc'/%3E%3C/svg%3E" alt="Quiz 2">
+                  <span class="link-text">Quiz 2</span>
+                </a>
+              </div>
+              <div class="link-container">
+                <a href="#quiz3" class="custom-link small" data-status="done">
+                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23ccc'/%3E%3C/svg%3E" alt="Quiz 3">
+                  <span class="link-text">Quiz 3</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status key banner -->
+          <div class="ncademi-status-key-banner">
+            <span class="ncademi-status-key-label">Quiz status:</span>
+            <div class="ncademi-status-key-item">
+              <span class="ncademi-status-key-icon pending"></span>
+              <span class="ncademi-status-key-text">Pending</span>
+            </div>
+            <div class="ncademi-status-key-item">
+              <span class="ncademi-status-key-icon active"></span>
+              <span class="ncademi-status-key-text">Active</span>
+            </div>
+            <div class="ncademi-status-key-item">
+              <span class="ncademi-status-key-icon done"></span>
+              <span class="ncademi-status-key-text">Done</span>
+            </div>
+          </div>
+
+          <!-- Sign-in banner -->
+          <div class="ncademi-signin-banner">
+            <p class="ncademi-signin-banner-message">
+              Create a <a href="http://usucourses.instructure.com/">free Canvas account</a> and sign in to take quizzes and track your progress.
+            </p>
+          </div>
+        </div>
+
+        <!-- Grades/Progress page structure -->
+        <div class="ncademi-grades-page">
+          <h1 class="page-title">Your Progress</h1>
+          <table id="grades_summary" class="editable ic-Table ic-Table--hover-row ic-Table--grades-summary-table">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col" class="status">Status</th>
+                <th scope="col" class="assignment_score">Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="student_assignment">
+                <th class="title" scope="row">
+                  <a href="#assignment1">Assignment 1</a>
+                </th>
+                <td class="status ncademi-status" data-status="pending">
+                  <span class="ncademi-status-text">Pending</span>
+                </td>
+                <td class="assignment_score">
+                  <span class="grade">-</span>
+                </td>
+              </tr>
+              <tr class="student_assignment">
+                <th class="title" scope="row">
+                  <a href="#assignment2">Assignment 2</a>
+                </th>
+                <td class="status ncademi-status" data-status="active">
+                  <span class="ncademi-status-text">Active</span>
+                </td>
+                <td class="assignment_score">
+                  <span class="grade">5</span>
+                </td>
+              </tr>
+              <tr class="student_assignment">
+                <th class="title" scope="row">
+                  <a href="#assignment3">Assignment 3</a>
+                </th>
+                <td class="status ncademi-status" data-status="done">
+                  <span class="ncademi-status-text">Done</span>
+                </td>
+                <td class="assignment_score">
+                  <span class="grade">10</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Content with headings -->
+        <div class="content-section">
+          <h1>Main Heading</h1>
+          <p>Paragraph content</p>
+          
+          <section class="heading-section">
+            <h2>Section Heading</h2>
+            <p>Paragraph under h2</p>
+            <ul>
+              <li>List item 1</li>
+              <li>List item 2</li>
+            </ul>
+            
+            <section class="heading-section">
+              <h3>Subsection Heading</h3>
+              <p>Paragraph under h3</p>
+              
+              <section class="heading-section">
+                <h4>Sub-subsection Heading</h4>
+                <p>Paragraph under h4</p>
+              </section>
+            </section>
+          </section>
+
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100'%3E%3Crect width='200' height='100' fill='%23ddd'/%3E%3C/svg%3E" alt="Test image" class="centered">
+          
+          <a href="#quiz" class="quiz-button">Take Quiz</a>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Function to extract computed styles for comparison
+    window.extractComputedStyles = function() {
+      const selectors = [
+        'html',
+        'body',
+        '#content-header.course-content-header',
+        '#ncademi-nav',
+        '#ncademi-nav a',
+        '#ncademi-nav a.active',
+        '#ncademi-nav a:first-child',
+        '.ncademi-skip-link',
+        '#content-wrapper',
+        '.custom-link.small',
+        '.custom-link.large',
+        '.custom-link[data-status="pending"]',
+        '.custom-link[data-status="active"]',
+        '.custom-link[data-status="done"]',
+        '.ncademi-status-key-banner',
+        '.ncademi-signin-banner',
+        'table#grades_summary',
+        'table#grades_summary tbody tr td.status.ncademi-status',
+        'table#grades_summary tbody tr td.status.ncademi-status[data-status="pending"]',
+        'h1', 'h2', 'h3', 'h4',
+        '.heading-section > h2',
+        '.heading-section > h3',
+        '.heading-section > h4'
+      ];
+
+      const styles = {};
+      const properties = [
+        'display', 'position', 'width', 'height', 'margin', 'padding',
+        'color', 'background-color', 'font-size', 'font-weight', 'font-style',
+        'text-align', 'border', 'border-radius', 'outline', 'box-shadow',
+        'z-index', 'overflow', 'flex-direction', 'align-items', 'justify-content',
+        'max-width', 'min-width', 'margin-left', 'margin-right', 'padding-left', 'padding-right'
+      ];
+
+      selectors.forEach(selector => {
+        try {
+          const elements = document.querySelectorAll(selector);
+          if (elements.length > 0) {
+            styles[selector] = {};
+            elements.forEach((el, idx) => {
+              const computed = window.getComputedStyle(el);
+              const key = elements.length > 1 ? `${selector}[${idx}]` : selector;
+              styles[selector][key] = {};
+              properties.forEach(prop => {
+                const value = computed.getPropertyValue(prop);
+                if (value && value !== 'none' && value !== 'normal') {
+                  styles[selector][key][prop] = value;
+                }
+              });
+            });
+          }
+        } catch (e) {
+          console.warn(`Could not query selector: ${selector}`, e);
+        }
+      });
+
+      return styles;
+    };
+
+    // Function to compare two style objects with tolerance
+    window.compareStyles = function(original, optimized, tolerance = 0.01) {
+      const differences = [];
+      
+      function compareValues(orig, opt, path = '') {
+        if (typeof orig === 'object' && typeof opt === 'object') {
+          const allKeys = new Set([...Object.keys(orig), ...Object.keys(opt)]);
+          allKeys.forEach(key => {
+            if (!(key in orig)) {
+              differences.push({ path: `${path}.${key}`, type: 'added', value: opt[key] });
+            } else if (!(key in opt)) {
+              differences.push({ path: `${path}.${key}`, type: 'removed', value: orig[key] });
+            } else {
+              compareValues(orig[key], opt[key], `${path}.${key}`);
+            }
+          });
+        } else {
+          // Compare CSS values with tolerance for numeric differences
+          const origNum = parseFloat(orig);
+          const optNum = parseFloat(opt);
+          
+          if (!isNaN(origNum) && !isNaN(optNum)) {
+            // Numeric comparison with tolerance
+            if (Math.abs(origNum - optNum) > tolerance) {
+              differences.push({ path, type: 'changed', original: orig, optimized: opt });
+            }
+          } else if (orig !== opt) {
+            // String comparison
+            differences.push({ path, type: 'changed', original: orig, optimized: opt });
+          }
+        }
+      }
+
+      compareValues(original, optimized);
+      return differences;
+    };
+  </script>
+</body>
+</html>
+

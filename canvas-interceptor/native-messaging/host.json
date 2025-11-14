@@ -1,0 +1,11 @@
+{
+  "name": "com.canvas.dev.interceptor",
+  "description": "Helper to start/stop Canvas Dev Interceptor server",
+  "path": "C:\\Users\\A00288946\\cursor-global\\canvas-interceptor\\native-messaging\\start-server-helper.cmd",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://REPLACE_WITH_EXTENSION_ID/"
+  ]
+}
+
+

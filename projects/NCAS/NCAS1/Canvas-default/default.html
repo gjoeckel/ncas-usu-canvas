@@ -1,0 +1,117 @@
+<!--
+  Canvas baseline page content structure (without custom page JS/CSS)
+  Source reference: https://usucourses.instructure.com/courses/2836/pages/home
+
+  Notes:
+  - Outer Canvas shell (headers, nav, wrappers) is provided by Canvas and institution branding.
+  - Page body content follows this structure, which is rendered inside #wiki_page_show .user_content.
+  - DesignPLUS and institution CSS provide layout/visuals for the classes below.
+-->
+
+<header id="content-header" class="course-content-header"></header>
+
+<main id="course-main-content" class="course-main-content">
+    <section id="course-navigation" class="course-navigation-section">
+
+        <!-- Top row: 3 feature tiles (Start Here, About, Survey) -->
+        <div class="custom-container top-row">
+            <div class="link-container">
+                <a class="custom-link large" title="Feature A" href="#" data-course-type="wikiPages" data-published="true">
+                    <img id="feature-a" role="presentation" src="#" alt="" width="100%" height="100%" loading="lazy" />
+                    <span class="link-text">Feature A</span>
+                </a>
+            </div>
+            <div class="link-container">
+                <a class="custom-link large" title="Feature B" href="#" data-course-type="wikiPages" data-published="true">
+                    <img id="feature-b" role="presentation" src="#" alt="" width="100%" height="100%" loading="lazy" />
+                    <span class="link-text">Feature B</span>
+                </a>
+            </div>
+            <div class="link-container">
+                <a class="custom-link large" title="Feature C" href="#" data-course-type="wikiPages" data-published="true">
+                    <img id="feature-c" role="presentation" src="#" alt="" width="100%" height="100%" loading="lazy" />
+                    <span class="link-text">Feature C</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Course modules: 3 rows × 3 items (small icons + labels) -->
+        <div class="custom-container course-modules">
+            <div class="custom-row">
+                <div class="link-container">
+                    <a class="custom-link small" title="Module 1" href="#" data-course-type="wikiPages" data-published="true">
+                        <img id="mod-1" src="#" alt="Module 1" width="60" height="60" loading="lazy" />
+                        <span class="link-text">Module 1</span>
+                    </a>
+                </div>
+                <div class="link-container">
+                    <a class="custom-link small" title="Module 2" href="#" data-course-type="wikiPages" data-published="true">
+                        <img id="mod-2" src="#" alt="Module 2" width="60" height="60" loading="lazy" />
+                        <span class="link-text">Module 2</span>
+                    </a>
+                </div>
+                <div class="link-container">
+                    <a class="custom-link small" title="Module 3" href="#" data-course-type="wikiPages" data-published="true">
+                        <img id="mod-3" src="#" alt="Module 3" width="60" height="60" loading="lazy" />
+                        <span class="link-text">Module 3</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="custom-row">
+                <div class="link-container">
+                    <a class="custom-link small" title="Module 4" href="#" data-course-type="wikiPages" data-published="true">
+                        <img id="mod-4" src="#" alt="Module 4" width="60" height="60" loading="lazy" />
+                        <span class="link-text">Module 4</span>
+                    </a>
+                </div>
+                <div class="link-container">
+                    <a class="custom-link small" title="Module 5" href="#" data-course-type="wikiPages" data-published="true">
+                        <img id="mod-5" src="#" alt="Module 5" width="60" height="60" loading="lazy" />
+                        <span class="link-text">Module 5</span>
+                    </a>
+                </div>
+                <div class="link-container">
+                    <a class="custom-link small" title="Module 6" href="#" data-course-type="wikiPages" data-published="true">
+                        <img id="mod-6" src="#" alt="Module 6" width="60" height="60" loading="lazy" />
+                        <span class="link-text">Module 6</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="custom-row">
+                <div class="link-container">
+                    <a class="custom-link small" title="Module 7" href="#" data-course-type="wikiPages" data-published="true">
+                        <img id="mod-7" src="#" alt="Module 7" width="60" height="60" loading="lazy" />
+                        <span class="link-text">Module 7</span>
+                    </a>
+                </div>
+                <div class="link-container">
+                    <a class="custom-link small" title="Module 8" href="#" data-course-type="wikiPages" data-published="true">
+                        <img id="mod-8" src="#" alt="Module 8" width="60" height="60" loading="lazy" />
+                        <span class="link-text">Module 8</span>
+                    </a>
+                </div>
+                <div class="link-container">
+                    <a class="custom-link small" title="Module 9" href="#" data-course-type="wikiPages" data-published="true">
+                        <img id="mod-9" src="#" alt="Module 9" width="60" height="60" loading="lazy" />
+                        <span class="link-text">Module 9</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Key class semantics (from institution/DesignPLUS CSS):
+  - .custom-container: layout wrapper
+  - .top-row: 3-column featured links with .custom-link.large
+  - .course-modules: grid of module tiles organized by .custom-row
+  - .custom-row: row grouping (typically 3 items)
+  - .link-container: centers content; houses anchor and child elements
+  - .custom-link.large: full-bleed image tiles with 100% width/height images
+  - .custom-link.small: icon tiles with 60×60 images
+  - .link-text: label text under/next to the image
+-->
+
+

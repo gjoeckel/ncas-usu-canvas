@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Canvas Dev Interceptor Options</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 16px; }
+      label { display: block; margin-top: 12px; }
+      input[type=text] { width: 100%; padding: 6px; }
+      input[readonly] { border: none; outline: none; background: transparent; padding-left: 0; }
+      .row { margin-top: 10px; }
+      button { padding: 6px 10px; }
+    </style>
+  </head>
+  <body>
+    <h1>Canvas Dev Interceptor - Options</h1>
+    <p>Display-only settings for targets and local redirect paths.</p>
+    <h2>Targets (Remote S3 URLs)</h2>
+    <div>
+      <label>Current CSS Target URL</label>
+      <input id="currentCss" type="text" readonly />
+    </div>
+    
+    <div>
+      <label>Current Local CSS Path</label>
+      <input id="currentLocalCss" type="text" readonly />
+    </div>
+    <div style="margin-top:10px"></div>
+    <div>
+      <label>Current JS Target URL</label>
+      <input id="currentJs" type="text" readonly />
+    </div>
+    
+    <div>
+      <label>Current Local JS Path</label>
+      <input id="currentLocalJs" type="text" readonly />
+    </div>
+    
+
+    <hr />
+    <h2>Local Redirect Paths</h2>
+
+    
+    <script src="options.js"></script>
+  </body>
+  </html>
+
+

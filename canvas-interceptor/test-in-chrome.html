@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Localhost HTTPS</title>
+</head>
+<body>
+  <h1>Testing Localhost HTTPS</h1>
+  <button id="testBtn">Test Connection</button>
+  <pre id="output"></pre>
+
+  <script>
+    document.getElementById('testBtn').onclick = async () => {
+      const output = document.getElementById('output');
+      output.textContent = 'Testing...';
+      
+      try {
+        const res = await fetch('https://localhost:3000/health');
+        const data = await res.json();
+        output.textContent = 'SUCCESS!\n' + JSON.stringify(data, null, 2);
+      } catch (e) {
+        output.textContent = 'ERROR:\n' + e.message + '\n\n' + e.stack;
+      }
+    };
+  </script>
+</body>
+</html>
+

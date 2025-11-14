@@ -1,0 +1,120 @@
+/*
+  Canvas baseline CSS context for page content
+  Source reference: https://usucourses.instructure.com/courses/2836/pages/home
+
+  Baseline styles are provided by:
+  - Canvas brandable bundles:
+    • common-d80187c278.css
+    • wiki_page-64d84d7ffb.css
+  - Institution/global CSS:
+    • catalog_canvas_global.css
+    • inst_theme_overrides.css
+  - DesignPLUS/CIDI tools:
+    • content.css
+    • editor.css
+    • themes.css
+
+  Fonts:
+  - Lato (various weights) preloaded via CloudFront
+
+  Key class semantics (used by page content):
+  - .custom-container: section wrapper providing grid/spacing
+  - .top-row: 3 featured tiles using .custom-link.large with 100% width/height images
+  - .course-modules: container for module tiles (3 rows × 3 items)
+  - .custom-row: horizontal grouping of three .link-container items
+  - .link-container: centers/blocks each tile (image + label)
+  - .custom-link.large: full-bleed tile links (image fills tile, text label below)
+  - .custom-link.small: small icon tiles (60×60 img + label)
+  - .link-text: label accompanying each tile
+
+  Accessibility patterns observed:
+  - Decorative images use role="presentation" and empty alt where appropriate
+  - Icon images for modules use alt with short descriptive text
+  - Images commonly include loading="lazy"
+
+  Do NOT override these globally in ncas2.css; prefer additive, scoped refinements.
+*/
+
+/* Placeholder selectors (no-op): document for reference only */
+.custom-container {}
+.top-row {}
+.course-modules {}
+.custom-row {}
+.link-container {}
+.custom-link.large {}
+.custom-link.small {}
+.link-text {}
+
+
+.btn,.Button,.ui-button {
+  background: #f2f4f4;
+  color: #273540;
+  border: 1px solid;
+  border-color: #e8eaec;
+  border-radius: 3px;
+  transition: background-color .2s ease-in-out;
+  display: inline-block;
+  position: relative;
+  padding: 8px 14px;
+  margin-bottom: 0;
+  font-size: 16px;
+  font-size: 1rem;
+  line-height: 22px;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  text-decoration: none;
+  overflow: hidden;
+  text-shadow: none;
+  -webkit-user-select: none;
+  user-select: none;
+  min-width: 24px;
+  min-height: 24px
+}
+
+.btn:focus,.Button:focus,.ui-button:focus {
+  color: #273540
+}
+
+.btn:hover,.Button:hover,.ui-button:hover {
+  background: #e4e8e8;
+  color: #273540
+}
+
+.btn:hover.ui-state-hover,.Button:hover.ui-state-hover,.ui-button:hover.ui-state-hover {
+  background: #e4e8e8;
+  color: #273540;
+  border-color: #c9d1d1
+}
+
+.btn.active,.btn.Button--active,.btn:active,.Button.active,.active.ui-button,.Button.Button--active,.Button--active.ui-button,.ui-button.ui-state-active:hover,.ui-button.ui-state-active,.ui-progressbar .ui-button.ui-widget-header,.Button:active,.ui-button:active {
+  box-shadow: none
+}
+
+.btn.active,.btn.Button--active,.Button.active,.active.ui-button,.Button.Button--active,.Button--active.ui-button,.ui-button.ui-state-active:hover,.ui-button.ui-state-active,.ui-progressbar .ui-button.ui-widget-header {
+  background: #5e6f6f;
+  border-color: #475454;
+  color: #fff
+}
+
+.btn:focus,.Button:focus,.ui-button:focus {
+  box-shadow: inset 0 0 0 2px var(--ic-link-color)
+}
+
+.btn.ui-state-focus.ui-state-active:focus,.ui-progressbar .btn.ui-state-focus.ui-widget-header:focus,.Button.ui-state-focus.ui-state-active:focus,.ui-state-focus.ui-state-active.ui-button:focus,.ui-progressbar .Button.ui-state-focus.ui-widget-header:focus,.ui-progressbar .ui-state-focus.ui-widget-header.ui-button:focus {
+  box-shadow: inset 0 0 0 2px #fff
+}
+
+.btn:active,.Button:active,.ui-button:active {
+  background: #dce1e1
+}
+
+.btn:focus,.btn--focus,.Button:focus,.ui-button:focus,.Button--focus,.ui-button.ui-state-focus {
+  text-decoration: none;
+  outline: none;
+  outline: none
+}
+
+.btn:hover,.btn--hover,.Button:hover,.ui-button:hover,.Button--hover,.ui-button.ui-state-hover {
+  text-decoration: none
+}

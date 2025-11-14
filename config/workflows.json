@@ -1,0 +1,126 @@
+{
+  "ai-start": {
+    "description": "Load AI session context and initialize environment",
+    "commands": [
+      "bash ~/cursor-global/scripts/session-start.sh"
+    ],
+    "auto_approve": true,
+    "timeout": 30000,
+    "on_error": "continue"
+  },
+  "ai-end": {
+    "description": "Save session context and generate changelog",
+    "commands": [
+      "bash ~/cursor-global/scripts/session-end.sh"
+    ],
+    "auto_approve": true,
+    "timeout": 20000,
+    "on_error": "continue"
+  },
+  "ai-update": {
+    "description": "Record mid-session progress",
+    "commands": [
+      "bash ~/cursor-global/scripts/session-update.sh"
+    ],
+    "auto_approve": true,
+    "timeout": 20000,
+    "on_error": "continue"
+  },
+  "ai-repeat": {
+    "description": "Reload session context",
+    "commands": [
+      "bash ~/cursor-global/scripts/session-start.sh"
+    ],
+    "auto_approve": true,
+    "timeout": 20000,
+    "on_error": "continue"
+  },
+  "ai-clean": {
+    "description": "Clean temporary files and logs (works in any project)",
+    "commands": [
+      "rm -f logs/*.log 2>/dev/null || true",
+      "rm -rf node_modules/.cache 2>/dev/null || true",
+      "find . -name '.DS_Store' -delete 2>/dev/null || true",
+      "echo '✅ Project cleaned'"
+    ],
+    "auto_approve": true,
+    "timeout": 10000,
+    "on_error": "continue"
+  },
+  "ai-compress": {
+    "description": "Compress session context into summary",
+    "commands": [
+      "bash ~/cursor-global/scripts/compress-context.sh"
+    ],
+    "auto_approve": true,
+    "timeout": 30000,
+    "on_error": "continue"
+  },
+  "mcp-health": {
+    "description": "Check MCP server health and status",
+    "commands": [
+      "bash ~/cursor-global/scripts/check-mcp-health.sh"
+    ],
+    "auto_approve": true,
+    "timeout": 15000,
+    "on_error": "continue"
+  },
+  "mcp-restart": {
+    "description": "Restart all MCP servers",
+    "commands": [
+      "bash ~/cursor-global/scripts/restart-mcp-servers.sh"
+    ],
+    "auto_approve": true,
+    "timeout": 30000,
+    "on_error": "continue"
+  },
+  "ai-local-commit": {
+    "description": "Update changelog and commit all changes to current local branch",
+    "commands": [
+      "bash ~/cursor-global/scripts/git-local-commit.sh"
+    ],
+    "auto_approve": true,
+    "timeout": 20000,
+    "on_error": "continue"
+  },
+  "ai-local-merge": {
+    "description": "Merge current branch to main, auto-updates changelog (handles conflicts gracefully)",
+    "commands": [
+      "bash ~/cursor-global/scripts/git-local-merge.sh"
+    ],
+    "auto_approve": true,
+    "timeout": 30000,
+    "on_error": "continue"
+  },
+  "ai-merge-finalize": {
+    "description": "Finalize merge after manual conflict resolution (updates changelog, run from main)",
+    "commands": [
+      "bash ~/cursor-global/scripts/git-local-merge.sh --finalize"
+    ],
+    "auto_approve": true,
+    "timeout": 10000,
+    "on_error": "continue"
+  },
+  "ai-docs-sync": {
+    "description": "Generate project workflows.md from global and project configs",
+    "commands": [
+      "bash ~/cursor-global/scripts/generate-workflows-doc.sh"
+    ],
+    "auto_approve": true,
+    "timeout": 10000,
+    "on_error": "continue"
+  },
+  "yolo-full": {
+    "description": "Verify YOLO setup, then stage, commit, and push all changes to current branch",
+    "commands": [
+      "bash ~/cursor-global/scripts/verify-yolo-setup.sh",
+      "echo '🚀 YOLO verification complete. Proceeding with git operations...'",
+      "git add -A",
+      "git commit -m \"Automated commit: $(date +%Y-%m-%d-%H%M%S)\"",
+      "git push"
+    ],
+    "auto_approve": true,
+    "timeout": 60000,
+    "on_error": "stop"
+  }
+}

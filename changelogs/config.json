@@ -1,0 +1,8 @@
+{
+  "version": "1.0.0",
+  "maxSessions": 100,
+  "maxAge": 30,
+  "compressionEnabled": true,
+  "mcpIntegration": true,
+  "srdFocus": true
+}

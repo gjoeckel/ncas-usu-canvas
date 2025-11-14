@@ -1,0 +1,10 @@
+eamodio.gitlens
+esbenp.prettier-vscode
+github.vscode-pull-request-github
+mads-hartmann.bash-ide-vscode
+mhutchie.git-graph
+ms-azuretools.vscode-containers
+ms-azuretools.vscode-docker
+timonwong.shellcheck
+usernamehw.errorlens
+yzhang.markdown-all-in-one

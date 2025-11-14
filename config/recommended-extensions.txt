@@ -1,0 +1,22 @@
+# Cursor IDE - Essential Extensions
+# Install all: cat recommended-extensions.txt | grep -v '^#' | xargs -L 1 cursor --install-extension
+
+# Git & GitHub (Highly Recommended)
+GitHub.vscode-pull-request-github
+eamodio.gitlens
+mhutchie.git-graph
+
+# Markdown (For Documentation)
+yzhang.markdown-all-in-one
+
+# Shell Scripting (For Your 13 Bash Scripts!)
+timonwong.shellcheck
+mads-hartmann.bash-ide-vscode
+
+# Code Quality
+esbenp.prettier-vscode
+usernamehw.errorlens
+
+# Already Installed
+# ms-azuretools.vscode-docker
+# ms-azuretools.vscode-containers

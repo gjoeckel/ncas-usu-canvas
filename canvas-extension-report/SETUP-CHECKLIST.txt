@@ -1,0 +1,172 @@
+CANVAS INTERCEPTOR - SETUP CHECKLIST
+====================================
+
+Print this out or keep it open while setting up!
+
+PREREQUISITES:
+□ Node.js installed
+□ npm installed  
+□ Chrome browser
+□ Canvas course page URL ready
+□ Local CSS/JS files created
+
+PART 1: SERVER SETUP
+--------------------
+□ Navigate to canvas-interceptor-mcp directory
+□ Run: npm install
+□ Open file-mappings.json
+□ Update URLs to match YOUR Canvas attachment URLs
+    How: Open Canvas page > DevTools > Network > Find your files
+□ Update localPath to point to YOUR local files
+    Example: "../projects/NCAS/NCAS1/ncas2.css"
+□ Verify local files exist at those paths
+□ Run: npm start
+□ See "Server running on: http://localhost:3000"
+□ Test health endpoint:
+    curl http://localhost:3000/health
+    OR visit: http://localhost:3000/health in browser
+□ Should see: {"status":"ok",...}
+
+PART 2: EXTENSION SETUP  
+-----------------------
+□ Create new folder: canvas-interceptor-extension
+□ Copy these files from outputs folder into extension folder:
+    □ manifest.json
+    □ rules.json
+    □ background.js
+    □ popup.html
+    □ popup.js
+□ Generate icons:
+    Option A: Run create-icons.sh (requires ImageMagick)
+    Option B: Use online SVG to PNG converter with icon.svg
+    Option C: Create any 16x16, 48x48, 128x128 PNG images
+□ Copy icon files to extension folder:
+    □ icon16.png
+    □ icon48.png
+    □ icon128.png
+
+PART 3: SYNC RULES WITH MAPPINGS
+---------------------------------
+□ From canvas-interceptor-mcp directory, run:
+    node generate-rules.js
+□ Copy the generated rules.json to extension folder
+    (Overwrites the template rules.json)
+□ Open rules.json and verify:
+    □ URLs match YOUR Canvas URLs
+    □ Redirect URLs point to localhost:3000
+
+PART 4: INSTALL EXTENSION
+-------------------------
+□ Open Chrome
+□ Go to: chrome://extensions/
+□ Enable "Developer mode" (toggle in top right)
+□ Click "Load unpacked"
+□ Select your canvas-interceptor-extension folder
+□ Extension appears in toolbar
+□ Click extension icon
+□ See green "✓ Server running" status
+    If red "✗ Server offline":
+    → Go back to Part 1, ensure server is running
+
+PART 5: CONFIGURE CANVAS FOR TESTING
+------------------------------------
+□ Open your Canvas course page
+□ Open DevTools: F12
+□ Go to Network tab
+□ Check "Disable cache" checkbox
+□ Keep DevTools open
+
+PART 6: TEST INTERCEPTION
+-------------------------
+□ Hard reload Canvas page: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)
+□ In Network tab, filter by your filename (e.g., "ncas1")
+□ Click on your CSS file
+□ Check "Request URL":
+    Should start with "http://localhost:3000"
+□ Check "Response Headers":
+    Should include "x-intercepted-by: Canvas-MCP-Interceptor"
+□ Go back to server console
+□ Should see lines like:
+    [INTERCEPTED] https://instructure-uploads.s3.amazonaws.com/...
+    [SERVED] /path/to/your/local/file.css
+
+PART 7: VERIFY LOCAL FILES ARE LOADING
+--------------------------------------
+□ Add a unique comment to top of your local CSS file:
+    /* TESTING LOCAL VERSION 123 */
+□ Save the file
+□ Server console shows: [FILE CHANGED]
+□ Hard reload Canvas: Ctrl+Shift+R
+□ In DevTools, click your CSS file
+□ Click "Response" tab
+□ See your unique comment at the top
+    If you see it: SUCCESS! ✓
+    If you don't see it: See TROUBLESHOOTING section
+
+TROUBLESHOOTING FAILURES:
+------------------------
+
+Extension shows "Server offline":
+□ Ensure npm start is running
+□ Check http://localhost:3000/health in browser
+□ Restart server if needed
+
+Files loading from S3 instead of localhost:
+□ Hard reload: Ctrl+Shift+R (NOT regular F5)
+□ Ensure "Disable cache" is checked in DevTools
+□ Click extension icon > "Clear Canvas Cache"
+□ Reload extension: chrome://extensions/ > reload icon
+□ Check that URLs in rules.json exactly match Network tab URLs
+
+Server shows 404 errors:
+□ Check file paths in file-mappings.json
+□ Use absolute paths or correct relative paths
+□ Verify files exist: ls -la /path/to/your/files
+
+Extension never triggers:
+□ Open chrome://extensions/
+□ Click "service worker" under Canvas Interceptor
+□ Should see log messages
+□ If console empty, extension isn't loading
+□ Try removing and reinstalling extension
+
+Still not working:
+□ Read TROUBLESHOOTING.txt (comprehensive guide)
+□ Use curl to test server directly:
+    curl "http://localhost:3000/?url=YOUR_FULL_CANVAS_URL"
+□ Try DevTools Local Overrides method (see README.md)
+
+SUCCESS INDICATORS:
+------------------
+
+You've succeeded when ALL of these are true:
+✓ Server console shows [INTERCEPTED] messages
+✓ Network tab shows requests to localhost:3000
+✓ Response headers include X-Intercepted-By
+✓ Your local file content appears in Response tab
+✓ Changes to local files appear after hard reload
+✓ Extension popup shows green "Server running"
+
+DAILY USE (After Setup):
+------------------------
+□ Start server: npm start
+□ Edit local files
+□ Save changes
+□ Hard reload Canvas: Ctrl+Shift+R
+□ See changes instantly
+
+Need to update URLs or paths?
+□ Update file-mappings.json
+□ Run: node generate-rules.js
+□ Copy new rules.json to extension folder
+□ Reload extension in chrome://extensions/
+□ Hard reload Canvas page
+
+COMPLETION:
+----------
+If you checked all boxes and see success indicators, you're done!
+Your Canvas development environment is now set up.
+
+If not, see TROUBLESHOOTING.txt for detailed help.
+
+Happy developing! 🎉

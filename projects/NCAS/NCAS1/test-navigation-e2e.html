@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NCAS Navigation E2E Tests</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .test-section h2 {
+      margin-top: 0;
+      color: #025191;
+    }
+    .test-result {
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 3px;
+    }
+    .test-result.pass {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .test-result.fail {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .test-result.info {
+      background-color: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    .test-summary {
+      font-size: 18px;
+      font-weight: bold;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+    .test-summary.pass {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .test-summary.fail {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      background-color: #025191;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #033d6b;
+    }
+    #test-results {
+      margin-top: 20px;
+    }
+    .test-detail {
+      font-family: monospace;
+      font-size: 12px;
+      margin-left: 20px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>NCAS Navigation E2E Test Suite</h1>
+  <p>This test suite validates the navigation bar injection and visual shift prevention during page navigation.</p>
+  
+  <div class="test-section">
+    <h2>Test Controls</h2>
+    <button onclick="runAllTests()">Run All Tests</button>
+    <button onclick="runHeaderTests()">Test Header Structure</button>
+    <button onclick="runNavigationTests()">Test Navigation</button>
+    <button onclick="runShiftPreventionTests()">Test Visual Shift Prevention</button>
+    <button onclick="clearResults()">Clear Results</button>
+  </div>
+
+  <div id="test-results"></div>
+
+  <script>
+    // Test results storage
+    let testResults = {
+      total: 0,
+      passed: 0,
+      failed: 0,
+      details: []
+    };
+
+    function logTest(testName, passed, message, details = null) {
+      testResults.total++;
+      if (passed) {
+        testResults.passed++;
+      } else {
+        testResults.failed++;
+      }
+      
+      testResults.details.push({
+        name: testName,
+        passed,
+        message,
+        details
+      });
+
+      const resultDiv = document.createElement('div');
+      resultDiv.className = `test-result ${passed ? 'pass' : 'fail'}`;
+      resultDiv.innerHTML = `
+        <strong>${passed ? '✅ PASS' : '❌ FAIL'}:</strong> ${testName}<br>
+        <span>${message}</span>
+        ${details ? `<div class="test-detail">${details}</div>` : ''}
+      `;
+      
+      document.getElementById('test-results').appendChild(resultDiv);
+    }
+
+    function logInfo(message) {
+      const resultDiv = document.createElement('div');
+      resultDiv.className = 'test-result info';
+      resultDiv.innerHTML = `<strong>ℹ️ INFO:</strong> ${message}`;
+      document.getElementById('test-results').appendChild(resultDiv);
+    }
+
+    function clearResults() {
+      testResults = { total: 0, passed: 0, failed: 0, details: [] };
+      document.getElementById('test-results').innerHTML = '';
+    }
+
+    function showSummary() {
+      const summaryDiv = document.createElement('div');
+      summaryDiv.className = `test-summary ${testResults.failed === 0 ? 'pass' : 'fail'}`;
+      summaryDiv.innerHTML = `
+        <strong>Test Summary:</strong><br>
+        Total: ${testResults.total} | Passed: ${testResults.passed} | Failed: ${testResults.failed}
+      `;
+      document.getElementById('test-results').appendChild(summaryDiv);
+    }
+
+    // Test: Header Structure
+    function testHeaderStructure() {
+      logInfo('Testing header structure...');
+      
+      const header = document.querySelector('#content-header.course-content-header');
+      if (!header) {
+        logTest('Header Exists', false, 'Header element not found', 'Expected #content-header.course-content-header');
+        return false;
+      }
+      logTest('Header Exists', true, 'Header element found');
+
+      const wrapper = header.querySelector('.ncademi-header-wrapper');
+      if (!wrapper) {
+        logTest('Header Wrapper Exists', false, 'Wrapper element not found', 'Expected .ncademi-header-wrapper');
+        return false;
+      }
+      logTest('Header Wrapper Exists', true, 'Wrapper element found');
+
+      const headerTitle = wrapper.querySelector('.ncademi-header-title');
+      if (!headerTitle) {
+        logTest('Header Title Exists', false, 'Title element not found', 'Expected .ncademi-header-title');
+        return false;
+      }
+      logTest('Header Title Exists', true, 'Title element found');
+
+      const headerText = headerTitle.querySelector('.header-text');
+      if (!headerText) {
+        logTest('Header Text Exists', false, 'Text element not found', 'Expected .header-text');
+        return false;
+      }
+      logTest('Header Text Exists', true, 'Text element found');
+
+      const nav = wrapper.querySelector('#ncademi-nav');
+      if (!nav) {
+        logTest('Navigation Exists', false, 'Nav element not found', 'Expected #ncademi-nav');
+        return false;
+      }
+      logTest('Navigation Exists', true, 'Nav element found');
+
+      // Check header position
+      const isFirstChild = header === document.body.firstChild;
+      logTest('Header Position', isFirstChild, 
+        isFirstChild ? 'Header is first child of body' : 'Header is not first child of body',
+        `Header position: ${isFirstChild ? 'correct' : 'incorrect'}`);
+
+      return true;
+    }
+
+    // Test: Navigation Links
+    function testNavigationLinks() {
+      logInfo('Testing navigation links...');
+      
+      const nav = document.querySelector('#ncademi-nav');
+      if (!nav) {
+        logTest('Nav Links Exist', false, 'Nav container not found');
+        return false;
+      }
+
+      const links = nav.querySelectorAll('a');
+      const expectedLinks = ['Start Here', 'Core Skills', 'Progress', 'Feedback'];
+      
+      if (links.length !== expectedLinks.length) {
+        logTest('Correct Number of Links', false, 
+          `Expected ${expectedLinks.length} links, found ${links.length}`,
+          `Found: ${Array.from(links).map(l => l.textContent).join(', ')}`);
+        return false;
+      }
+      logTest('Correct Number of Links', true, `Found ${links.length} navigation links`);
+
+      // Check each link
+      expectedLinks.forEach((expectedText, index) => {
+        const link = links[index];
+        const hasCorrectText = link && link.textContent.trim() === expectedText;
+        logTest(`Link "${expectedText}"`, hasCorrectText,
+          hasCorrectText ? `Link "${expectedText}" found` : `Link "${expectedText}" not found or incorrect`,
+          link ? `Found: "${link.textContent.trim()}"` : 'Link not found');
+      });
+
+      return true;
+    }
+
+    // Test: Active State
+    function testActiveState() {
+      logInfo('Testing active state...');
+      
+      const nav = document.querySelector('#ncademi-nav');
+      if (!nav) return false;
+
+      const links = nav.querySelectorAll('a');
+      const activeLinks = Array.from(links).filter(link => link.classList.contains('active'));
+      
+      if (activeLinks.length === 0) {
+        logTest('Active Link Exists', false, 'No active link found', 'Expected one link to have .active class');
+        return false;
+      }
+      
+      if (activeLinks.length > 1) {
+        logTest('Single Active Link', false, 
+          `Multiple active links found (${activeLinks.length})`, 
+          'Expected only one active link');
+        return false;
+      }
+      
+      logTest('Active Link Exists', true, 
+        `Active link found: "${activeLinks[0].textContent.trim()}"`);
+      
+      return true;
+    }
+
+    // Test: Header Persistence (simulated)
+    function testHeaderPersistence() {
+      logInfo('Testing header persistence logic...');
+      
+      const header = document.querySelector('#content-header');
+      if (!header) {
+        logTest('Header Persistence Check', false, 'No header to test');
+        return false;
+      }
+
+      // Simulate checking if header exists in correct position
+      const isCorrectPosition = header.parentNode === document.body && 
+                                header === document.body.firstChild;
+      
+      logTest('Header Persistence Check', isCorrectPosition,
+        isCorrectPosition ? 'Header is in correct position for persistence' : 'Header is not in correct position',
+        `Parent: ${header.parentNode.tagName}, Is first child: ${header === document.body.firstChild}`);
+
+      // Check if wrapper exists (needed for updateExistingHeader)
+      const wrapper = header.querySelector('.ncademi-header-wrapper');
+      const hasWrapper = wrapper !== null;
+      logTest('Wrapper Structure Check', hasWrapper,
+        hasWrapper ? 'Wrapper structure exists for updates' : 'Wrapper structure missing',
+        'Wrapper needed for updateExistingHeader to work');
+
+      return true;
+    }
+
+    // Test: Responsive Classes
+    function testResponsiveClasses() {
+      logInfo('Testing responsive classes...');
+      
+      const header = document.querySelector('#content-header');
+      if (!header) return false;
+
+      const isMobile = window.innerWidth <= 850;
+      const hasMobileClass = header.classList.contains('ncademi-mobile-header');
+      const hasDesktopClass = header.classList.contains('ncademi-desktop-header');
+      
+      if (isMobile) {
+        logTest('Mobile Responsive Class', hasMobileClass,
+          hasMobileClass ? 'Mobile class applied correctly' : 'Mobile class not applied',
+          `Viewport: ${window.innerWidth}px, Expected: mobile class`);
+      } else {
+        logTest('Desktop Responsive Class', hasDesktopClass,
+          hasDesktopClass ? 'Desktop class applied correctly' : 'Desktop class not applied',
+          `Viewport: ${window.innerWidth}px, Expected: desktop class`);
+      }
+
+      return true;
+    }
+
+    // Test: Visual Shift Prevention
+    function testVisualShiftPrevention() {
+      logInfo('Testing visual shift prevention...');
+      
+      const header = document.querySelector('#content-header');
+      if (!header) {
+        logTest('Header Stability', false, 'No header found');
+        return false;
+      }
+
+      // Check CSS properties that prevent shifts
+      const computedStyle = window.getComputedStyle(header);
+      const hasMinHeight = computedStyle.minHeight !== '0px' && computedStyle.minHeight !== 'auto';
+      logTest('Header Min-Height', hasMinHeight,
+        hasMinHeight ? 'Min-height set to prevent collapse' : 'Min-height not set',
+        `Min-height: ${computedStyle.minHeight}`);
+
+      const hasContain = computedStyle.contain.includes('layout') || computedStyle.contain.includes('style');
+      logTest('CSS Contain Property', hasContain,
+        hasContain ? 'Contain property set to prevent layout shifts' : 'Contain property not set',
+        `Contain: ${computedStyle.contain || 'none'}`);
+
+      // Check wrapper structure
+      const wrapper = header.querySelector('.ncademi-header-wrapper');
+      if (wrapper) {
+        const wrapperStyle = window.getComputedStyle(wrapper);
+        const wrapperHasMinHeight = wrapperStyle.minHeight !== '0px' && wrapperStyle.minHeight !== 'auto';
+        logTest('Wrapper Min-Height', wrapperHasMinHeight,
+          wrapperHasMinHeight ? 'Wrapper min-height set' : 'Wrapper min-height not set',
+          `Min-height: ${wrapperStyle.minHeight}`);
+      }
+
+      return true;
+    }
+
+    // Test: Progress Page Specific
+    function testProgressPageSpecific() {
+      logInfo('Testing Progress page specific elements...');
+      
+      const currentPath = window.location.pathname;
+      const isProgressPage = currentPath.includes('/grades');
+      
+      if (!isProgressPage) {
+        logInfo('Not on Progress page, skipping Progress-specific tests');
+        return true;
+      }
+
+      // Check for page title
+      const pageTitle = document.querySelector('h1.page-title');
+      logTest('Progress Page Title', pageTitle !== null,
+        pageTitle ? 'Page title "Progress" found' : 'Page title not found',
+        pageTitle ? `Text: "${pageTitle.textContent}"` : 'Expected h1.page-title');
+
+      // Check that Canvas heading is hidden
+      const canvasHeading = document.querySelector('.ic-Action-header__Heading, h1.ic-Action-header__Heading');
+      if (canvasHeading) {
+        const isHidden = window.getComputedStyle(canvasHeading).display === 'none';
+        logTest('Canvas Heading Hidden', isHidden,
+          isHidden ? 'Canvas heading is hidden' : 'Canvas heading is visible',
+          'Expected Canvas heading to be hidden');
+      }
+
+      // Check for grades table
+      const gradesTable = document.querySelector('table#grades_summary');
+      logTest('Grades Table Exists', gradesTable !== null,
+        gradesTable ? 'Grades table found' : 'Grades table not found',
+        'Expected table#grades_summary');
+
+      return true;
+    }
+
+    // Test: Navigation Listener Setup
+    function testNavigationListener() {
+      logInfo('Testing navigation listener setup...');
+      
+      // Check if Backbone is available (would be in Canvas)
+      const hasBackbone = typeof window.Backbone !== 'undefined' && 
+                         window.Backbone.history;
+      
+      if (hasBackbone) {
+        const isWrapped = window.Backbone.history.navigate._ncademiWrapped === true;
+        logTest('Navigation Listener Wrapped', isWrapped,
+          isWrapped ? 'Backbone navigation is wrapped' : 'Backbone navigation not wrapped',
+          'Navigation listener should wrap Backbone.history.navigate');
+      } else {
+        logInfo('Backbone not available (expected in test environment)');
+      }
+
+      // Check if listener flags are set
+      const listenerSet = window.ncademiNavigationListenerSet === true;
+      logTest('Navigation Listener Set', listenerSet,
+        listenerSet ? 'Navigation listener flag is set' : 'Navigation listener flag not set',
+        'Expected window.ncademiNavigationListenerSet === true');
+
+      return true;
+    }
+
+    // Run all tests
+    function runAllTests() {
+      clearResults();
+      logInfo('=== Starting E2E Test Suite ===');
+      
+      testHeaderStructure();
+      testNavigationLinks();
+      testActiveState();
+      testHeaderPersistence();
+      testResponsiveClasses();
+      testVisualShiftPrevention();
+      testProgressPageSpecific();
+      testNavigationListener();
+      
+      showSummary();
+      logInfo('=== Test Suite Complete ===');
+    }
+
+    function runHeaderTests() {
+      clearResults();
+      logInfo('=== Running Header Structure Tests ===');
+      testHeaderStructure();
+      testNavigationLinks();
+      testHeaderPersistence();
+      showSummary();
+    }
+
+    function runNavigationTests() {
+      clearResults();
+      logInfo('=== Running Navigation Tests ===');
+      testNavigationLinks();
+      testActiveState();
+      testNavigationListener();
+      showSummary();
+    }
+
+    function runShiftPreventionTests() {
+      clearResults();
+      logInfo('=== Running Visual Shift Prevention Tests ===');
+      testHeaderPersistence();
+      testVisualShiftPrevention();
+      testResponsiveClasses();
+      showSummary();
+    }
+
+    // Auto-run tests on load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        logInfo('Page loaded. Run tests manually using the buttons above.');
+        logInfo('Note: Full E2E tests require Canvas environment. Run these in browser console on actual Canvas pages.');
+      }, 1000);
+    });
+  </script>
+
+  <div class="test-section">
+    <h2>Manual Test Instructions</h2>
+    <p><strong>To test visual shift prevention:</strong></p>
+    <ol>
+      <li>Open browser console on a Canvas course page</li>
+      <li>Navigate between pages using the nav links</li>
+      <li>Watch for any visual shifts in the header or page content</li>
+      <li>Check console logs for navigation events</li>
+    </ol>
+    <p><strong>Expected behavior:</strong></p>
+    <ul>
+      <li>Header should remain visible during navigation (no removal/recreation)</li>
+      <li>Active state should update smoothly</li>
+      <li>No flickering or jumping of header or page content</li>
+      <li>Progress page should inject h1.page-title without shift</li>
+    </ul>
+  </div>
+
+  <div class="test-section">
+    <h2>Browser Console Test Functions</h2>
+    <p>Copy and paste these into the browser console on a Canvas page:</p>
+    <pre style="background: #f5f5f5; padding: 15px; border-radius: 3px; overflow-x: auto;">
+// Test 1: Check header structure
+(function() {
+  const header = document.querySelector('#content-header');
+  const wrapper = header?.querySelector('.ncademi-header-wrapper');
+  const title = wrapper?.querySelector('.ncademi-header-title');
+  const nav = wrapper?.querySelector('#ncademi-nav');
+  console.log('Header Structure:', {
+    header: !!header,
+    wrapper: !!wrapper,
+    title: !!title,
+    nav: !!nav,
+    position: header === document.body.firstChild ? 'correct' : 'incorrect'
+  });
+})();
+
+// Test 2: Monitor navigation events
+(function() {
+  let navCount = 0;
+  const originalNavigate = window.Backbone?.history?.navigate;
+  if (originalNavigate && !originalNavigate._ncademiWrapped) {
+    window.Backbone.history.navigate = function(...args) {
+      navCount++;
+      console.log(`Navigation #${navCount}:`, args[0]);
+      return originalNavigate.apply(this, args);
+    };
+    console.log('Navigation monitoring enabled');
+  }
+})();
+
+// Test 3: Test visual shift prevention
+(function() {
+  const header = document.querySelector('#content-header');
+  if (!header) {
+    console.error('Header not found');
+    return;
+  }
+  
+  const rectBefore = header.getBoundingClientRect();
+  console.log('Header position before navigation:', rectBefore);
+  
+  // Navigate and check
+  setTimeout(() => {
+    const rectAfter = header.getBoundingClientRect();
+    console.log('Header position after navigation:', rectAfter);
+    const shifted = rectBefore.top !== rectAfter.top || rectBefore.left !== rectAfter.left;
+    console.log(shifted ? '❌ SHIFT DETECTED' : '✅ NO SHIFT');
+  }, 2000);
+})();
+    </pre>
+  </div>
+</body>
+</html>
