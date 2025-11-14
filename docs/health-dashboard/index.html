@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Canvas Health Dashboard</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 2rem;
+        color: #0f2439;
+      }
+      .status-pass {
+        color: #1c7c54;
+        font-weight: 600;
+      }
+      .status-fail {
+        color: #c0392b;
+        font-weight: 600;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 1rem;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 0.5rem;
+        vertical-align: top;
+      }
+      th {
+        background: #f5f5f5;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+      }
+      .actions {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fafafa;
+      }
+      button {
+        background: #0f7ac9;
+        color: #fff;
+        border: none;
+        padding: 0.6rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .note {
+        font-size: 0.9rem;
+        color: #555;
+        margin-top: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Canvas Health Dashboard</h1>
+    <p>Latest automated dependency check for the NCAS Canvas deployment.</p>
+
+    <div id="summary">
+      <p>Loading latest results…</p>
+    </div>
+
+    <table id="results-table" style="display: none">
+      <thead>
+        <tr>
+          <th>Page</th>
+          <th>Status</th>
+          <th>Checks</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="actions">
+      <h2>Run a Health Check</h2>
+      <p>
+        To run a fresh health check, trigger the <strong>Canvas Health Check</strong> workflow in GitHub Actions.
+      </p>
+      <button id="workflow-button" onclick="openWorkflow()">Open Workflow</button>
+      <p class="note">
+        Tip: You can also trigger the workflow via the GitHub REST API with a personal access token that has
+        <code>workflow</code> scope.
+      </p>
+    </div>
+
+    <script>
+      async function loadResults() {
+        const summaryEl = document.getElementById('summary');
+        const table = document.getElementById('results-table');
+        const tbody = table.querySelector('tbody');
+
+        try {
+          const response = await fetch('../health-results/latest.json', { cache: 'no-store' });
+          if (!response.ok) {
+            throw new Error('Unable to load latest results');
+          }
+          const data = await response.json();
+          summaryEl.innerHTML = `
+            <p><strong>Timestamp:</strong> ${data.timestamp || 'n/a'}</p>
+            <p><strong>Overall Status:</strong>
+              <span class="${data.overallStatus === 'pass' ? 'status-pass' : 'status-fail'}">
+                ${data.overallStatus?.toUpperCase() || 'UNKNOWN'}
+              </span>
+            </p>
+          `;
+
+          tbody.innerHTML = '';
+          data.results?.forEach((result) => {
+            const tr = document.createElement('tr');
+            const detailHtml = (result.checks || [])
+              .map((c) => `${c.passed ? '✅' : '❌'} ${c.description}`)
+              .join('<br>');
+            tr.innerHTML = `
+              <td>${result.slug}</td>
+              <td>
+                <span class="${result.status === 'pass' ? 'status-pass' : 'status-fail'}">
+                  ${result.status?.toUpperCase()}
+                </span>
+                <div style="font-size:0.85rem;color:#555;">${result.message || ''}</div>
+              </td>
+              <td>${detailHtml || '—'}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          table.style.display = 'table';
+        } catch (error) {
+          summaryEl.innerHTML = `<p class="status-fail">${error.message}</p>`;
+          table.style.display = 'none';
+        }
+      }
+
+      function openWorkflow() {
+        window.open('https://github.com/NCADEMI/ncas-usu-canvas/actions/workflows/canvas-health-check.yml', '_blank');
+      }
+
+      loadResults();
+    </script>
+  </body>
+</html>
+

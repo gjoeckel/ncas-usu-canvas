@@ -207,6 +207,16 @@ This system is designed with accessibility in mind:
 - Check that course home page is set correctly
 - Verify JavaScript is not blocked by browser extensions
 
+## Canvas Health Dashboard
+
+To ensure Canvas hasn’t moved any DOM dependencies, run the **Canvas Health Check** workflow:
+
+1. **Store the token** – Add `CANVAS_API_TOKEN` under **Settings → Secrets and variables → Actions** with a Canvas admin token.
+2. **Trigger the workflow** – In GitHub, go to **Actions → Canvas Health Check → Run workflow**.
+3. **View results** – The GitHub Pages dashboard at `docs/health-dashboard/index.html` loads `docs/health-results/latest.json` to display the latest pass/fail report.
+
+Each run fetches the critical Canvas pages (Core Skills, Start Here, all skill pages, etc.) and verifies that required selectors still exist. If any dependency breaks, the workflow fails so we can react before production users are impacted.
+
 ## Support
 
 For issues or questions:
