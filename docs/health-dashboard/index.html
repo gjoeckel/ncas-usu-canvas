@@ -79,6 +79,28 @@
         opacity: 0.6;
         cursor: not-allowed;
       }
+      .workflow-banner {
+        display: none;
+        margin-top: 1rem;
+        padding: 0.85rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+      }
+      .workflow-banner.progress {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fcd34d;
+      }
+      .workflow-banner.success {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+      }
+      .workflow-banner.failure {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fca5a5;
+      }
       .note {
         font-size: 0.9rem;
         color: #555;
@@ -89,6 +111,8 @@
   <body>
     <h1>Canvas Health Dashboard</h1>
     <p>Latest automated dependency check for the NCAS Canvas deployment.</p>
+
+    <div id="workflow-banner" class="workflow-banner"></div>
 
     <div id="summary">
       <p>Loading latest results…</p>
@@ -181,16 +205,18 @@
 
           table.style.display = 'table';
           if (showStatus) setRefreshStatus('Results refreshed.');
+          return true;
         } catch (error) {
           summaryEl.innerHTML = `<p class="status-fail">${error.message}</p>`;
           table.style.display = 'none';
           if (showStatus) setRefreshStatus(error.message, true);
+          return false;
         }
       }
 
-      function refreshResults() {
+      async function refreshResults() {
         setRefreshStatus('Refreshing results…');
-        loadResults(true);
+        await loadResults(true);
       }
 
       function getRepoOwner() {
@@ -234,6 +260,13 @@
         progressEl.style.color = isError ? '#c0392b' : '#0f2439';
       }
 
+      function setWorkflowBanner(message, state = '') {
+        const banner = document.getElementById('workflow-banner');
+        banner.textContent = message || '';
+        banner.className = `workflow-banner ${state}`.trim();
+        banner.style.display = message ? 'block' : 'none';
+      }
+
       function setRefreshStatus(message, isError = false) {
         const refreshEl = document.getElementById('refresh-status');
         refreshEl.textContent = message || '';
@@ -258,6 +291,7 @@
         runButton.disabled = true;
         setStatus('Dispatching workflow…');
         setWorkflowProgress('');
+        setWorkflowBanner('Preparing to run workflow…', 'progress');
 
         try {
           const owner = getRepoOwner();
@@ -283,6 +317,7 @@
           trackWorkflowRun(owner, token, branch);
         } catch (error) {
           setStatus(error.message, true);
+          setWorkflowBanner(error.message, 'failure');
         } finally {
           runButton.disabled = false;
         }
@@ -293,12 +328,15 @@
           const latestRun = await waitForLatestRun(owner, token, branch);
           if (!latestRun) {
             setWorkflowProgress('Workflow dispatched, but no run information was returned. You may need to refresh manually.', true);
+            setWorkflowBanner('Workflow dispatched, but no run information was returned. Refresh manually.', 'failure');
             return;
           }
           setWorkflowProgress(`Workflow #${latestRun.run_number} is ${latestRun.status}…`);
+           setWorkflowBanner(`Workflow #${latestRun.run_number} is ${latestRun.status}…`, 'progress');
           await pollRunUntilComplete(owner, token, latestRun.id, latestRun.run_number);
         } catch (error) {
           setWorkflowProgress(error.message, true);
+          setWorkflowBanner(error.message, 'failure');
         }
       }
 
@@ -316,20 +354,30 @@
           const run = await fetchRun(owner, token, runId);
           if (!run) {
             setWorkflowProgress('Unable to read workflow status. Check Actions tab for details.', true);
+            setWorkflowBanner('Unable to read workflow status. Check Actions tab for details.', 'failure');
             return;
           }
 
           if (run.status === 'completed') {
             if (run.conclusion === 'success') {
-              setWorkflowProgress(`Workflow #${runNumber} succeeded. Click Refresh Results to load the new report.`);
-              setRefreshStatus('Workflow finished. Refresh when ready.');
+              setWorkflowProgress(`Workflow #${runNumber} succeeded. Refreshing results…`);
+              setWorkflowBanner(`Workflow #${runNumber} succeeded.`, 'success');
+              const refreshed = await loadResults(true);
+              if (refreshed) {
+                setRefreshStatus('Results auto-refreshed from latest workflow run.');
+              } else {
+                setRefreshStatus('Workflow finished, but results could not refresh automatically.', true);
+              }
             } else {
               setWorkflowProgress(`Workflow #${runNumber} finished with status: ${run.conclusion || 'unknown'}.`, true);
+              setWorkflowBanner(`Workflow #${runNumber} finished with status: ${run.conclusion || 'unknown'}.`, 'failure');
+              setRefreshStatus('Workflow finished. Refresh when ready.', true);
             }
             return;
           }
 
           setWorkflowProgress(`Workflow #${runNumber} is ${run.status}…`);
+          setWorkflowBanner(`Workflow #${runNumber} is ${run.status}…`, 'progress');
           await delay(3000);
         }
       }
