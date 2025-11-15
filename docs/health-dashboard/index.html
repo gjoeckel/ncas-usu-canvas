@@ -120,23 +120,11 @@
       <span id="refresh-status" class="note"></span>
     </div>
 
-    <table id="results-table" style="display: none">
-      <thead>
-        <tr>
-          <th>Page</th>
-          <th>Status</th>
-          <th>Checks</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div id="workflow-banner" class="workflow-banner"></div>
 
     <div class="actions">
       <h2>Run a Health Check</h2>
       <p>Trigger the GitHub Action from this page. You will need a GitHub Personal Access Token (PAT) with <code>workflow</code> scope.</p>
-
-      <div id="workflow-banner" class="workflow-banner"></div>
-
       <div class="form-field">
         <label for="token-input">GitHub PAT</label>
         <input type="password" id="token-input" placeholder="ghp_..." autocomplete="off" />
@@ -158,6 +146,17 @@
       <p id="run-status" class="note"></p>
       <p id="workflow-progress" class="note"></p>
     </div>
+
+    <table id="results-table" style="display: none">
+      <thead>
+        <tr>
+          <th>Page</th>
+          <th>Status</th>
+          <th>Checks</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
 
     <script>
       const STORAGE_KEYS = {
