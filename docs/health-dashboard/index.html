@@ -112,8 +112,6 @@
     <h1>Canvas Health Dashboard</h1>
     <p>Latest automated dependency check for the NCAS Canvas deployment.</p>
 
-    <div id="workflow-banner" class="workflow-banner"></div>
-
     <div id="summary">
       <p>Loading latest results…</p>
     </div>
@@ -136,6 +134,9 @@
     <div class="actions">
       <h2>Run a Health Check</h2>
       <p>Trigger the GitHub Action from this page. You will need a GitHub Personal Access Token (PAT) with <code>workflow</code> scope.</p>
+
+      <div id="workflow-banner" class="workflow-banner"></div>
+
       <div class="form-field">
         <label for="token-input">GitHub PAT</label>
         <input type="password" id="token-input" placeholder="ghp_..." autocomplete="off" />
