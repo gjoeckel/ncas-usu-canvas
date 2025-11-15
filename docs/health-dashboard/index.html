@@ -126,7 +126,6 @@
       </div>
       <div class="run-controls">
         <button id="run-button" onclick="runHealthCheck()">Run Health Check</button>
-        <button id="workflow-button" type="button" onclick="openWorkflow()">Open Workflow on GitHub</button>
       </div>
       <p class="note">
         Tokens are stored only in your browser's localStorage and used solely to call the GitHub Actions dispatch API.
@@ -365,11 +364,6 @@
 
       function delay(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
-      }
-
-      function openWorkflow() {
-        const workflowUrl = `https://github.com/${getRepoOwner()}/ncas-usu-canvas/actions/workflows/canvas-health-check.yml`;
-        window.open(workflowUrl, '_blank');
       }
 
       loadResults();
