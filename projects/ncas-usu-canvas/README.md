@@ -226,8 +226,8 @@ The dashboard now exposes a “Run Health Check” panel:
 1. Generate a GitHub Personal Access Token with **workflow** (and repo-read) scope.
 2. Paste the PAT into the dashboard field, optionally save it to your browser (stored via `localStorage` only).
 3. Choose the branch to validate (defaults to `main` after merge; use `feedback-updates` until then).
-4. Click **Run Health Check** to dispatch the GitHub Actions workflow without leaving the dashboard.
-5. Once the workflow completes, refresh the page to see the updated results.
+4. Click **Run Health Check**. The dashboard now monitors the workflow until it finishes and tells you when a refresh is needed.
+5. Press **Refresh Results** once prompted (or anytime) to reload `latest.json` and display the newest report.
 
 Each run fetches the critical Canvas pages (Core Skills, Start Here, all skill pages, etc.) and verifies that required selectors still exist. If any dependency breaks, the workflow fails so we can react before production users are impacted.
 
