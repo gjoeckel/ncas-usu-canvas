@@ -240,7 +240,30 @@ for (const page of pages) {
 // (they're informational - Canvas DOM may vary by page)
 const pageResults = results.filter(r => !r.slug.startsWith('ncas23-'));
 const overallStatus = pageResults.every((r) => r.status === 'pass') ? 'pass' : 'fail';
-const timestamp = new Date().toISOString();
+
+// Format timestamp as MM-DD-YY HH:MM in Mountain Time
+function formatMountainTime(date) {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Denver',
+    year: '2-digit',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+  
+  const parts = formatter.formatToParts(date);
+  const month = parts.find(p => p.type === 'month').value;
+  const day = parts.find(p => p.type === 'day').value;
+  const year = parts.find(p => p.type === 'year').value;
+  const hour = parts.find(p => p.type === 'hour').value;
+  const minute = parts.find(p => p.type === 'minute').value;
+  
+  return `${month}-${day}-${year} ${hour}:${minute}`;
+}
+
+const timestamp = formatMountainTime(new Date());
 
 const summary = {
   timestamp,
