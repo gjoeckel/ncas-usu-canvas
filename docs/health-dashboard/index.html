@@ -331,9 +331,9 @@
             setWorkflowBanner('Workflow dispatched, but no run information was returned. Refresh manually.', 'failure');
             return;
           }
-          setWorkflowProgress(`Workflow #${latestRun.run_number} is ${latestRun.status}…`);
-           setWorkflowBanner(`Workflow #${latestRun.run_number} is ${latestRun.status}…`, 'progress');
-          await pollRunUntilComplete(owner, token, latestRun.id, latestRun.run_number);
+          setWorkflowProgress(`Workflow is ${latestRun.status}…`);
+          setWorkflowBanner(`Workflow is ${latestRun.status}…`, 'progress');
+          await pollRunUntilComplete(owner, token, latestRun.id);
         } catch (error) {
           setWorkflowProgress(error.message, true);
           setWorkflowBanner(error.message, 'failure');
@@ -349,7 +349,7 @@
         return null;
       }
 
-      async function pollRunUntilComplete(owner, token, runId, runNumber) {
+      async function pollRunUntilComplete(owner, token, runId) {
         while (true) {
           const run = await fetchRun(owner, token, runId);
           if (!run) {
@@ -360,24 +360,26 @@
 
           if (run.status === 'completed') {
             if (run.conclusion === 'success') {
-              setWorkflowProgress(`Workflow #${runNumber} succeeded. Refreshing results…`);
-              setWorkflowBanner(`Workflow #${runNumber} succeeded.`, 'success');
+              setWorkflowProgress('Workflow succeeded. Refreshing results…');
+              setWorkflowBanner('Workflow succeeded.', 'success');
+              // Wait a moment for results to be written, then refresh
+              await delay(2000);
               const refreshed = await loadResults(true);
               if (refreshed) {
-                setRefreshStatus('Results auto-refreshed from latest workflow run.');
+                setRefreshStatus('Results auto-refreshed with latest timestamp.');
               } else {
                 setRefreshStatus('Workflow finished, but results could not refresh automatically.', true);
               }
             } else {
-              setWorkflowProgress(`Workflow #${runNumber} finished with status: ${run.conclusion || 'unknown'}.`, true);
-              setWorkflowBanner(`Workflow #${runNumber} finished with status: ${run.conclusion || 'unknown'}.`, 'failure');
+              setWorkflowProgress(`Workflow finished with status: ${run.conclusion || 'unknown'}.`, true);
+              setWorkflowBanner(`Workflow finished with status: ${run.conclusion || 'unknown'}.`, 'failure');
               setRefreshStatus('Workflow finished. Refresh when ready.', true);
             }
             return;
           }
 
-          setWorkflowProgress(`Workflow #${runNumber} is ${run.status}…`);
-          setWorkflowBanner(`Workflow #${runNumber} is ${run.status}…`, 'progress');
+          setWorkflowProgress(`Workflow is ${run.status}…`);
+          setWorkflowBanner(`Workflow is ${run.status}…`, 'progress');
           await delay(3000);
         }
       }
