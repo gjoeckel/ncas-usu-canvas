@@ -136,17 +136,45 @@ async function fetchRenderedPage(slug) {
   }
 }
 
+// Function to fetch grades page HTML
+async function fetchGradesPage() {
+  try {
+    const url = `${CANVAS_BASE_URL}/courses/${COURSE_ID}/grades`;
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${TOKEN}`,
+        Accept: 'text/html'
+      }
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return await response.text();
+  } catch (error) {
+    console.error(`[WARN] Could not fetch grades page:`, error.message);
+    return null;
+  }
+}
+
 const results = [];
 
 // Add CSS and JS dependency checks at the top
 if (cssDeps.length > 0 || jsDeps.length > 0) {
-  // Fetch a rendered page to check against (use core-skills as it has the most Canvas elements)
-  const html = await fetchRenderedPage('core-skills');
+  // Fetch multiple pages to cover all Canvas elements
+  // - core-skills: general Canvas layout and course content
+  // - grades: grade-related selectors (#grades_summary, .grade, .assignment_score, etc.)
+  const [coreSkillsHtml, gradesHtml] = await Promise.all([
+    fetchRenderedPage('core-skills'),
+    fetchGradesPage()
+  ]);
   
-  if (html) {
+  // Combine HTML from all pages for comprehensive validation
+  const combinedHtml = [coreSkillsHtml, gradesHtml].filter(Boolean).join('\n');
+  
+  if (combinedHtml) {
     // Check CSS dependencies
     if (cssDeps.length > 0) {
-      const cssChecks = checkSelectorsInHTML(html, cssDeps);
+      const cssChecks = checkSelectorsInHTML(combinedHtml, cssDeps);
       const cssPassed = cssChecks.filter(c => c.passed).length;
       // Only include failed checks in output to keep dashboard manageable
       const failedChecks = cssChecks.filter(c => !c.passed).slice(0, 20); // Limit to first 20 failures
@@ -161,7 +189,7 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
     
     // Check JS dependencies
     if (jsDeps.length > 0) {
-      const jsChecks = checkSelectorsInHTML(html, jsDeps);
+      const jsChecks = checkSelectorsInHTML(combinedHtml, jsDeps);
       const jsPassed = jsChecks.filter(c => c.passed).length;
       // Only include failed checks in output to keep dashboard manageable
       const failedChecks = jsChecks.filter(c => !c.passed).slice(0, 20); // Limit to first 20 failures
@@ -180,7 +208,7 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
         slug: 'ncas23-css',
         description: 'CSS dependency validation',
         status: 'fail',
-        message: 'Could not fetch rendered page for validation',
+        message: 'Could not fetch rendered pages for validation',
         checks: []
       });
     }
@@ -189,7 +217,7 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
         slug: 'ncas23-js',
         description: 'JavaScript dependency validation',
         status: 'fail',
-        message: 'Could not fetch rendered page for validation',
+        message: 'Could not fetch rendered pages for validation',
         checks: []
       });
     }
