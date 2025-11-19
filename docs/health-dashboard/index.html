@@ -150,7 +150,7 @@
     <table id="results-table" style="display: none">
       <thead>
         <tr>
-          <th>Page</th>
+          <th>Code/Page</th>
           <th>Status</th>
           <th>Checks</th>
         </tr>
@@ -187,18 +187,38 @@
           tbody.innerHTML = '';
           data.results?.forEach((result) => {
             const tr = document.createElement('tr');
-            const detailHtml = (result.checks || [])
-              .map((c) => `${c.passed ? '✅' : '❌'} ${c.description}`)
-              .join('<br>');
+            
+            // For CSS/JS rows, show simplified format
+            const isCodeCheck = result.slug === 'ncas23-css' || result.slug === 'ncas23-js';
+            let codePageColumn, checksColumn;
+            
+            if (isCodeCheck) {
+              // Display "CSS" or "JS" instead of slug
+              codePageColumn = result.slug === 'ncas23-css' ? 'CSS' : 'JS';
+              // Use totalCount field if available, otherwise extract from message
+              const totalCount = result.totalCount || (() => {
+                const match = result.message?.match(/\/(\d+)/);
+                return match ? match[1] : '0';
+              })();
+              checksColumn = `${totalCount} elements checked`;
+            } else {
+              // Regular page rows
+              codePageColumn = result.slug;
+              const detailHtml = (result.checks || [])
+                .map((c) => `${c.passed ? '✅' : '❌'} ${c.description}`)
+                .join('<br>');
+              checksColumn = detailHtml || '—';
+            }
+            
             tr.innerHTML = `
-              <td>${result.slug}</td>
+              <td>${codePageColumn}</td>
               <td>
                 <span class="${result.status === 'pass' ? 'status-pass' : 'status-fail'}">
                   ${result.status?.toUpperCase()}
                 </span>
                 <div style="font-size:0.85rem;color:#555;">${result.message || ''}</div>
               </td>
-              <td>${detailHtml || '—'}</td>
+              <td>${checksColumn}</td>
             `;
             tbody.appendChild(tr);
           });

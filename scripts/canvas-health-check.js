@@ -188,6 +188,7 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
         description: 'CSS dependency validation',
         status: cssPassed === cssDeps.length ? 'pass' : 'fail',
         message: `${cssPassed}/${cssDeps.length} CSS selectors found${failedChecks.length > 0 ? ` (${failedChecks.length} missing shown)` : ''}`,
+        totalCount: cssDeps.length,
         checks: failedChecks.length > 0 ? failedChecks : [{ description: 'All CSS selectors found', passed: true }]
       });
     }
@@ -205,6 +206,7 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
         description: 'JavaScript dependency validation',
         status: jsPassed === jsDeps.length ? 'pass' : 'fail',
         message: `${jsPassed}/${jsDeps.length} JS selectors found${failedChecks.length > 0 ? ` (${failedChecks.length} missing shown)` : ''}`,
+        totalCount: jsDeps.length,
         checks: failedChecks.length > 0 ? failedChecks : [{ description: 'All JS selectors found', passed: true }]
       });
     }
@@ -217,6 +219,7 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
         description: 'CSS dependency validation',
         status: 'fail',
         message: 'Could not fetch rendered pages for validation',
+        totalCount: cssDeps.length,
         checks: []
       });
     }
@@ -226,6 +229,7 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
         description: 'JavaScript dependency validation',
         status: 'fail',
         message: 'Could not fetch rendered pages for validation',
+        totalCount: jsDeps.length,
         checks: []
       });
     }
