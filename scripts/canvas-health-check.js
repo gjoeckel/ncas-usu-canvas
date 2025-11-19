@@ -18,20 +18,27 @@ if (!TOKEN) {
 }
 
 // Load CSS and JS dependency lists
+console.log('[INFO] Starting dependency file loading...');
 let cssDeps = [];
 let jsDeps = [];
 try {
+  console.log('[INFO] Attempting to read scripts/canvas-css-deps.json...');
   const cssData = await fs.readFile('scripts/canvas-css-deps.json', 'utf8');
   cssDeps = JSON.parse(cssData);
+  console.log(`[INFO] ✅ Successfully loaded ${cssDeps.length} CSS dependencies`);
 } catch (error) {
-  console.error('[WARN] Could not load CSS dependencies:', error.message);
+  console.error(`[ERROR] ❌ Could not load CSS dependencies: ${error.message}`);
+  console.error(`[ERROR] Error stack: ${error.stack}`);
 }
 
 try {
+  console.log('[INFO] Attempting to read scripts/canvas-js-deps.json...');
   const jsData = await fs.readFile('scripts/canvas-js-deps.json', 'utf8');
   jsDeps = JSON.parse(jsData);
+  console.log(`[INFO] ✅ Successfully loaded ${jsDeps.length} JS dependencies`);
 } catch (error) {
-  console.error('[WARN] Could not load JS dependencies:', error.message);
+  console.error(`[ERROR] ❌ Could not load JS dependencies: ${error.message}`);
+  console.error(`[ERROR] Error stack: ${error.stack}`);
 }
 
 const pages = [
@@ -120,6 +127,7 @@ function checkSelectorsInHTML(html, selectors) {
 async function fetchRenderedPage(slug) {
   try {
     const url = `${CANVAS_BASE_URL}/courses/${COURSE_ID}/pages/${slug}`;
+    console.log(`[INFO] Fetching page: ${url}`);
     const response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${TOKEN}`,
@@ -127,11 +135,15 @@ async function fetchRenderedPage(slug) {
       }
     });
     if (!response.ok) {
+      console.error(`[ERROR] Failed to fetch ${slug}: HTTP ${response.status} ${response.statusText}`);
       return null;
     }
-    return await response.text();
+    const html = await response.text();
+    console.log(`[INFO] ✅ Successfully fetched ${slug} (${html.length} bytes)`);
+    return html;
   } catch (error) {
-    console.error(`[WARN] Could not fetch rendered page ${slug}:`, error.message);
+    console.error(`[ERROR] ❌ Could not fetch rendered page ${slug}:`, error.message);
+    console.error(`[ERROR] Error stack: ${error.stack}`);
     return null;
   }
 }
@@ -140,6 +152,7 @@ async function fetchRenderedPage(slug) {
 async function fetchGradesPage() {
   try {
     const url = `${CANVAS_BASE_URL}/courses/${COURSE_ID}/grades`;
+    console.log(`[INFO] Fetching grades page: ${url}`);
     const response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${TOKEN}`,
@@ -147,11 +160,15 @@ async function fetchGradesPage() {
       }
     });
     if (!response.ok) {
+      console.error(`[ERROR] Failed to fetch grades page: HTTP ${response.status} ${response.statusText}`);
       return null;
     }
-    return await response.text();
+    const html = await response.text();
+    console.log(`[INFO] ✅ Successfully fetched grades page (${html.length} bytes)`);
+    return html;
   } catch (error) {
-    console.error(`[WARN] Could not fetch grades page:`, error.message);
+    console.error(`[ERROR] ❌ Could not fetch grades page:`, error.message);
+    console.error(`[ERROR] Error stack: ${error.stack}`);
     return null;
   }
 }
@@ -184,14 +201,16 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
       // Only include failed checks in output to keep dashboard manageable
       const failedChecks = cssChecks.filter(c => !c.passed).slice(0, 20); // Limit to first 20 failures
       console.log(`[INFO] CSS validation: ${cssPassed}/${cssDeps.length} selectors found`);
-      results.unshift({
+      const cssResult = {
         slug: 'ncas23-css',
         description: 'CSS dependency validation',
         status: cssPassed === cssDeps.length ? 'pass' : 'fail',
         message: `${cssPassed}/${cssDeps.length} CSS selectors found${failedChecks.length > 0 ? ` (${failedChecks.length} missing shown)` : ''}`,
         totalCount: cssDeps.length,
         checks: failedChecks.length > 0 ? failedChecks : [{ description: 'All CSS selectors found', passed: true }]
-      });
+      };
+      results.unshift(cssResult);
+      console.log(`[INFO] ✅ Added CSS result to results array: ${JSON.stringify(cssResult, null, 2)}`);
     }
     
     // Check JS dependencies
@@ -202,60 +221,71 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
       // Only include failed checks in output to keep dashboard manageable
       const failedChecks = jsChecks.filter(c => !c.passed).slice(0, 20); // Limit to first 20 failures
       console.log(`[INFO] JS validation: ${jsPassed}/${jsDeps.length} selectors found`);
-      results.unshift({
+      const jsResult = {
         slug: 'ncas23-js',
         description: 'JavaScript dependency validation',
         status: jsPassed === jsDeps.length ? 'pass' : 'fail',
         message: `${jsPassed}/${jsDeps.length} JS selectors found${failedChecks.length > 0 ? ` (${failedChecks.length} missing shown)` : ''}`,
         totalCount: jsDeps.length,
         checks: failedChecks.length > 0 ? failedChecks : [{ description: 'All JS selectors found', passed: true }]
-      });
+      };
+      results.unshift(jsResult);
+      console.log(`[INFO] ✅ Added JS result to results array: ${JSON.stringify(jsResult, null, 2)}`);
     }
   } else {
     console.error('[WARN] Could not fetch HTML from Canvas pages');
     // If we can't fetch HTML, mark as failed but don't fail the whole workflow
     if (cssDeps.length > 0) {
-      results.unshift({
+      const cssNoHtmlResult = {
         slug: 'ncas23-css',
         description: 'CSS dependency validation',
         status: 'fail',
         message: 'Could not fetch rendered pages for validation',
         totalCount: cssDeps.length,
         checks: []
-      });
+      };
+      results.unshift(cssNoHtmlResult);
+      console.log(`[INFO] ✅ Added CSS no-HTML result to results array: ${JSON.stringify(cssNoHtmlResult, null, 2)}`);
     }
     if (jsDeps.length > 0) {
-      results.unshift({
+      const jsNoHtmlResult = {
         slug: 'ncas23-js',
         description: 'JavaScript dependency validation',
         status: 'fail',
         message: 'Could not fetch rendered pages for validation',
         totalCount: jsDeps.length,
         checks: []
-      });
+      };
+      results.unshift(jsNoHtmlResult);
+      console.log(`[INFO] ✅ Added JS no-HTML result to results array: ${JSON.stringify(jsNoHtmlResult, null, 2)}`);
     }
   } catch (error) {
-    console.error('[ERROR] CSS/JS validation failed:', error.message);
+    console.error('[ERROR] ❌ CSS/JS validation failed:', error.message);
+    console.error(`[ERROR] Error stack: ${error.stack}`);
     // Still add rows to results so they appear in dashboard, even if validation failed
     if (cssDeps.length > 0) {
-      results.unshift({
+      const cssErrorResult = {
         slug: 'ncas23-css',
         description: 'CSS dependency validation',
         status: 'fail',
         message: `Validation error: ${error.message}`,
         totalCount: cssDeps.length,
         checks: []
-      });
+      };
+      results.unshift(cssErrorResult);
+      console.log(`[INFO] ✅ Added CSS error result to results array: ${JSON.stringify(cssErrorResult, null, 2)}`);
     }
     if (jsDeps.length > 0) {
-      results.unshift({
+      const jsErrorResult = {
         slug: 'ncas23-js',
         description: 'JavaScript dependency validation',
         status: 'fail',
         message: `Validation error: ${error.message}`,
         totalCount: jsDeps.length,
         checks: []
-      });
+      };
+      results.unshift(jsErrorResult);
+      console.log(`[INFO] ✅ Added JS error result to results array: ${JSON.stringify(jsErrorResult, null, 2)}`);
     }
   }
 } else {
@@ -338,16 +368,35 @@ const summary = {
   results
 };
 
+console.log(`[INFO] ========== RESULTS SUMMARY ==========`);
+console.log(`[INFO] Total results: ${results.length}`);
+console.log(`[INFO] Results with slug starting with 'ncas23-': ${results.filter(r => r.slug.startsWith('ncas23-')).length}`);
+console.log(`[INFO] Timestamp: ${timestamp}`);
+console.log(`[INFO] Overall Status: ${overallStatus}`);
+
 results.forEach((result) => {
   console.log(`[${result.status.toUpperCase()}] ${result.slug} - ${result.message || 'Completed'}`);
-  result.checks.forEach((check) => {
-    console.log(`   ${check.passed ? '✅' : '❌'} ${check.description}`);
-  });
+  if (result.checks && result.checks.length > 0) {
+    result.checks.forEach((check) => {
+      console.log(`   ${check.passed ? '✅' : '❌'} ${check.description}`);
+    });
+  } else {
+    console.log(`   (no checks)`);
+  }
 });
 
+console.log(`[INFO] ========== WRITING RESULTS ==========`);
 const outputDir = 'docs/health-results';
+console.log(`[INFO] Creating output directory: ${outputDir}`);
 await fs.mkdir(outputDir, { recursive: true });
-await fs.writeFile(`${outputDir}/latest.json`, JSON.stringify(summary, null, 2), 'utf8');
+const jsonPath = `${outputDir}/latest.json`;
+const jsonContent = JSON.stringify(summary, null, 2);
+console.log(`[INFO] Writing JSON file: ${jsonPath}`);
+console.log(`[INFO] JSON content length: ${jsonContent.length} bytes`);
+console.log(`[INFO] JSON contains ${summary.results.length} results`);
+console.log(`[INFO] JSON contains CSS/JS rows: ${summary.results.some(r => r.slug.startsWith('ncas23-'))}`);
+await fs.writeFile(jsonPath, jsonContent, 'utf8');
+console.log(`[INFO] ✅ Successfully wrote ${jsonPath}`);
 
 const markdownLines = [
   `# Canvas Health Check`,
