@@ -159,10 +159,12 @@ async function fetchGradesPage() {
 const results = [];
 
 // Add CSS and JS dependency checks at the top
+console.log(`[INFO] CSS dependencies: ${cssDeps.length}, JS dependencies: ${jsDeps.length}`);
 if (cssDeps.length > 0 || jsDeps.length > 0) {
   // Fetch multiple pages to cover all Canvas elements
   // - core-skills: general Canvas layout and course content
   // - grades: grade-related selectors (#grades_summary, .grade, .assignment_score, etc.)
+  console.log('[INFO] Fetching Canvas pages for dependency validation...');
   const [coreSkillsHtml, gradesHtml] = await Promise.all([
     fetchRenderedPage('core-skills'),
     fetchGradesPage()
@@ -170,15 +172,18 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
   
   // Combine HTML from all pages for comprehensive validation
   const combinedHtml = [coreSkillsHtml, gradesHtml].filter(Boolean).join('\n');
+  console.log(`[INFO] Combined HTML length: ${combinedHtml.length} bytes`);
   
   if (combinedHtml) {
     // Check CSS dependencies
     if (cssDeps.length > 0) {
+      console.log(`[INFO] Checking ${cssDeps.length} CSS selectors...`);
       const cssChecks = checkSelectorsInHTML(combinedHtml, cssDeps);
       const cssPassed = cssChecks.filter(c => c.passed).length;
       // Only include failed checks in output to keep dashboard manageable
       const failedChecks = cssChecks.filter(c => !c.passed).slice(0, 20); // Limit to first 20 failures
-      results.push({
+      console.log(`[INFO] CSS validation: ${cssPassed}/${cssDeps.length} selectors found`);
+      results.unshift({
         slug: 'ncas23-css',
         description: 'CSS dependency validation',
         status: cssPassed === cssDeps.length ? 'pass' : 'fail',
@@ -189,11 +194,13 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
     
     // Check JS dependencies
     if (jsDeps.length > 0) {
+      console.log(`[INFO] Checking ${jsDeps.length} JS selectors...`);
       const jsChecks = checkSelectorsInHTML(combinedHtml, jsDeps);
       const jsPassed = jsChecks.filter(c => c.passed).length;
       // Only include failed checks in output to keep dashboard manageable
       const failedChecks = jsChecks.filter(c => !c.passed).slice(0, 20); // Limit to first 20 failures
-      results.push({
+      console.log(`[INFO] JS validation: ${jsPassed}/${jsDeps.length} selectors found`);
+      results.unshift({
         slug: 'ncas23-js',
         description: 'JavaScript dependency validation',
         status: jsPassed === jsDeps.length ? 'pass' : 'fail',
@@ -202,9 +209,10 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
       });
     }
   } else {
+    console.error('[WARN] Could not fetch HTML from Canvas pages');
     // If we can't fetch HTML, mark as failed but don't fail the whole workflow
     if (cssDeps.length > 0) {
-      results.push({
+      results.unshift({
         slug: 'ncas23-css',
         description: 'CSS dependency validation',
         status: 'fail',
@@ -213,7 +221,7 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
       });
     }
     if (jsDeps.length > 0) {
-      results.push({
+      results.unshift({
         slug: 'ncas23-js',
         description: 'JavaScript dependency validation',
         status: 'fail',
@@ -222,6 +230,8 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
       });
     }
   }
+} else {
+  console.warn('[WARN] No CSS or JS dependencies loaded - skipping dependency validation');
 }
 
 for (const page of pages) {
@@ -292,6 +302,7 @@ function formatMountainTime(date) {
 }
 
 const timestamp = formatMountainTime(new Date());
+console.log(`[INFO] Timestamp formatted: ${timestamp}`);
 
 const summary = {
   timestamp,
