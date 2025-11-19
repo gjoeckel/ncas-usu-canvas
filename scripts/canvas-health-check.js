@@ -161,20 +161,21 @@ const results = [];
 // Add CSS and JS dependency checks at the top
 console.log(`[INFO] CSS dependencies: ${cssDeps.length}, JS dependencies: ${jsDeps.length}`);
 if (cssDeps.length > 0 || jsDeps.length > 0) {
-  // Fetch multiple pages to cover all Canvas elements
-  // - core-skills: general Canvas layout and course content
-  // - grades: grade-related selectors (#grades_summary, .grade, .assignment_score, etc.)
-  console.log('[INFO] Fetching Canvas pages for dependency validation...');
-  const [coreSkillsHtml, gradesHtml] = await Promise.all([
-    fetchRenderedPage('core-skills'),
-    fetchGradesPage()
-  ]);
-  
-  // Combine HTML from all pages for comprehensive validation
-  const combinedHtml = [coreSkillsHtml, gradesHtml].filter(Boolean).join('\n');
-  console.log(`[INFO] Combined HTML length: ${combinedHtml.length} bytes`);
-  
-  if (combinedHtml) {
+  try {
+    // Fetch multiple pages to cover all Canvas elements
+    // - core-skills: general Canvas layout and course content
+    // - grades: grade-related selectors (#grades_summary, .grade, .assignment_score, etc.)
+    console.log('[INFO] Fetching Canvas pages for dependency validation...');
+    const [coreSkillsHtml, gradesHtml] = await Promise.all([
+      fetchRenderedPage('core-skills'),
+      fetchGradesPage()
+    ]);
+    
+    // Combine HTML from all pages for comprehensive validation
+    const combinedHtml = [coreSkillsHtml, gradesHtml].filter(Boolean).join('\n');
+    console.log(`[INFO] Combined HTML length: ${combinedHtml.length} bytes`);
+    
+    if (combinedHtml) {
     // Check CSS dependencies
     if (cssDeps.length > 0) {
       console.log(`[INFO] Checking ${cssDeps.length} CSS selectors...`);
@@ -229,6 +230,29 @@ if (cssDeps.length > 0 || jsDeps.length > 0) {
         description: 'JavaScript dependency validation',
         status: 'fail',
         message: 'Could not fetch rendered pages for validation',
+        totalCount: jsDeps.length,
+        checks: []
+      });
+    }
+  } catch (error) {
+    console.error('[ERROR] CSS/JS validation failed:', error.message);
+    // Still add rows to results so they appear in dashboard, even if validation failed
+    if (cssDeps.length > 0) {
+      results.unshift({
+        slug: 'ncas23-css',
+        description: 'CSS dependency validation',
+        status: 'fail',
+        message: `Validation error: ${error.message}`,
+        totalCount: cssDeps.length,
+        checks: []
+      });
+    }
+    if (jsDeps.length > 0) {
+      results.unshift({
+        slug: 'ncas23-js',
+        description: 'JavaScript dependency validation',
+        status: 'fail',
+        message: `Validation error: ${error.message}`,
         totalCount: jsDeps.length,
         checks: []
       });
